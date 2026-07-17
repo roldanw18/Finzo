@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
-import { Zap, TrendingDown, CalendarClock, Sparkles, PiggyBank } from 'lucide-react'
+import { Zap, TrendingDown, CalendarClock, Sparkles, PiggyBank, PieChart, CheckCircle2 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { AmountInput } from '@/components/ui/AmountInput'
-import { LineTrend } from '@/components/charts/LineTrend'
+import { CategoryPie } from '@/components/charts/CategoryPie'
+import { DebtProjectionChart } from './DebtProjectionChart'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
-import { compareExtra, simulatePayoff } from '@/lib/debt'
-import { fmtShort } from '@/lib/dates'
+import { compareExtra, simulatePayoff, monthlyAllocation, projectDebts } from '@/lib/debt'
+import { fmtShort, daysInCurrentMonth } from '@/lib/dates'
+import { debtTypeMeta } from '@/types'
 import { cn } from '@/lib/utils'
 
 export function SimulatorTab() {
@@ -26,6 +28,29 @@ export function SimulatorTab() {
 
   const result = useMemo(() => compareExtra(included, extra), [included, extra])
   const plan = useMemo(() => simulatePayoff(included, extra), [included, extra])
+  const allocation = useMemo(() => monthlyAllocation(included, extra), [included, extra])
+  const projection = useMemo(() => projectDebts(included, extra), [included, extra])
+
+  const colorMap = useMemo(
+    () => new Map(projection.order.map((o) => [o.id, o.color])),
+    [projection],
+  )
+  const allocSlices = useMemo(
+    () =>
+      allocation.items
+        .filter((it) => it.total > 0)
+        .map((it) => ({
+          id: it.debt.id,
+          name: it.debt.name,
+          color: colorMap.get(it.debt.id) ?? '#94a3b8',
+          icon: debtTypeMeta(it.debt.type).icon,
+          value: it.total,
+          count: 1,
+          pct: it.pct,
+        })),
+    [allocation, colorMap],
+  )
+  const budgetPerDay = allocation.budget / daysInCurrentMonth()
 
   const scenarios = [
     { label: '+$1.000.000', value: 1_000_000 },
@@ -112,11 +137,64 @@ export function SimulatorTab() {
         </div>
       )}
 
-      {/* Projection chart */}
-      {plan.schedule.length > 1 && (
+      {/* Allocation: how the money splits across debts */}
+      <Card>
+        <CardHeader
+          title="Cómo se reparte tu dinero"
+          subtitle={`Presupuesto mensual ${money(allocation.budget)} · ≈ ${money(budgetPerDay, { compact: true })}/día`}
+          icon={<PieChart size={18} className="text-primary" />}
+        />
+        <CategoryPie data={allocSlices} />
+        <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
+          {allocation.items.map((it) => (
+            <div key={it.debt.id} className="flex items-center gap-3">
+              <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorMap.get(it.debt.id) }} />
+              <span className="min-w-0 flex-1 truncate text-sm text-content">{it.debt.name}</span>
+              <div className="text-right text-xs">
+                <span className="tnum font-semibold text-content">{money(it.total, { compact: true })}</span>
+                {it.extra > 0 && (
+                  <span className="ml-1.5 text-income">
+                    (mín {money(it.base, { compact: true })} + extra {money(it.extra, { compact: true })})
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        {allocation.extra > 0 && (
+          <p className="mt-3 rounded-xl bg-primary/10 p-2.5 text-xs text-primary">
+            💡 El extra de {money(allocation.extra)} se dirige a la deuda de mayor interés (Avalancha).
+          </p>
+        )}
+      </Card>
+
+      {/* Per-debt projection */}
+      {projection.series.length > 1 && (
         <Card>
-          <CardHeader title="Evolución proyectada de la deuda" subtitle="Con el plan simulado" />
-          <LineTrend data={plan.schedule} dataKey="balance" xKey="label" color="rgb(var(--c-expense))" />
+          <CardHeader
+            title="Proyección por deuda"
+            subtitle="Cómo se reducen tus deudas mes a mes"
+            icon={<TrendingDown size={18} className="text-expense" />}
+          />
+          <DebtProjectionChart projection={projection} />
+
+          {projection.payoff.length > 0 && (
+            <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-subtle">
+                Cuándo pagas cada deuda
+              </p>
+              {projection.payoff.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 text-sm">
+                  <CheckCircle2 size={15} style={{ color: p.color }} />
+                  <span className="flex-1 truncate text-content">{p.name}</span>
+                  <span className="text-muted">
+                    {fmtShort(p.date.toISOString().slice(0, 10))} {p.date.getFullYear()}
+                  </span>
+                  <span className="chip bg-surface-2 text-[11px] text-muted">{p.month} meses</span>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 

@@ -9,6 +9,7 @@ import type {
   ReminderCategory,
 } from '@/types'
 import { debtTypeMeta } from '@/types'
+import { CATEGORY_COLORS } from './icons'
 import { safeDiv } from './utils'
 
 const monthlyRate = (d: Debt) => (d.interest_rate ?? 0) / 100 / 12
@@ -184,6 +185,127 @@ export function simulatePayoff(debts: Debt[], extraMonthly = 0, ref = new Date()
     totalInterest,
     perDebt,
     schedule,
+  }
+}
+
+/* ----------------------------------------- Payment allocation */
+
+export interface AllocationItem {
+  debt: Debt
+  base: number // minimum portion
+  extra: number // avalanche extra
+  total: number
+  pct: number
+}
+export interface MonthlyAllocation {
+  budget: number
+  extra: number
+  items: AllocationItem[]
+}
+
+/** How this month's payment budget (minimums + extra) splits across debts. */
+export function monthlyAllocation(debts: Debt[], extra = 0): MonthlyAllocation {
+  const ordered = sortAvalanche(debts)
+  const budget = ordered.reduce((a, d) => a + d.min_payment, 0) + extra
+  const items: AllocationItem[] = ordered.map((d) => ({
+    debt: d,
+    base: Math.min(d.min_payment, d.balance),
+    extra: 0,
+    total: 0,
+    pct: 0,
+  }))
+  let remaining = extra
+  for (const it of items) {
+    if (remaining <= 0) break
+    const room = Math.max(0, it.debt.balance - it.base)
+    const pay = Math.min(room, remaining)
+    it.extra += pay
+    remaining -= pay
+  }
+  const used = items.reduce((a, it) => a + it.base + it.extra, 0)
+  for (const it of items) {
+    it.total = it.base + it.extra
+    it.pct = used > 0 ? (it.total / used) * 100 : 0
+  }
+  return { budget, extra, items }
+}
+
+/* ----------------------------------------- Per-debt projection */
+
+export interface DebtProjection {
+  months: number | null
+  payoffDate: Date | null
+  order: { id: string; name: string; color: string }[]
+  series: Record<string, number | string>[]
+  payoff: { id: string; name: string; color: string; month: number; date: Date }[]
+}
+
+/** Balance of every debt month-by-month (for a stacked area chart). */
+export function projectDebts(debts: Debt[], extra = 0, ref = new Date()): DebtProjection {
+  const ordered = sortAvalanche(debts)
+  const order = ordered.map((d, i) => ({
+    id: d.id,
+    name: d.name,
+    color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+  }))
+  const sim = ordered.map((d) => ({ id: d.id, balance: d.balance, rate: monthlyRate(d), min: d.min_payment }))
+  const budget = sim.reduce((a, d) => a + d.min, 0) + extra
+  const nameOf = new Map(order.map((o) => [o.id, o]))
+
+  const point0: Record<string, number | string> = { label: 'Hoy' }
+  for (const d of sim) point0[d.id] = Math.round(d.balance)
+  const series = [point0]
+  const payoff: DebtProjection['payoff'] = []
+  const MAX = 120
+
+  let month = 0
+  for (; month < MAX; month++) {
+    const activeSim = sim.filter((d) => d.balance > 0.5)
+    if (activeSim.length === 0) break
+
+    for (const d of activeSim) d.balance += d.balance * d.rate
+    let remaining = budget
+    const av = activeSim.sort((a, b) => b.rate - a.rate || a.balance - b.balance)
+    for (const d of av) {
+      const pay = Math.min(d.min, d.balance, remaining)
+      d.balance -= pay
+      remaining -= pay
+    }
+    for (const d of av) {
+      if (remaining <= 0) break
+      const pay = Math.min(d.balance, remaining)
+      d.balance -= pay
+      remaining -= pay
+    }
+
+    const pt: Record<string, number | string> = {
+      label: format(addMonths(ref, month + 1), 'MMM yy', { locale: es }),
+    }
+    for (const d of sim) {
+      if (d.balance <= 0.5 && d.balance !== -1) {
+        d.balance = 0
+        if (!payoff.find((p) => p.id === d.id)) {
+          const o = nameOf.get(d.id)!
+          payoff.push({ ...o, month: month + 1, date: addMonths(ref, month + 1) })
+          d.balance = -1 // mark recorded, render as 0
+        }
+      }
+      pt[d.id] = Math.round(Math.max(0, d.balance))
+    }
+    series.push(pt)
+    if (sim.every((d) => d.balance <= 0)) {
+      month++
+      break
+    }
+  }
+
+  const finished = sim.every((d) => d.balance <= 0)
+  return {
+    months: finished ? month : null,
+    payoffDate: finished ? addMonths(ref, month) : null,
+    order,
+    series,
+    payoff,
   }
 }
 

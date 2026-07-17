@@ -22,12 +22,15 @@ import { KpiCard } from '@/components/KpiCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { DebtCard } from './DebtCard'
 import { DailyTargetCard } from './DailyTargetCard'
+import { DebtProjectionChart } from './DebtProjectionChart'
+import { CategoryPie } from '@/components/charts/CategoryPie'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
 import { useDebtModal } from './modalContext'
 import { hoursToPay } from '@/lib/debt'
-import { fmtShort } from '@/lib/dates'
+import { fmtShort, daysInCurrentMonth } from '@/lib/dates'
+import { debtTypeMeta } from '@/types'
 import { cn } from '@/lib/utils'
 
 const ALERT_ICONS = { AlertTriangle, Info, Flame, TrendingDown, CheckCircle2 }
@@ -45,10 +48,30 @@ const URGENCY = {
 }
 
 export function PlanOverview() {
-  const { summary, avalanche, recommendation, alerts, calendar, basePlan, uber, phrases } = useDebt()
+  const { summary, avalanche, recommendation, alerts, calendar, basePlan, uber, phrases, allocation, projection } = useDebt()
   const { kpis } = useAnalytics()
   const { money } = useMoney()
   const open = useDebtModal()
+
+  const colorMap = useMemo(
+    () => new Map(projection.order.map((o) => [o.id, o.color])),
+    [projection],
+  )
+  const allocSlices = useMemo(
+    () =>
+      allocation.items
+        .filter((it) => it.total > 0)
+        .map((it) => ({
+          id: it.debt.id,
+          name: it.debt.name,
+          color: colorMap.get(it.debt.id) ?? '#94a3b8',
+          icon: debtTypeMeta(it.debt.type).icon,
+          value: it.total,
+          count: 1,
+          pct: it.pct,
+        })),
+    [allocation, colorMap],
+  )
 
   // surplus = income - expense this month
   const surplus = kpis.monthIncome - kpis.monthExpense
@@ -275,6 +298,71 @@ export function PlanOverview() {
           ))}
         </div>
       </div>
+
+      {/* Distribution + per-debt projection */}
+      {allocSlices.length > 0 && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader
+              title="Cómo se reparte tu dinero"
+              subtitle={`Presupuesto mensual ${money(allocation.budget)} · ≈ ${money(
+                allocation.budget / daysInCurrentMonth(),
+                { compact: true },
+              )}/día`}
+            />
+            <CategoryPie data={allocSlices} />
+            <div className="mt-4 space-y-1.5 border-t border-border/60 pt-3">
+              {allocation.items.map((it) => (
+                <div key={it.debt.id} className="flex items-center gap-2.5 text-sm">
+                  <span
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: colorMap.get(it.debt.id) }}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-content">{it.debt.name}</span>
+                  <span className="tnum font-semibold text-content">
+                    {money(it.total, { compact: true })}
+                  </span>
+                  <span className="tnum w-10 text-right text-xs text-muted">
+                    {it.pct.toFixed(0)}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Proyección por deuda"
+              subtitle="Cómo se van pagando (pagos mínimos)"
+            />
+            {projection.series.length > 1 ? (
+              <>
+                <DebtProjectionChart projection={projection} />
+                {projection.payoff.length > 0 && (
+                  <div className="mt-3 space-y-1.5 border-t border-border/60 pt-3">
+                    {projection.payoff.slice(0, 4).map((p) => (
+                      <div key={p.id} className="flex items-center gap-2.5 text-sm">
+                        <CheckCircle2 size={14} style={{ color: p.color }} />
+                        <span className="flex-1 truncate text-content">{p.name}</span>
+                        <span className="text-xs text-muted">
+                          {fmtShort(p.date.toISOString().slice(0, 10))} {p.date.getFullYear()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-3 text-center text-xs text-subtle">
+                  Ajusta un pago extra y mira el impacto en la pestaña <b>Simulador</b>.
+                </p>
+              </>
+            ) : (
+              <p className="py-6 text-center text-sm text-muted">
+                Agrega el pago mínimo a tus deudas para ver la proyección.
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
 
       {/* Next payments */}
       <Card>

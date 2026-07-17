@@ -21,6 +21,7 @@ import { Card, CardHeader } from '@/components/ui/Card'
 import { KpiCard } from '@/components/KpiCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { DebtCard } from './DebtCard'
+import { DailyTargetCard } from './DailyTargetCard'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
@@ -193,6 +194,9 @@ export function PlanOverview() {
           </button>
         </motion.div>
       )}
+
+      {/* Daily income target */}
+      <DailyTargetCard />
 
       {/* Payoff projection + surplus */}
       <div className="grid gap-4 lg:grid-cols-2">

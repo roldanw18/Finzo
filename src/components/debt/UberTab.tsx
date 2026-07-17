@@ -7,6 +7,7 @@ import { useMoney } from '@/hooks/useMoney'
 import { useDebtModal } from './modalContext'
 import { hoursToPay } from '@/lib/debt'
 import { fmtShort } from '@/lib/dates'
+import { DailyTargetCard } from './DailyTargetCard'
 
 export function UberTab() {
   const { uber, workSessions, active } = useDebt()
@@ -50,6 +51,9 @@ export function UberTab() {
           <p className="tnum mt-1 font-display text-xl font-bold text-expense">{money(uber.totalFuel, { compact: true })}</p>
         </div>
       </div>
+
+      {/* Daily income target */}
+      <DailyTargetCard />
 
       {/* Hours to pay each debt */}
       <Card>

@@ -9,6 +9,7 @@ import {
   buildCalendar,
   simulatePayoff,
   motivationalPhrases,
+  dailyEarningTargets,
 } from '@/lib/debt'
 import { pctChange } from '@/lib/utils'
 
@@ -31,6 +32,10 @@ export function useDebt() {
   const uber = useMemo(() => uberStats(workSessions), [workSessions])
   const calendar = useMemo(() => buildCalendar(debts, reminders), [debts, reminders])
   const basePlan = useMemo(() => simulatePayoff(debts, 0), [debts])
+  const dailyTargets = useMemo(
+    () => dailyEarningTargets(debts, payments, uber.netPerHour),
+    [debts, payments, uber.netPerHour],
+  )
 
   const reducedPctThisMonth = useMemo(() => {
     const monthKey = new Date().toISOString().slice(0, 7)
@@ -66,6 +71,7 @@ export function useDebt() {
     uber,
     calendar,
     basePlan,
+    dailyTargets,
     phrases,
   }
 }

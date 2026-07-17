@@ -1,4 +1,4 @@
-import { addMonths, differenceInCalendarDays, format } from 'date-fns'
+import { addMonths, differenceInCalendarDays, endOfMonth, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type {
   Debt,
@@ -242,6 +242,77 @@ export function uberStats(sessions: WorkSession[]): UberStats {
 
 export function hoursToPay(balance: number, netPerHour: number): number {
   return netPerHour > 0 ? balance / netPerHour : 0
+}
+
+/* --------------------------------------------- Daily income target */
+
+/** Fuel overhead: earn 30% extra so the payment stays "free" after gas. */
+export const FUEL_FACTOR = 1.3
+
+export interface DailyTargets {
+  daysLeftInMonth: number
+  fuelFactor: number
+  hasCards: boolean
+  hasDebts: boolean
+  // Remaining obligation THIS month (net, after what's already paid)
+  cardRemaining: number
+  allRemaining: number
+  targetRemaining: number
+  cardMinimums: number
+  allMinimums: number
+  // Gross daily target = remaining × fuelFactor / days left
+  cardPerDay: number
+  allPerDay: number
+  targetPerDay: number
+  // Net portion (the actual payment) per day, and hours of work
+  cardNetPerDay: number
+  cardHoursPerDay: number | null
+}
+
+/**
+ * How much to EARN per day (gross, incl. fuel via `fuelFactor`) so the credit
+ * card minimums — and optionally all minimums / target pace — stay covered.
+ */
+export function dailyEarningTargets(
+  debts: Debt[],
+  debtPayments: DebtPayment[],
+  netPerHour = 0,
+  ref = new Date(),
+  fuelFactor = FUEL_FACTOR,
+): DailyTargets {
+  const active = debts.filter((d) => d.status === 'active')
+  const cards = active.filter((d) => d.type === 'credit_card')
+  const monthKey = format(ref, 'yyyy-MM')
+  const daysLeft = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
+
+  const paidThisMonth = new Map<string, number>()
+  for (const p of debtPayments) {
+    if (p.date.slice(0, 7) !== monthKey) continue
+    paidThisMonth.set(p.debt_id, (paidThisMonth.get(p.debt_id) ?? 0) + p.amount)
+  }
+  const remainingFor = (list: Debt[], pick: (d: Debt) => number) =>
+    list.reduce((a, d) => a + Math.max(0, pick(d) - (paidThisMonth.get(d.id) ?? 0)), 0)
+
+  const cardRemaining = remainingFor(cards, (d) => d.min_payment)
+  const allRemaining = remainingFor(active, (d) => d.min_payment)
+  const targetRemaining = remainingFor(active, (d) => d.target_payment || d.min_payment)
+
+  return {
+    daysLeftInMonth: daysLeft,
+    fuelFactor,
+    hasCards: cards.length > 0,
+    hasDebts: active.length > 0,
+    cardRemaining,
+    allRemaining,
+    targetRemaining,
+    cardMinimums: cards.reduce((a, d) => a + d.min_payment, 0),
+    allMinimums: active.reduce((a, d) => a + d.min_payment, 0),
+    cardPerDay: (cardRemaining * fuelFactor) / daysLeft,
+    allPerDay: (allRemaining * fuelFactor) / daysLeft,
+    targetPerDay: (targetRemaining * fuelFactor) / daysLeft,
+    cardNetPerDay: cardRemaining / daysLeft,
+    cardHoursPerDay: netPerHour > 0 ? cardRemaining / daysLeft / netPerHour : null,
+  }
 }
 
 /* --------------------------------------------------- Goals */

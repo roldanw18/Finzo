@@ -1,12 +1,27 @@
-import type { Category, Expense, Income, Profile } from '@/types'
+import type {
+  Category,
+  Debt,
+  DebtGoal,
+  DebtPayment,
+  Expense,
+  Income,
+  Profile,
+  Reminder,
+  WorkSession,
+} from '@/types'
 import { DEFAULT_CATEGORIES } from '@/lib/defaultCategories'
 import { uid } from '@/lib/utils'
 import type {
   CategoryInput,
   Database,
+  DebtInput,
   ExpenseInput,
+  GoalInput,
   IncomeInput,
+  PaymentInput,
+  ReminderInput,
   Snapshot,
+  WorkSessionInput,
 } from './db'
 
 const KEY = 'finzo:data:v1'
@@ -17,6 +32,11 @@ interface Store {
   categories: Category[]
   incomes: Income[]
   expenses: Expense[]
+  debts: Debt[]
+  debtPayments: DebtPayment[]
+  goals: DebtGoal[]
+  workSessions: WorkSession[]
+  reminders: Reminder[]
 }
 
 function defaultProfile(): Profile {
@@ -54,6 +74,11 @@ function read(): Store {
       // Backfill any missing profile fields
       parsed.profile = { ...defaultProfile(), ...parsed.profile }
       parsed.profile.budgets ??= {}
+      parsed.debts ??= []
+      parsed.debtPayments ??= []
+      parsed.goals ??= []
+      parsed.workSessions ??= []
+      parsed.reminders ??= []
       return parsed
     }
   } catch {
@@ -64,6 +89,11 @@ function read(): Store {
     categories: seedCategories(),
     incomes: [],
     expenses: [],
+    debts: [],
+    debtPayments: [],
+    goals: [],
+    workSessions: [],
+    reminders: [],
   }
   write(fresh)
   return fresh
@@ -198,6 +228,159 @@ export class LocalDatabase implements Database {
     return s.profile
   }
 
+  // ---------------- Debt freedom plan ----------------
+
+  async createDebt(input: DebtInput): Promise<Debt> {
+    const s = read()
+    const debt: Debt = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      name: input.name,
+      creditor: input.creditor ?? '',
+      initial_balance: input.initial_balance,
+      balance: input.balance,
+      interest_rate: input.interest_rate ?? null,
+      type: input.type ?? 'other',
+      min_payment: input.min_payment ?? 0,
+      target_payment: input.target_payment ?? 0,
+      cut_day: input.cut_day ?? null,
+      due_day: input.due_day ?? null,
+      priority: input.priority ?? s.debts.length,
+      status: input.status ?? 'active',
+      created_at: new Date().toISOString(),
+    }
+    s.debts.push(debt)
+    write(s)
+    return debt
+  }
+
+  async updateDebt(id: string, patch: Partial<DebtInput>): Promise<Debt> {
+    const s = read()
+    const debt = s.debts.find((d) => d.id === id)
+    if (!debt) throw new Error('Deuda no encontrada')
+    Object.assign(debt, patch)
+    write(s)
+    return debt
+  }
+
+  async deleteDebt(id: string): Promise<void> {
+    const s = read()
+    s.debts = s.debts.filter((d) => d.id !== id)
+    s.debtPayments = s.debtPayments.filter((p) => p.debt_id !== id)
+    s.goals = s.goals.filter((g) => g.debt_id !== id)
+    write(s)
+  }
+
+  async createPayment(input: PaymentInput): Promise<DebtPayment> {
+    const s = read()
+    const pay: DebtPayment = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      debt_id: input.debt_id,
+      amount: input.amount,
+      date: input.date,
+      note: input.note ?? null,
+      created_at: new Date().toISOString(),
+    }
+    s.debtPayments.push(pay)
+    write(s)
+    return pay
+  }
+
+  async deletePayment(id: string): Promise<void> {
+    const s = read()
+    s.debtPayments = s.debtPayments.filter((p) => p.id !== id)
+    write(s)
+  }
+
+  async createGoal(input: GoalInput): Promise<DebtGoal> {
+    const s = read()
+    const goal: DebtGoal = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      name: input.name,
+      kind: input.kind,
+      debt_type: input.debt_type ?? null,
+      debt_id: input.debt_id ?? null,
+      target_date: input.target_date ?? null,
+      created_at: new Date().toISOString(),
+    }
+    s.goals.push(goal)
+    write(s)
+    return goal
+  }
+
+  async updateGoal(id: string, patch: Partial<GoalInput>): Promise<DebtGoal> {
+    const s = read()
+    const goal = s.goals.find((g) => g.id === id)
+    if (!goal) throw new Error('Meta no encontrada')
+    Object.assign(goal, patch)
+    write(s)
+    return goal
+  }
+
+  async deleteGoal(id: string): Promise<void> {
+    const s = read()
+    s.goals = s.goals.filter((g) => g.id !== id)
+    write(s)
+  }
+
+  async createWorkSession(input: WorkSessionInput): Promise<WorkSession> {
+    const s = read()
+    const ws: WorkSession = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      date: input.date,
+      hours: input.hours,
+      earnings: input.earnings,
+      fuel_cost: input.fuel_cost,
+      note: input.note ?? null,
+      created_at: new Date().toISOString(),
+    }
+    s.workSessions.push(ws)
+    write(s)
+    return ws
+  }
+
+  async deleteWorkSession(id: string): Promise<void> {
+    const s = read()
+    s.workSessions = s.workSessions.filter((w) => w.id !== id)
+    write(s)
+  }
+
+  async createReminder(input: ReminderInput): Promise<Reminder> {
+    const s = read()
+    const rem: Reminder = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      title: input.title,
+      category: input.category,
+      date: input.date,
+      amount: input.amount ?? null,
+      recurring: input.recurring ?? 'none',
+      note: input.note ?? null,
+      created_at: new Date().toISOString(),
+    }
+    s.reminders.push(rem)
+    write(s)
+    return rem
+  }
+
+  async updateReminder(id: string, patch: Partial<ReminderInput>): Promise<Reminder> {
+    const s = read()
+    const rem = s.reminders.find((r) => r.id === id)
+    if (!rem) throw new Error('Recordatorio no encontrado')
+    Object.assign(rem, patch)
+    write(s)
+    return rem
+  }
+
+  async deleteReminder(id: string): Promise<void> {
+    const s = read()
+    s.reminders = s.reminders.filter((r) => r.id !== id)
+    write(s)
+  }
+
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {
     const s = read()
     const next: Store = {
@@ -205,6 +388,11 @@ export class LocalDatabase implements Database {
       categories: data.categories ?? s.categories,
       incomes: data.incomes ?? s.incomes,
       expenses: data.expenses ?? s.expenses,
+      debts: data.debts ?? s.debts,
+      debtPayments: data.debtPayments ?? s.debtPayments,
+      goals: data.goals ?? s.goals,
+      workSessions: data.workSessions ?? s.workSessions,
+      reminders: data.reminders ?? s.reminders,
     }
     write(next)
     return structuredClone(next)
@@ -279,6 +467,54 @@ export function generateDemoData(): void {
 
   s.incomes = incomes
   s.expenses = expenses
+
+  // Demo debts (avalanche showcase)
+  const now = new Date().toISOString()
+  const mkDebt = (
+    name: string,
+    creditor: string,
+    initial: number,
+    balance: number,
+    rate: number | null,
+    type: Debt['type'],
+    min: number,
+    cut: number,
+    due: number,
+  ): Debt => ({
+    id: uid(),
+    user_id: LOCAL_USER,
+    name,
+    creditor,
+    initial_balance: initial,
+    balance,
+    interest_rate: rate,
+    type,
+    min_payment: min,
+    target_payment: min,
+    cut_day: cut,
+    due_day: due,
+    priority: 0,
+    status: 'active',
+    created_at: now,
+  })
+  s.debts = [
+    mkDebt('NU', 'Nu Bank', 6000000, 5200000, 32, 'credit_card', 260000, 3, 18),
+    mkDebt('Bancolombia', 'Bancolombia', 8000000, 6400000, 28, 'credit_card', 320000, 15, 2),
+    mkDebt('Crédito vehículo', 'Banco de Bogotá', 20000000, 14800000, 18, 'vehicle', 620000, 10, 25),
+    mkDebt('Préstamo familiar', 'Tío Jorge', 3000000, 1800000, null, 'family', 200000, 1, 30),
+  ]
+  const firstDebt = s.debts[0]
+  s.debtPayments = [
+    {
+      id: uid(),
+      user_id: LOCAL_USER,
+      debt_id: firstDebt.id,
+      amount: 800000,
+      date: new Date(Date.now() - 20 * 864e5).toISOString().slice(0, 10),
+      note: 'Abono extra',
+      created_at: now,
+    },
+  ]
   write(s)
 }
 

@@ -1,10 +1,19 @@
 import type {
   Category,
+  Debt,
+  DebtGoal,
+  DebtPayment,
+  DebtStatus,
+  DebtType,
   Expense,
+  GoalKind,
   Income,
   IncomeSource,
   PaymentMethod,
   Profile,
+  Reminder,
+  ReminderCategory,
+  WorkSession,
 } from '@/types'
 
 export interface CategoryInput {
@@ -31,11 +40,63 @@ export interface ExpenseInput {
   notes?: string | null
 }
 
+export interface DebtInput {
+  name: string
+  creditor?: string
+  initial_balance: number
+  balance: number
+  interest_rate?: number | null
+  type?: DebtType
+  min_payment?: number
+  target_payment?: number
+  cut_day?: number | null
+  due_day?: number | null
+  priority?: number
+  status?: DebtStatus
+}
+
+export interface PaymentInput {
+  debt_id: string
+  amount: number
+  date: string
+  note?: string | null
+}
+
+export interface GoalInput {
+  name: string
+  kind: GoalKind
+  debt_type?: DebtType | null
+  debt_id?: string | null
+  target_date?: string | null
+}
+
+export interface WorkSessionInput {
+  date: string
+  hours: number
+  earnings: number
+  fuel_cost: number
+  note?: string | null
+}
+
+export interface ReminderInput {
+  title: string
+  category: ReminderCategory
+  date: string
+  amount?: number | null
+  recurring?: 'none' | 'monthly' | 'yearly'
+  note?: string | null
+}
+
 export interface Snapshot {
   profile: Profile
   categories: Category[]
   incomes: Income[]
   expenses: Expense[]
+  debts: Debt[]
+  debtPayments: DebtPayment[]
+  goals: DebtGoal[]
+  workSessions: WorkSession[]
+  reminders: Reminder[]
 }
 
 /** Storage-agnostic data access contract. */
@@ -57,6 +118,25 @@ export interface Database {
   deleteExpense(id: string): Promise<void>
 
   updateProfile(patch: Partial<Profile>): Promise<Profile>
+
+  // Debt freedom plan
+  createDebt(input: DebtInput): Promise<Debt>
+  updateDebt(id: string, patch: Partial<DebtInput>): Promise<Debt>
+  deleteDebt(id: string): Promise<void>
+
+  createPayment(input: PaymentInput): Promise<DebtPayment>
+  deletePayment(id: string): Promise<void>
+
+  createGoal(input: GoalInput): Promise<DebtGoal>
+  updateGoal(id: string, patch: Partial<GoalInput>): Promise<DebtGoal>
+  deleteGoal(id: string): Promise<void>
+
+  createWorkSession(input: WorkSessionInput): Promise<WorkSession>
+  deleteWorkSession(id: string): Promise<void>
+
+  createReminder(input: ReminderInput): Promise<Reminder>
+  updateReminder(id: string, patch: Partial<ReminderInput>): Promise<Reminder>
+  deleteReminder(id: string): Promise<void>
 
   /** Replace all data (used by import). */
   importAll(data: Partial<Snapshot>): Promise<Snapshot>

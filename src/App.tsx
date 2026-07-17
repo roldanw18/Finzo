@@ -12,6 +12,7 @@ const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default:
 const History = lazy(() => import('@/pages/History').then((m) => ({ default: m.History })))
 const Categories = lazy(() => import('@/pages/Categories').then((m) => ({ default: m.Categories })))
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
+const DebtPlan = lazy(() => import('@/pages/DebtPlan').then((m) => ({ default: m.DebtPlan })))
 const TipQuickPage = lazy(() =>
   import('@/pages/TipQuickPage').then((m) => ({ default: m.TipQuickPage })),
 )
@@ -78,6 +79,7 @@ function AppContent({
         <Route path="/propina" element={<TipQuickPage />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/plan" element={<DebtPlan />} />
           <Route path="/analisis" element={<Analytics />} />
           <Route path="/historial" element={<History />} />
           <Route path="/categorias" element={<Categories />} />

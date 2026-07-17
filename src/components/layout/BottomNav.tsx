@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { NAV_ITEMS } from '@/config/nav'
+import { BOTTOM_NAV_ITEMS } from '@/config/nav'
 import { cn } from '@/lib/utils'
 
 export function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/90 backdrop-blur-xl lg:hidden">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
-        {NAV_ITEMS.map((item) => (
+        {BOTTOM_NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

@@ -61,6 +61,117 @@ export interface Profile {
   created_at: string
 }
 
+/* ------------------------------------------------ Debt freedom plan */
+
+export type DebtType = 'credit_card' | 'loan' | 'family' | 'vehicle' | 'other'
+export type DebtStatus = 'active' | 'paid'
+
+export interface Debt {
+  id: string
+  user_id: string
+  name: string
+  creditor: string
+  /** Balance when first registered — baseline for % paid. */
+  initial_balance: number
+  balance: number
+  /** Annual interest rate as a percent. null / 0 = sin interés. */
+  interest_rate: number | null
+  type: DebtType
+  min_payment: number
+  target_payment: number
+  /** Day of month (1-31) or null. */
+  cut_day: number | null
+  due_day: number | null
+  priority: number
+  status: DebtStatus
+  created_at: string
+}
+
+export interface DebtPayment {
+  id: string
+  user_id: string
+  debt_id: string
+  amount: number
+  date: string
+  note: string | null
+  created_at: string
+}
+
+export type GoalKind = 'all' | 'type' | 'debt'
+
+export interface DebtGoal {
+  id: string
+  user_id: string
+  name: string
+  kind: GoalKind
+  debt_type: DebtType | null
+  debt_id: string | null
+  target_date: string | null
+  created_at: string
+}
+
+export interface WorkSession {
+  id: string
+  user_id: string
+  date: string
+  hours: number
+  earnings: number
+  fuel_cost: number
+  note: string | null
+  created_at: string
+}
+
+export type ReminderCategory =
+  | 'corte'
+  | 'pago'
+  | 'servicio'
+  | 'impuesto'
+  | 'soat'
+  | 'mantenimiento'
+  | 'aceite'
+  | 'tecnomecanica'
+  | 'otro'
+
+export interface Reminder {
+  id: string
+  user_id: string
+  title: string
+  category: ReminderCategory
+  date: string // yyyy-MM-dd
+  amount: number | null
+  recurring: 'none' | 'monthly' | 'yearly'
+  note: string | null
+  created_at: string
+}
+
+export const DEBT_TYPES: { value: DebtType; label: string; icon: string; color: string }[] = [
+  { value: 'credit_card', label: 'Tarjeta de crédito', icon: 'CreditCard', color: '#f6465d' },
+  { value: 'loan', label: 'Préstamo', icon: 'Landmark', color: '#f0b90b' },
+  { value: 'family', label: 'Familiar', icon: 'Users', color: '#50a0ff' },
+  { value: 'vehicle', label: 'Vehículo', icon: 'Car', color: '#a855f7' },
+  { value: 'other', label: 'Otra', icon: 'Shapes', color: '#94a3b8' },
+]
+
+export function debtTypeMeta(t: DebtType) {
+  return DEBT_TYPES.find((d) => d.value === t) ?? DEBT_TYPES[4]
+}
+
+export const REMINDER_CATEGORIES: { value: ReminderCategory; label: string; icon: string; color: string }[] = [
+  { value: 'corte', label: 'Fecha de corte', icon: 'Scissors', color: '#f0b90b' },
+  { value: 'pago', label: 'Fecha de pago', icon: 'CalendarCheck', color: '#f6465d' },
+  { value: 'servicio', label: 'Servicio', icon: 'Zap', color: '#50a0ff' },
+  { value: 'impuesto', label: 'Impuesto', icon: 'Landmark', color: '#ec4899' },
+  { value: 'soat', label: 'SOAT', icon: 'ShieldCheck', color: '#14b8a6' },
+  { value: 'mantenimiento', label: 'Mantenimiento', icon: 'Wrench', color: '#fb923c' },
+  { value: 'aceite', label: 'Cambio de aceite', icon: 'Droplet', color: '#8b5cf6' },
+  { value: 'tecnomecanica', label: 'Técnico-mecánica', icon: 'ClipboardCheck', color: '#22c55e' },
+  { value: 'otro', label: 'Otro', icon: 'Bell', color: '#94a3b8' },
+]
+
+export function reminderCategoryMeta(c: ReminderCategory) {
+  return REMINDER_CATEGORIES.find((r) => r.value === c) ?? REMINDER_CATEGORIES[8]
+}
+
 /** A unified movement used by history / exports. */
 export type MovementKind = 'income' | 'expense'
 

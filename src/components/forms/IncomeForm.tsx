@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { Car, Loader2, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Car, Loader2, Trash2, Target } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
+import { nextRecommendedDebt } from '@/lib/debt'
 import type { Income } from '@/types'
 
 interface Props {
@@ -13,15 +14,25 @@ interface Props {
 }
 
 export function IncomeForm({ editing, onDone }: Props) {
-  const { currency } = useMoney()
+  const { currency, money } = useMoney()
   const addIncome = useStore((s) => s.addIncome)
   const editIncome = useStore((s) => s.editIncome)
   const removeIncome = useStore((s) => s.removeIncome)
+  const addPayment = useStore((s) => s.addPayment)
+  const debts = useStore((s) => s.debts)
+
+  const activeDebts = useMemo(() => debts.filter((d) => d.status === 'active'), [debts])
+  const recommended = useMemo(() => nextRecommendedDebt(debts).debt, [debts])
 
   const [amount, setAmount] = useState(editing?.amount ?? 0)
   const [date, setDate] = useState(editing?.date ?? todayISO())
   const [note, setNote] = useState(editing?.note ?? '')
+  const [allocate, setAllocate] = useState(false)
+  const [allocAmount, setAllocAmount] = useState(0)
+  const [allocDebtId, setAllocDebtId] = useState(recommended?.id ?? activeDebts[0]?.id ?? '')
   const [saving, setSaving] = useState(false)
+
+  const showAllocation = !editing && activeDebts.length > 0
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -36,7 +47,12 @@ export function IncomeForm({ editing, onDone }: Props) {
         toast.success('Ingreso actualizado')
       } else {
         await addIncome({ amount, date, note })
-        toast.success('Ingreso registrado ✓')
+        if (allocate && allocAmount > 0 && allocDebtId) {
+          await addPayment({ debt_id: allocDebtId, amount: allocAmount, date, note: 'Abono desde ingreso' })
+          toast.success(`Ingreso + abono de ${money(allocAmount)} ✓`)
+        } else {
+          toast.success('Ingreso registrado ✓')
+        }
       }
       onDone()
     } catch (err) {
@@ -99,6 +115,56 @@ export function IncomeForm({ editing, onDone }: Props) {
           />
         </div>
       </div>
+
+      {showAllocation && (
+        <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-3.5">
+          <label className="flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-medium text-content">
+              <Target size={16} className="text-primary" />
+              Destinar parte a mis deudas
+            </span>
+            <input
+              type="checkbox"
+              checked={allocate}
+              onChange={(e) => {
+                setAllocate(e.target.checked)
+                if (e.target.checked && allocAmount === 0) {
+                  setAllocAmount(Math.round(amount * 0.3))
+                }
+              }}
+              className="h-5 w-5 accent-primary"
+            />
+          </label>
+          {allocate && (
+            <div className="mt-3 space-y-3">
+              <div>
+                <label className="label">¿Cuánto abonar?</label>
+                <AmountInput
+                  value={allocAmount}
+                  onChange={setAllocAmount}
+                  currency={currency}
+                  size="md"
+                />
+              </div>
+              <div>
+                <label className="label">A la deuda</label>
+                <select
+                  value={allocDebtId}
+                  onChange={(e) => setAllocDebtId(e.target.value)}
+                  className="input"
+                >
+                  {activeDebts.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                      {recommended?.id === d.id ? ' (recomendada)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-3 pt-1">
         {editing && (

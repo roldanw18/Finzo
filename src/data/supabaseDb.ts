@@ -1,12 +1,27 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Category, Expense, Income, Profile } from '@/types'
+import type {
+  Category,
+  Debt,
+  DebtGoal,
+  DebtPayment,
+  Expense,
+  Income,
+  Profile,
+  Reminder,
+  WorkSession,
+} from '@/types'
 import { DEFAULT_CATEGORIES } from '@/lib/defaultCategories'
 import type {
   CategoryInput,
   Database,
+  DebtInput,
   ExpenseInput,
+  GoalInput,
   IncomeInput,
+  PaymentInput,
+  ReminderInput,
   Snapshot,
+  WorkSessionInput,
 } from './db'
 
 /** Supabase-backed database. Row-level security scopes everything to user. */
@@ -23,11 +38,41 @@ export class SupabaseDatabase implements Database {
     if (categories.length === 0) {
       categories = await this.seedCategories()
     }
-    const [incomes, expenses] = await Promise.all([
-      this.fetchIncomes(),
-      this.fetchExpenses(),
-    ])
-    return { profile, categories, incomes, expenses }
+    const [incomes, expenses, debts, debtPayments, goals, workSessions, reminders] =
+      await Promise.all([
+        this.fetchIncomes(),
+        this.fetchExpenses(),
+        this.safeList<Debt>('debts', 'priority', true),
+        this.safeList<DebtPayment>('debt_payments', 'date', false),
+        this.safeList<DebtGoal>('debt_goals', 'created_at', true),
+        this.safeList<WorkSession>('work_sessions', 'date', false),
+        this.safeList<Reminder>('reminders', 'date', true),
+      ])
+    return {
+      profile,
+      categories,
+      incomes,
+      expenses,
+      debts,
+      debtPayments,
+      goals,
+      workSessions,
+      reminders,
+    }
+  }
+
+  /** Fetches a table, returning [] if it doesn't exist yet (migration pending). */
+  private async safeList<T>(table: string, orderCol: string, asc: boolean): Promise<T[]> {
+    try {
+      const { data, error } = await this.sb
+        .from(table)
+        .select('*')
+        .order(orderCol, { ascending: asc })
+      if (error) throw error
+      return (data ?? []) as T[]
+    } catch {
+      return []
+    }
   }
 
   private async ensureProfile(): Promise<Profile> {
@@ -218,6 +263,113 @@ export class SupabaseDatabase implements Database {
       .single()
     if (error) throw error
     return data as Profile
+  }
+
+  // ---------------- Debt freedom plan ----------------
+
+  private async insert<T>(table: string, row: object): Promise<T> {
+    const { data, error } = await this.sb
+      .from(table)
+      .insert({ ...row, user_id: this.userId })
+      .select()
+      .single()
+    if (error) throw error
+    return data as T
+  }
+  private async patch<T>(table: string, id: string, patch: object): Promise<T> {
+    const { data, error } = await this.sb
+      .from(table)
+      .update(patch)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data as T
+  }
+  private async remove(table: string, id: string): Promise<void> {
+    const { error } = await this.sb.from(table).delete().eq('id', id)
+    if (error) throw error
+  }
+
+  createDebt(input: DebtInput) {
+    return this.insert<Debt>('debts', {
+      name: input.name,
+      creditor: input.creditor ?? '',
+      initial_balance: input.initial_balance,
+      balance: input.balance,
+      interest_rate: input.interest_rate ?? null,
+      type: input.type ?? 'other',
+      min_payment: input.min_payment ?? 0,
+      target_payment: input.target_payment ?? 0,
+      cut_day: input.cut_day ?? null,
+      due_day: input.due_day ?? null,
+      priority: input.priority ?? 0,
+      status: input.status ?? 'active',
+    })
+  }
+  updateDebt(id: string, patch: Partial<DebtInput>) {
+    return this.patch<Debt>('debts', id, patch)
+  }
+  deleteDebt(id: string) {
+    return this.remove('debts', id)
+  }
+
+  createPayment(input: PaymentInput) {
+    return this.insert<DebtPayment>('debt_payments', {
+      debt_id: input.debt_id,
+      amount: input.amount,
+      date: input.date,
+      note: input.note ?? null,
+    })
+  }
+  deletePayment(id: string) {
+    return this.remove('debt_payments', id)
+  }
+
+  createGoal(input: GoalInput) {
+    return this.insert<DebtGoal>('debt_goals', {
+      name: input.name,
+      kind: input.kind,
+      debt_type: input.debt_type ?? null,
+      debt_id: input.debt_id ?? null,
+      target_date: input.target_date ?? null,
+    })
+  }
+  updateGoal(id: string, patch: Partial<GoalInput>) {
+    return this.patch<DebtGoal>('debt_goals', id, patch)
+  }
+  deleteGoal(id: string) {
+    return this.remove('debt_goals', id)
+  }
+
+  createWorkSession(input: WorkSessionInput) {
+    return this.insert<WorkSession>('work_sessions', {
+      date: input.date,
+      hours: input.hours,
+      earnings: input.earnings,
+      fuel_cost: input.fuel_cost,
+      note: input.note ?? null,
+    })
+  }
+  deleteWorkSession(id: string) {
+    return this.remove('work_sessions', id)
+  }
+
+  createReminder(input: ReminderInput) {
+    return this.insert<Reminder>('reminders', {
+      title: input.title,
+      category: input.category,
+      date: input.date,
+      amount: input.amount ?? null,
+      recurring: input.recurring ?? 'none',
+      note: input.note ?? null,
+    })
+  }
+  updateReminder(id: string, patch: Partial<ReminderInput>) {
+    return this.patch<Reminder>('reminders', id, patch)
+  }
+  deleteReminder(id: string) {
+    return this.remove('reminders', id)
   }
 
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {

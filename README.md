@@ -27,6 +27,11 @@ backend en **Supabase** (Postgres + Auth + RLS) y modo **local offline** de resp
 - **Moneda configurable**: Peso colombiano (COP) o Dólar (USD).
 - **Modo claro / oscuro**, animaciones suaves, barra lateral (escritorio), barra inferior
   (móvil) y botón flotante de acción rápida (FAB).
+- **Módulo de Propinas** con teclado rápido tipo widget (deep-link `/propina`).
+- **Plan de Libertad Financiera**: gestión de deudas con **método Avalancha**, recomendación
+  automática de cuál atacar, **simulador** de pago extra (intereses ahorrados, fecha de salida),
+  registro e historial de pagos, **metas**, integración con **Uber** (horas para pagar cada deuda),
+  **calendario financiero** (cortes, pagos, SOAT, servicios), alertas inteligentes y motivación.
 
 ---
 
@@ -47,10 +52,12 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
 ## ☁️ Conectar Supabase (sincronización en la nube + login)
 
 1. Crea una **organización** y un **proyecto** en <https://supabase.com/dashboard>.
-2. En el **SQL Editor**, ejecuta el contenido de
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   Esto crea las tablas (`profiles`, `categories`, `incomes`, `expenses`) y las
-   políticas de seguridad (RLS) para que cada usuario solo vea sus propios datos.
+2. En el **SQL Editor**, ejecuta **en orden** los archivos de `supabase/migrations/`:
+   - [`0001_init.sql`](supabase/migrations/0001_init.sql) — perfiles, categorías, ingresos y gastos + RLS.
+   - [`0002_tips.sql`](supabase/migrations/0002_tips.sql) — columna de propinas.
+   - [`0003_debt_plan.sql`](supabase/migrations/0003_debt_plan.sql) — Plan de Libertad Financiera
+     (deudas, pagos, metas, jornadas de Uber, recordatorios) + RLS.
+   Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:
 

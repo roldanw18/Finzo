@@ -2,17 +2,27 @@ import { create } from 'zustand'
 import type {
   Category,
   Currency,
+  Debt,
+  DebtGoal,
+  DebtPayment,
   Expense,
   Income,
   Profile,
+  Reminder,
   ThemeMode,
+  WorkSession,
 } from '@/types'
 import type {
   CategoryInput,
   Database,
+  DebtInput,
   ExpenseInput,
+  GoalInput,
   IncomeInput,
+  PaymentInput,
+  ReminderInput,
   Snapshot,
+  WorkSessionInput,
 } from '@/data/db'
 import { LocalDatabase, generateDemoData, wipeLocal } from '@/data/localDb'
 import { SupabaseDatabase } from '@/data/supabaseDb'
@@ -32,6 +42,11 @@ interface AppState {
   categories: Category[]
   incomes: Income[]
   expenses: Expense[]
+  debts: Debt[]
+  debtPayments: DebtPayment[]
+  goals: DebtGoal[]
+  workSessions: WorkSession[]
+  reminders: Reminder[]
 
   init: () => Promise<void>
   refresh: () => Promise<void>
@@ -60,6 +75,21 @@ interface AppState {
   setCurrency: (currency: Currency) => Promise<void>
   saveProfile: (patch: Partial<Profile>) => Promise<void>
 
+  // Debt freedom plan
+  addDebt: (input: DebtInput) => Promise<void>
+  editDebt: (id: string, patch: Partial<DebtInput>) => Promise<void>
+  removeDebt: (id: string) => Promise<void>
+  addPayment: (input: PaymentInput) => Promise<void>
+  removePayment: (payment: DebtPayment) => Promise<void>
+  addGoal: (input: GoalInput) => Promise<void>
+  editGoal: (id: string, patch: Partial<GoalInput>) => Promise<void>
+  removeGoal: (id: string) => Promise<void>
+  addWorkSession: (input: WorkSessionInput) => Promise<void>
+  removeWorkSession: (id: string) => Promise<void>
+  addReminder: (input: ReminderInput) => Promise<void>
+  editReminder: (id: string, patch: Partial<ReminderInput>) => Promise<void>
+  removeReminder: (id: string) => Promise<void>
+
   // Data management
   loadDemoData: () => Promise<void>
   resetLocal: () => Promise<void>
@@ -83,6 +113,11 @@ export const useStore = create<AppState>((set, get) => {
       categories: s.categories,
       incomes: s.incomes,
       expenses: s.expenses,
+      debts: s.debts,
+      debtPayments: s.debtPayments,
+      goals: s.goals,
+      workSessions: s.workSessions,
+      reminders: s.reminders,
     })
   }
 
@@ -102,6 +137,11 @@ export const useStore = create<AppState>((set, get) => {
     categories: [],
     incomes: [],
     expenses: [],
+    debts: [],
+    debtPayments: [],
+    goals: [],
+    workSessions: [],
+    reminders: [],
 
     async init() {
       set({ status: 'loading', error: null })
@@ -166,7 +206,19 @@ export const useStore = create<AppState>((set, get) => {
 
     async signOut() {
       if (supabase) await supabase.auth.signOut()
-      set({ status: 'auth', user: null, db: null, profile: null, expenses: [], incomes: [] })
+      set({
+        status: 'auth',
+        user: null,
+        db: null,
+        profile: null,
+        expenses: [],
+        incomes: [],
+        debts: [],
+        debtPayments: [],
+        goals: [],
+        workSessions: [],
+        reminders: [],
+      })
     },
 
     async addCategory(input) {
@@ -238,6 +290,95 @@ export const useStore = create<AppState>((set, get) => {
       const profile = await get().db!.updateProfile(patch)
       if (patch.theme) applyTheme(patch.theme)
       set({ profile })
+    },
+
+    // ---------------- Debt freedom plan ----------------
+
+    async addDebt(input) {
+      const debt = await get().db!.createDebt(input)
+      set((s) => ({ debts: [...s.debts, debt] }))
+    },
+    async editDebt(id, patch) {
+      const debt = await get().db!.updateDebt(id, patch)
+      set((s) => ({ debts: s.debts.map((d) => (d.id === id ? debt : d)) }))
+    },
+    async removeDebt(id) {
+      await get().db!.deleteDebt(id)
+      set((s) => ({
+        debts: s.debts.filter((d) => d.id !== id),
+        debtPayments: s.debtPayments.filter((p) => p.debt_id !== id),
+        goals: s.goals.filter((g) => g.debt_id !== id),
+      }))
+    },
+    async addPayment(input) {
+      const db = get().db!
+      const payment = await db.createPayment(input)
+      const debt = get().debts.find((d) => d.id === input.debt_id)
+      let updatedDebt: Debt | undefined
+      if (debt) {
+        const newBalance = Math.max(0, debt.balance - input.amount)
+        updatedDebt = await db.updateDebt(debt.id, {
+          balance: newBalance,
+          status: newBalance <= 0 ? 'paid' : 'active',
+        })
+      }
+      set((s) => ({
+        debtPayments: [payment, ...s.debtPayments],
+        debts: updatedDebt
+          ? s.debts.map((d) => (d.id === updatedDebt!.id ? updatedDebt! : d))
+          : s.debts,
+      }))
+    },
+    async removePayment(payment) {
+      const db = get().db!
+      await db.deletePayment(payment.id)
+      // Restore the balance the payment had subtracted
+      const debt = get().debts.find((d) => d.id === payment.debt_id)
+      let updatedDebt: Debt | undefined
+      if (debt) {
+        updatedDebt = await db.updateDebt(debt.id, {
+          balance: debt.balance + payment.amount,
+          status: 'active',
+        })
+      }
+      set((s) => ({
+        debtPayments: s.debtPayments.filter((p) => p.id !== payment.id),
+        debts: updatedDebt
+          ? s.debts.map((d) => (d.id === updatedDebt!.id ? updatedDebt! : d))
+          : s.debts,
+      }))
+    },
+    async addGoal(input) {
+      const goal = await get().db!.createGoal(input)
+      set((s) => ({ goals: [...s.goals, goal] }))
+    },
+    async editGoal(id, patch) {
+      const goal = await get().db!.updateGoal(id, patch)
+      set((s) => ({ goals: s.goals.map((g) => (g.id === id ? goal : g)) }))
+    },
+    async removeGoal(id) {
+      await get().db!.deleteGoal(id)
+      set((s) => ({ goals: s.goals.filter((g) => g.id !== id) }))
+    },
+    async addWorkSession(input) {
+      const ws = await get().db!.createWorkSession(input)
+      set((s) => ({ workSessions: [ws, ...s.workSessions] }))
+    },
+    async removeWorkSession(id) {
+      await get().db!.deleteWorkSession(id)
+      set((s) => ({ workSessions: s.workSessions.filter((w) => w.id !== id) }))
+    },
+    async addReminder(input) {
+      const rem = await get().db!.createReminder(input)
+      set((s) => ({ reminders: [...s.reminders, rem] }))
+    },
+    async editReminder(id, patch) {
+      const rem = await get().db!.updateReminder(id, patch)
+      set((s) => ({ reminders: s.reminders.map((r) => (r.id === id ? rem : r)) }))
+    },
+    async removeReminder(id) {
+      await get().db!.deleteReminder(id)
+      set((s) => ({ reminders: s.reminders.filter((r) => r.id !== id) }))
     },
 
     async loadDemoData() {

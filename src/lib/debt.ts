@@ -376,24 +376,29 @@ export interface DailyTargets {
   fuelFactor: number
   hasCards: boolean
   hasDebts: boolean
-  // Remaining obligation THIS month (net, after what's already paid)
+  // Remaining obligation THIS cycle (net, after what's already paid)
   cardRemaining: number
   allRemaining: number
   targetRemaining: number
   cardMinimums: number
   allMinimums: number
-  // Gross daily target = remaining × fuelFactor / days left
+  // Gross daily target = net-per-day × fuelFactor (per-debt due dates)
   cardPerDay: number
   allPerDay: number
   targetPerDay: number
-  // Net portion (the actual payment) per day, and hours of work
+  // Net portion (the actual payment) per day
   cardNetPerDay: number
+  allNetPerDay: number
+  // Days until the nearest payment due date (fallback: end of month)
+  cardDaysToDue: number
+  allDaysToDue: number
   cardHoursPerDay: number | null
 }
 
 /**
  * How much to EARN per day (gross, incl. fuel via `fuelFactor`) so the credit
  * card minimums — and optionally all minimums / target pace — stay covered.
+ * Each debt is spread over the days until ITS OWN payment due date.
  */
 export function dailyEarningTargets(
   debts: Debt[],
@@ -405,35 +410,53 @@ export function dailyEarningTargets(
   const active = debts.filter((d) => d.status === 'active')
   const cards = active.filter((d) => d.type === 'credit_card')
   const monthKey = format(ref, 'yyyy-MM')
-  const daysLeft = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
+  const daysLeftInMonth = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
 
   const paidThisMonth = new Map<string, number>()
   for (const p of debtPayments) {
     if (p.date.slice(0, 7) !== monthKey) continue
     paidThisMonth.set(p.debt_id, (paidThisMonth.get(p.debt_id) ?? 0) + p.amount)
   }
-  const remainingFor = (list: Debt[], pick: (d: Debt) => number) =>
-    list.reduce((a, d) => a + Math.max(0, pick(d) - (paidThisMonth.get(d.id) ?? 0)), 0)
 
-  const cardRemaining = remainingFor(cards, (d) => d.min_payment)
-  const allRemaining = remainingFor(active, (d) => d.min_payment)
-  const targetRemaining = remainingFor(active, (d) => d.target_payment || d.min_payment)
+  // Days until this debt's next payment date (fallback: end of month).
+  const daysToDue = (d: Debt) =>
+    d.due_day
+      ? Math.max(1, differenceInCalendarDays(nextMonthlyDate(d.due_day, ref), ref))
+      : daysLeftInMonth
+
+  const remainingOf = (d: Debt, pick: (d: Debt) => number) =>
+    Math.max(0, pick(d) - (paidThisMonth.get(d.id) ?? 0))
+  const netPerDayFor = (list: Debt[], pick: (d: Debt) => number) =>
+    list.reduce((a, d) => a + remainingOf(d, pick) / daysToDue(d), 0)
+  const remainingSum = (list: Debt[], pick: (d: Debt) => number) =>
+    list.reduce((a, d) => a + remainingOf(d, pick), 0)
+  const nearestDue = (list: Debt[]) => {
+    const pending = list.filter((d) => remainingOf(d, (x) => x.min_payment) > 0)
+    return pending.length ? Math.min(...pending.map(daysToDue)) : daysLeftInMonth
+  }
+
+  const cardNetPerDay = netPerDayFor(cards, (d) => d.min_payment)
+  const allNetPerDay = netPerDayFor(active, (d) => d.min_payment)
+  const targetNetPerDay = netPerDayFor(active, (d) => d.target_payment || d.min_payment)
 
   return {
-    daysLeftInMonth: daysLeft,
+    daysLeftInMonth,
     fuelFactor,
     hasCards: cards.length > 0,
     hasDebts: active.length > 0,
-    cardRemaining,
-    allRemaining,
-    targetRemaining,
+    cardRemaining: remainingSum(cards, (d) => d.min_payment),
+    allRemaining: remainingSum(active, (d) => d.min_payment),
+    targetRemaining: remainingSum(active, (d) => d.target_payment || d.min_payment),
     cardMinimums: cards.reduce((a, d) => a + d.min_payment, 0),
     allMinimums: active.reduce((a, d) => a + d.min_payment, 0),
-    cardPerDay: (cardRemaining * fuelFactor) / daysLeft,
-    allPerDay: (allRemaining * fuelFactor) / daysLeft,
-    targetPerDay: (targetRemaining * fuelFactor) / daysLeft,
-    cardNetPerDay: cardRemaining / daysLeft,
-    cardHoursPerDay: netPerHour > 0 ? cardRemaining / daysLeft / netPerHour : null,
+    cardPerDay: cardNetPerDay * fuelFactor,
+    allPerDay: allNetPerDay * fuelFactor,
+    targetPerDay: targetNetPerDay * fuelFactor,
+    cardNetPerDay,
+    allNetPerDay,
+    cardDaysToDue: nearestDue(cards),
+    allDaysToDue: nearestDue(active),
+    cardHoursPerDay: netPerHour > 0 ? cardNetPerDay / netPerHour : null,
   }
 }
 

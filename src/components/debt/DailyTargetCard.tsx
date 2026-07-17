@@ -10,8 +10,20 @@ export function DailyTargetCard() {
   if (!dt.hasDebts) return null
 
   const primary = dt.hasCards
-    ? { remaining: dt.cardRemaining, perDay: dt.cardPerDay, min: dt.cardMinimums, label: 'el mínimo de tus tarjetas' }
-    : { remaining: dt.allRemaining, perDay: dt.allPerDay, min: dt.allMinimums, label: 'tus pagos mínimos' }
+    ? {
+        remaining: dt.cardRemaining,
+        perDay: dt.cardPerDay,
+        netPerDay: dt.cardNetPerDay,
+        daysToDue: dt.cardDaysToDue,
+        label: 'el mínimo de tus tarjetas',
+      }
+    : {
+        remaining: dt.allRemaining,
+        perDay: dt.allPerDay,
+        netPerDay: dt.allNetPerDay,
+        daysToDue: dt.allDaysToDue,
+        label: 'tus pagos mínimos',
+      }
 
   const covered = primary.remaining <= 0.5
 
@@ -61,13 +73,13 @@ export function DailyTargetCard() {
               </span>
             )}
             <span className="chip bg-surface-2 text-xs text-muted">
-              {dt.daysLeftInMonth} días restantes del mes
+              {primary.daysToDue} días para el próximo pago
             </span>
           </div>
 
           <p className="mt-3 text-xs text-muted">
-            De eso, <b className="text-content">{money(primary.perDay - primary.remaining / dt.daysLeftInMonth, { compact: true })}</b> es
-            gasolina y te queda libre el pago de <b className="text-content">{money(primary.remaining / dt.daysLeftInMonth, { compact: true })}/día</b>{' '}
+            De eso, <b className="text-content">{money(primary.perDay - primary.netPerDay, { compact: true })}</b> es
+            gasolina y te queda libre el pago de <b className="text-content">{money(primary.netPerDay, { compact: true })}/día</b>{' '}
             para las deudas.
           </p>
         </div>

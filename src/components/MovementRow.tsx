@@ -1,19 +1,26 @@
+import { useNavigate } from 'react-router-dom'
 import { CategoryIcon } from './ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { relativeDay } from '@/lib/dates'
+import { DEBT_PAYMENT_CATEGORY } from '@/lib/analytics'
 import { paymentMethodLabel, type Movement } from '@/types'
 import { cn } from '@/lib/utils'
 
 export function MovementRow({ m, showDate = true }: { m: Movement; showDate?: boolean }) {
   const { money } = useMoney()
+  const navigate = useNavigate()
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
   const incomes = useStore((s) => s.incomes)
   const expenses = useStore((s) => s.expenses)
 
   function onClick() {
+    if (m.categoryId === DEBT_PAYMENT_CATEGORY.id) {
+      navigate('/plan')
+      return
+    }
     if (m.kind === 'income') {
       const inc = incomes.find((i) => i.id === m.id)
       if (inc) openIncome(inc)

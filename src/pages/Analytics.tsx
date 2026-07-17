@@ -59,22 +59,37 @@ function rangeFor(sel: RangeKey): DateRange {
 }
 
 export function Analytics() {
-  const { incomes, expenses, categories, opening, kpis, movements } = useAnalytics()
+  const { incomes, expenses, categories, debtPayments, opening, kpis, movements } = useAnalytics()
   const { money } = useMoney()
   const [range, setRange] = useState<RangeKey>('month')
   const [flow, setFlow] = useState<FlowKey>('daily')
 
   const dateRange = rangeFor(range)
   const byCat = useMemo(
-    () => expensesByCategory(expenses, categories, dateRange),
-    [expenses, categories, range],
+    () => expensesByCategory(expenses, categories, dateRange, debtPayments),
+    [expenses, categories, range, debtPayments],
   )
-  const months12 = useMemo(() => monthlySeries(incomes, expenses, 12), [incomes, expenses])
-  const weekly = useMemo(() => weeklySeries(incomes, expenses, 12), [incomes, expenses])
-  const annual = useMemo(() => annualSeries(incomes, expenses), [incomes, expenses])
+  const months12 = useMemo(
+    () => monthlySeries(incomes, expenses, 12, new Date(), debtPayments),
+    [incomes, expenses, debtPayments],
+  )
+  const weekly = useMemo(
+    () => weeklySeries(incomes, expenses, 12, new Date(), debtPayments),
+    [incomes, expenses, debtPayments],
+  )
+  const annual = useMemo(
+    () => annualSeries(incomes, expenses, debtPayments),
+    [incomes, expenses, debtPayments],
+  )
   const daily = useMemo(
-    () => dailySeries(incomes, expenses, { start: startOfMonth(new Date()), end: endOfMonth(new Date()) }),
-    [incomes, expenses],
+    () =>
+      dailySeries(
+        incomes,
+        expenses,
+        { start: startOfMonth(new Date()), end: endOfMonth(new Date()) },
+        debtPayments,
+      ),
+    [incomes, expenses, debtPayments],
   )
 
   const insights = useMemo(

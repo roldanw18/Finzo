@@ -44,21 +44,24 @@ function greeting(): string {
 }
 
 export function Dashboard() {
-  const { incomes, expenses, categories, profile, kpis, movements } = useAnalytics()
+  const { incomes, expenses, categories, debtPayments, profile, kpis, movements } = useAnalytics()
   const { money } = useMoney()
   const openExpense = useUI((s) => s.openExpense)
   const openIncome = useUI((s) => s.openIncome)
   const openTip = useUI((s) => s.openTip)
 
-  const months = useMemo(() => monthlySeries(incomes, expenses, 6), [incomes, expenses])
+  const months = useMemo(
+    () => monthlySeries(incomes, expenses, 6, new Date(), debtPayments),
+    [incomes, expenses, debtPayments],
+  )
   const monthRange = { start: startOfMonth(new Date()), end: endOfMonth(new Date()) }
   const daily = useMemo(
-    () => dailySeries(incomes, expenses, monthRange),
-    [incomes, expenses],
+    () => dailySeries(incomes, expenses, monthRange, debtPayments),
+    [incomes, expenses, debtPayments],
   )
   const byCat = useMemo(
-    () => expensesByCategory(expenses, categories, monthRange),
-    [expenses, categories],
+    () => expensesByCategory(expenses, categories, monthRange, debtPayments),
+    [expenses, categories, debtPayments],
   )
   const recent = movements.slice(0, 6)
 

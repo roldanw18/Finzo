@@ -12,9 +12,17 @@ import {
   isWithinInterval,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import type { Category, Expense, Income, Movement } from '@/types'
+import type { Category, Debt, DebtPayment, Expense, Income, Movement } from '@/types'
 import { paymentMethodLabel } from '@/types'
 import { pctChange, safeDiv } from './utils'
+
+/** Synthetic category used to show debt payments as a spending category. */
+export const DEBT_PAYMENT_CATEGORY = {
+  id: 'debt-payments',
+  name: 'Pago de deudas',
+  color: '#8b5cf6',
+  icon: 'Landmark',
+}
 
 export interface DateRange {
   start: Date
@@ -59,6 +67,7 @@ export function computeKpis(
   expenses: Expense[],
   openingBalance: number,
   ref = new Date(),
+  debtPayments: DebtPayment[] = [],
 ): Kpis {
   const todayIso = format(ref, 'yyyy-MM-dd')
   const monthRange: DateRange = { start: startOfMonth(ref), end: endOfMonth(ref) }
@@ -69,33 +78,50 @@ export function computeKpis(
   }
 
   const totalIncome = sum(incomes, (i) => i.amount)
-  const totalExpense = sum(expenses, (e) => e.amount)
+  // Debt payments count as cash outflow (expenses) too.
+  const totalDebtPaid = sum(debtPayments, (p) => p.amount)
+  const totalExpense = sum(expenses, (e) => e.amount) + totalDebtPaid
 
   const todayIncome = sum(
     incomes.filter((i) => i.date === todayIso),
     (i) => i.amount,
   )
-  const todayExpense = sum(
-    expenses.filter((e) => e.date === todayIso),
-    (e) => e.amount,
-  )
+  const todayExpense =
+    sum(
+      expenses.filter((e) => e.date === todayIso),
+      (e) => e.amount,
+    ) +
+    sum(
+      debtPayments.filter((p) => p.date === todayIso),
+      (p) => p.amount,
+    )
 
   const monthIncome = sum(
     incomes.filter((i) => inRange(i.date, monthRange)),
     (i) => i.amount,
   )
-  const monthExpense = sum(
-    expenses.filter((e) => inRange(e.date, monthRange)),
-    (e) => e.amount,
-  )
+  const monthExpense =
+    sum(
+      expenses.filter((e) => inRange(e.date, monthRange)),
+      (e) => e.amount,
+    ) +
+    sum(
+      debtPayments.filter((p) => inRange(p.date, monthRange)),
+      (p) => p.amount,
+    )
   const prevMonthIncome = sum(
     incomes.filter((i) => inRange(i.date, prevRange)),
     (i) => i.amount,
   )
-  const prevMonthExpense = sum(
-    expenses.filter((e) => inRange(e.date, prevRange)),
-    (e) => e.amount,
-  )
+  const prevMonthExpense =
+    sum(
+      expenses.filter((e) => inRange(e.date, prevRange)),
+      (e) => e.amount,
+    ) +
+    sum(
+      debtPayments.filter((p) => inRange(p.date, prevRange)),
+      (p) => p.amount,
+    )
 
   const todayTips = sum(
     incomes.filter((i) => i.source === 'tip' && i.date === todayIso),
@@ -157,9 +183,14 @@ export function expensesByCategory(
   expenses: Expense[],
   categories: Category[],
   range?: DateRange,
+  debtPayments: DebtPayment[] = [],
 ): CategorySlice[] {
   const filtered = range ? expenses.filter((e) => inRange(e.date, range)) : expenses
-  const total = sum(filtered, (e) => e.amount)
+  const filteredDebt = range
+    ? debtPayments.filter((p) => inRange(p.date, range))
+    : debtPayments
+  const debtTotal = sum(filteredDebt, (p) => p.amount)
+  const total = sum(filtered, (e) => e.amount) + debtTotal
   const map = new Map<string, { value: number; count: number }>()
   for (const e of filtered) {
     const key = e.category_id ?? 'uncategorized'
@@ -181,6 +212,17 @@ export function expensesByCategory(
       pct: safeDiv(agg.value, total) * 100,
     })
   }
+  if (debtTotal > 0) {
+    slices.push({
+      id: DEBT_PAYMENT_CATEGORY.id,
+      name: DEBT_PAYMENT_CATEGORY.name,
+      color: DEBT_PAYMENT_CATEGORY.color,
+      icon: DEBT_PAYMENT_CATEGORY.icon,
+      value: debtTotal,
+      count: filteredDebt.length,
+      pct: safeDiv(debtTotal, total) * 100,
+    })
+  }
   return slices.sort((a, b) => b.value - a.value)
 }
 
@@ -199,6 +241,7 @@ export function monthlySeries(
   expenses: Expense[],
   months = 6,
   ref = new Date(),
+  debtPayments: DebtPayment[] = [],
 ): MonthPoint[] {
   const start = startOfMonth(subMonths(ref, months - 1))
   const monthsArr = eachMonthOfInterval({ start, end: ref })
@@ -208,10 +251,15 @@ export function monthlySeries(
       incomes.filter((i) => i.date.slice(0, 7) === key),
       (i) => i.amount,
     )
-    const exp = sum(
-      expenses.filter((e) => e.date.slice(0, 7) === key),
-      (e) => e.amount,
-    )
+    const exp =
+      sum(
+        expenses.filter((e) => e.date.slice(0, 7) === key),
+        (e) => e.amount,
+      ) +
+      sum(
+        debtPayments.filter((p) => p.date.slice(0, 7) === key),
+        (p) => p.amount,
+      )
     return {
       key,
       label: format(m, 'MMM', { locale: es }),
@@ -235,6 +283,7 @@ export function dailySeries(
   incomes: Income[],
   expenses: Expense[],
   range: DateRange,
+  debtPayments: DebtPayment[] = [],
 ): DayPoint[] {
   const days = eachDayOfInterval({ start: range.start, end: range.end })
   let cumulative = 0
@@ -244,10 +293,15 @@ export function dailySeries(
       incomes.filter((i) => i.date === key),
       (i) => i.amount,
     )
-    const exp = sum(
-      expenses.filter((e) => e.date === key),
-      (e) => e.amount,
-    )
+    const exp =
+      sum(
+        expenses.filter((e) => e.date === key),
+        (e) => e.amount,
+      ) +
+      sum(
+        debtPayments.filter((p) => p.date === key),
+        (p) => p.amount,
+      )
     const net = inc - exp
     cumulative += net
     return {
@@ -274,6 +328,7 @@ export function weeklySeries(
   expenses: Expense[],
   weeks = 12,
   ref = new Date(),
+  debtPayments: DebtPayment[] = [],
 ): WeekPoint[] {
   const points: WeekPoint[] = []
   for (let i = weeks - 1; i >= 0; i--) {
@@ -285,10 +340,15 @@ export function weeklySeries(
       incomes.filter((x) => inRange(x.date, range)),
       (x) => x.amount,
     )
-    const exp = sum(
-      expenses.filter((x) => inRange(x.date, range)),
-      (x) => x.amount,
-    )
+    const exp =
+      sum(
+        expenses.filter((x) => inRange(x.date, range)),
+        (x) => x.amount,
+      ) +
+      sum(
+        debtPayments.filter((x) => inRange(x.date, range)),
+        (x) => x.amount,
+      )
     points.push({
       key: format(start, 'yyyy-ww'),
       label: format(start, 'd MMM', { locale: es }),
@@ -307,10 +367,15 @@ export interface YearPoint {
   balance: number
 }
 
-export function annualSeries(incomes: Income[], expenses: Expense[]): YearPoint[] {
+export function annualSeries(
+  incomes: Income[],
+  expenses: Expense[],
+  debtPayments: DebtPayment[] = [],
+): YearPoint[] {
   const years = new Set<string>()
   incomes.forEach((i) => years.add(i.date.slice(0, 4)))
   expenses.forEach((e) => years.add(e.date.slice(0, 4)))
+  debtPayments.forEach((p) => years.add(p.date.slice(0, 4)))
   return [...years]
     .sort()
     .map((y) => {
@@ -318,10 +383,15 @@ export function annualSeries(incomes: Income[], expenses: Expense[]): YearPoint[
         incomes.filter((i) => i.date.slice(0, 4) === y),
         (i) => i.amount,
       )
-      const exp = sum(
-        expenses.filter((e) => e.date.slice(0, 4) === y),
-        (e) => e.amount,
-      )
+      const exp =
+        sum(
+          expenses.filter((e) => e.date.slice(0, 4) === y),
+          (e) => e.amount,
+        ) +
+        sum(
+          debtPayments.filter((p) => p.date.slice(0, 4) === y),
+          (p) => p.amount,
+        )
       return { year: y, income: inc, expense: exp, balance: inc - exp }
     })
 }
@@ -332,8 +402,11 @@ export function toMovements(
   incomes: Income[],
   expenses: Expense[],
   categories: Category[],
+  debtPayments: DebtPayment[] = [],
+  debts: Debt[] = [],
 ): Movement[] {
   const catMap = new Map(categories.map((c) => [c.id, c]))
+  const debtMap = new Map(debts.map((d) => [d.id, d]))
   const incMovs: Movement[] = incomes.map((i) => {
     const isTip = i.source === 'tip'
     return {
@@ -368,7 +441,24 @@ export function toMovements(
       createdAt: e.created_at,
     }
   })
-  return [...incMovs, ...expMovs].sort((a, b) => {
+  const debtMovs: Movement[] = debtPayments.map((p) => {
+    const debt = debtMap.get(p.debt_id)
+    return {
+      id: p.id,
+      kind: 'expense',
+      amount: p.amount,
+      date: p.date,
+      categoryId: DEBT_PAYMENT_CATEGORY.id,
+      categoryName: DEBT_PAYMENT_CATEGORY.name,
+      categoryColor: DEBT_PAYMENT_CATEGORY.color,
+      categoryIcon: DEBT_PAYMENT_CATEGORY.icon,
+      title: debt ? `Pago ${debt.name}` : 'Pago de deuda',
+      paymentMethod: null,
+      notes: p.note,
+      createdAt: p.created_at,
+    }
+  })
+  return [...incMovs, ...expMovs, ...debtMovs].sort((a, b) => {
     if (a.date === b.date) return b.createdAt.localeCompare(a.createdAt)
     return b.date.localeCompare(a.date)
   })

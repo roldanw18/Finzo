@@ -4,22 +4,20 @@ import { NAV_ITEMS } from '@/config/nav'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
-import { computeKpis } from '@/lib/analytics'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { cn, initials } from '@/lib/utils'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 
 export function Sidebar() {
   const profile = useStore((s) => s.profile)
-  const incomes = useStore((s) => s.incomes)
-  const expenses = useStore((s) => s.expenses)
   const setTheme = useStore((s) => s.setTheme)
   const signOut = useStore((s) => s.signOut)
   const mode = useStore((s) => s.mode)
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
   const { currency } = useMoney()
+  const { kpis } = useAnalytics()
 
-  const kpis = computeKpis(incomes, expenses, profile?.opening_balance ?? 0)
   const dark = profile?.theme !== 'light'
 
   return (

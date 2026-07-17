@@ -18,7 +18,9 @@ export function SimulatorTab() {
   const { kpis } = useAnalytics()
   const { currency, money } = useMoney()
 
-  const [extra, setExtra] = useState(0)
+  // Pre-load the extra with this month's surplus (income − expenses, incl. debt).
+  const suggestedExtra = Math.max(0, Math.round(kpis.monthBalance))
+  const [extra, setExtra] = useState(suggestedExtra)
   const [excluded, setExcluded] = useState<Set<string>>(new Set())
 
   const included = useMemo(
@@ -53,6 +55,7 @@ export function SimulatorTab() {
   const budgetPerDay = allocation.budget / daysInCurrentMonth()
 
   const scenarios = [
+    { label: '💰 Mi excedente', value: suggestedExtra },
     { label: '+$1.000.000', value: 1_000_000 },
     { label: '+20% ingresos', value: Math.round(kpis.monthIncome * 0.2) },
     { label: '-10% gastos', value: Math.round(kpis.monthExpense * 0.1) },
@@ -72,6 +75,11 @@ export function SimulatorTab() {
       <Card>
         <CardHeader title="Simulador de pago extra" subtitle="¿Cuánto adicional puedes abonar este mes?" icon={<Zap size={18} className="text-primary" />} />
         <AmountInput value={extra} onChange={setExtra} currency={currency} />
+        {suggestedExtra > 0 && (
+          <p className="mt-2 text-xs text-muted">
+            Precargado con tu <b className="text-content">excedente del mes</b> ({money(suggestedExtra)}). Ajústalo si quieres.
+          </p>
+        )}
         <div className="mt-3 flex flex-wrap gap-2">
           {scenarios.map((s) => (
             <button

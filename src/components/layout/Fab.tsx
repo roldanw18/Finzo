@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, TrendingUp, TrendingDown, X } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, Coins, X } from 'lucide-react'
 import { useUI } from '@/store/ui'
 
 export function Fab() {
@@ -7,6 +7,7 @@ export function Fab() {
   const toggle = useUI((s) => s.toggleFab)
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
+  const openTip = useUI((s) => s.openTip)
 
   return (
     <>
@@ -36,6 +37,17 @@ export function Fab() {
                 className="flex items-center gap-2.5 rounded-full bg-income py-2.5 pl-4 pr-5 font-semibold text-white shadow-card-lg"
               >
                 <TrendingUp size={18} /> Ingreso
+              </motion.button>
+              <motion.button
+                key="tip"
+                initial={{ opacity: 0, y: 16, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.8 }}
+                transition={{ delay: 0.025 }}
+                onClick={() => openTip()}
+                className="flex items-center gap-2.5 rounded-full bg-[#14b8a6] py-2.5 pl-4 pr-5 font-semibold text-white shadow-card-lg"
+              >
+                <Coins size={18} /> Propina
               </motion.button>
               <motion.button
                 key="expense"

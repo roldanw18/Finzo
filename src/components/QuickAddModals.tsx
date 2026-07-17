@@ -2,12 +2,14 @@ import { Modal } from './ui/Modal'
 import { IncomeForm } from './forms/IncomeForm'
 import { ExpenseForm } from './forms/ExpenseForm'
 import { CategoryForm } from './forms/CategoryForm'
+import { TipForm } from './forms/TipForm'
 import { useUI } from '@/store/ui'
 
 const TITLES = {
   income: 'Registrar ingreso',
   expense: 'Registrar gasto',
   category: 'Categoría',
+  tip: 'Agregar propina',
 } as const
 
 export function QuickAddModals() {
@@ -26,6 +28,7 @@ export function QuickAddModals() {
       {modal.type === 'category' && (
         <CategoryForm editing={modal.editing} onDone={close} />
       )}
+      {modal.type === 'tip' && <TipForm onSaved={close} />}
     </Modal>
   )
 }

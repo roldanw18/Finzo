@@ -12,6 +12,9 @@ const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default:
 const History = lazy(() => import('@/pages/History').then((m) => ({ default: m.History })))
 const Categories = lazy(() => import('@/pages/Categories').then((m) => ({ default: m.Categories })))
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
+const TipQuickPage = lazy(() =>
+  import('@/pages/TipQuickPage').then((m) => ({ default: m.TipQuickPage })),
+)
 
 function PageLoader() {
   return (
@@ -71,6 +74,8 @@ function AppContent({
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Full-screen quick tip entry (deep-link / iOS shortcut target) */}
+        <Route path="/propina" element={<TipQuickPage />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/analisis" element={<Analytics />} />

@@ -2,6 +2,9 @@ export type Currency = 'COP' | 'USD'
 
 export type ThemeMode = 'dark' | 'light'
 
+/** Where an income came from. 'tip' = propina, the rest is Uber income. */
+export type IncomeSource = 'uber' | 'tip'
+
 export type PaymentMethod =
   | 'cash'
   | 'debit'
@@ -29,6 +32,8 @@ export interface Income {
   amount: number
   date: string // ISO yyyy-MM-dd
   note: string | null
+  /** Defaults to 'uber' for legacy rows without the column. */
+  source?: IncomeSource
   created_at: string
 }
 

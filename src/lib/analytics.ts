@@ -50,6 +50,8 @@ export interface Kpis {
   balanceChangePct: number
   trend: 'up' | 'down' | 'flat'
   savingsRate: number // % of income kept this month
+  todayTips: number
+  monthTips: number
 }
 
 export function computeKpis(
@@ -95,6 +97,15 @@ export function computeKpis(
     (e) => e.amount,
   )
 
+  const todayTips = sum(
+    incomes.filter((i) => i.source === 'tip' && i.date === todayIso),
+    (i) => i.amount,
+  )
+  const monthTips = sum(
+    incomes.filter((i) => i.source === 'tip' && inRange(i.date, monthRange)),
+    (i) => i.amount,
+  )
+
   const daysElapsed = ref.getDate()
   const monthBalance = monthIncome - monthExpense
   const prevMonthBalance = prevMonthIncome - prevMonthExpense
@@ -125,6 +136,8 @@ export function computeKpis(
     balanceChangePct,
     trend,
     savingsRate: safeDiv(monthBalance, monthIncome) * 100,
+    todayTips,
+    monthTips,
   }
 }
 
@@ -321,20 +334,23 @@ export function toMovements(
   categories: Category[],
 ): Movement[] {
   const catMap = new Map(categories.map((c) => [c.id, c]))
-  const incMovs: Movement[] = incomes.map((i) => ({
-    id: i.id,
-    kind: 'income',
-    amount: i.amount,
-    date: i.date,
-    categoryId: null,
-    categoryName: 'Ingreso Uber',
-    categoryColor: '#0ecb81',
-    categoryIcon: 'Car',
-    title: i.note || 'Ingreso Uber',
-    paymentMethod: null,
-    notes: i.note,
-    createdAt: i.created_at,
-  }))
+  const incMovs: Movement[] = incomes.map((i) => {
+    const isTip = i.source === 'tip'
+    return {
+      id: i.id,
+      kind: 'income',
+      amount: i.amount,
+      date: i.date,
+      categoryId: null,
+      categoryName: isTip ? 'Propina' : 'Ingreso Uber',
+      categoryColor: isTip ? '#14b8a6' : '#0ecb81',
+      categoryIcon: isTip ? 'Coins' : 'Car',
+      title: i.note || (isTip ? 'Propina' : 'Ingreso Uber'),
+      paymentMethod: null,
+      notes: i.note,
+      createdAt: i.created_at,
+    }
+  })
   const expMovs: Movement[] = expenses.map((e) => {
     const cat = e.category_id ? catMap.get(e.category_id) : undefined
     return {

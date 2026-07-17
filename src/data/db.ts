@@ -2,6 +2,7 @@ import type {
   Category,
   Expense,
   Income,
+  IncomeSource,
   PaymentMethod,
   Profile,
 } from '@/types'
@@ -18,6 +19,7 @@ export interface IncomeInput {
   amount: number
   date: string
   note?: string | null
+  source?: IncomeSource
 }
 
 export interface ExpenseInput {

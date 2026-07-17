@@ -31,6 +31,15 @@ export default defineConfig({
             purpose: 'any maskable',
           },
         ],
+        shortcuts: [
+          {
+            name: 'Agregar propina',
+            short_name: 'Propina',
+            description: 'Registrar una propina al instante',
+            url: '/propina',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
       },
       workbox: {
         // Precache only app shell assets. Supabase API calls always hit the network.

@@ -27,12 +27,16 @@ export function AmountInput({
   placeholder,
 }: Props) {
   const decimals = currency === 'USD' ? 2 : 0
+  const groupSep = currency === 'COP' ? '.' : ','
   const decimalSep = currency === 'COP' ? ',' : '.'
   const [raw, setRaw] = useState<string>(value ? String(value) : '')
 
-  // Sync when the external value changes (e.g. editing a movement)
+  // Sync only on genuine external value changes (e.g. editing a movement),
+  // never on our own onChange — otherwise trailing decimals get clobbered.
   useEffect(() => {
-    setRaw(value ? String(value) : '')
+    const current = raw ? parseFloat(raw) : 0
+    if (value !== current) setRaw(value ? String(value) : '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   const display = useMemo(() => {
@@ -43,11 +47,15 @@ export function AmountInput({
   }, [raw, currency, decimalSep])
 
   function handle(e: React.ChangeEvent<HTMLInputElement>) {
-    let v = e.target.value.replace(/[^\d.,]/g, '').replace(/,/g, '.')
+    // Strip grouping separators first, then normalize the decimal separator
+    // to '.', so the thousands '.' in COP is never mistaken for a decimal.
+    let v = e.target.value.split(groupSep).join('')
+    v = v.split(decimalSep).join('.')
+    v = v.replace(/[^\d.]/g, '')
     const parts = v.split('.')
     if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('')
     if (decimals === 0) {
-      v = v.replace(/\..*/, '')
+      v = v.split('.')[0]
     } else {
       const [int, dec] = v.split('.')
       if (dec !== undefined) v = int + '.' + dec.slice(0, decimals)

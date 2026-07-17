@@ -135,6 +135,7 @@ export class LocalDatabase implements Database {
       amount: input.amount,
       date: input.date,
       note: input.note ?? null,
+      source: input.source ?? 'uber',
       created_at: new Date().toISOString(),
     }
     s.incomes.push(inc)
@@ -236,6 +237,21 @@ export function generateDemoData(): void {
         amount: Math.max(40000, amount),
         date: iso,
         note: null,
+        source: 'uber',
+        created_at: date.toISOString(),
+      })
+    }
+
+    // Occasional tips
+    if (Math.random() > 0.4) {
+      const tip = Math.round((2000 + Math.random() * 12000) / 500) * 500
+      incomes.push({
+        id: uid(),
+        user_id: LOCAL_USER,
+        amount: tip,
+        date: iso,
+        note: null,
+        source: 'tip',
         created_at: date.toISOString(),
       })
     }

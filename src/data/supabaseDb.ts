@@ -151,6 +151,7 @@ export class SupabaseDatabase implements Database {
         amount: input.amount,
         date: input.date,
         note: input.note ?? null,
+        source: input.source ?? 'uber',
       })
       .select()
       .single()

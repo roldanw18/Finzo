@@ -14,6 +14,7 @@ import {
   Minus,
   ChevronRight,
   Plus,
+  Coins,
 } from 'lucide-react'
 import { KpiCard } from '@/components/KpiCard'
 import { Card, CardHeader } from '@/components/ui/Card'
@@ -47,6 +48,7 @@ export function Dashboard() {
   const { money } = useMoney()
   const openExpense = useUI((s) => s.openExpense)
   const openIncome = useUI((s) => s.openIncome)
+  const openTip = useUI((s) => s.openTip)
 
   const months = useMemo(() => monthlySeries(incomes, expenses, 6), [incomes, expenses])
   const monthRange = { start: startOfMonth(new Date()), end: endOfMonth(new Date()) }
@@ -124,6 +126,12 @@ export function Dashboard() {
               <span className="chip bg-surface-2 text-xs text-muted">
                 <PiggyBank size={13} /> Ahorro: {money(kpis.totalSavings, { compact: true })}
               </span>
+              <button
+                onClick={() => openTip()}
+                className="chip bg-[#14b8a6]/12 text-xs font-semibold text-[#14b8a6] transition hover:bg-[#14b8a6]/20"
+              >
+                <Coins size={13} /> Propinas mes: {money(kpis.monthTips, { compact: true })}
+              </button>
             </div>
           </div>
           <div className="flex gap-2 sm:hidden">

@@ -4,6 +4,7 @@ import type {
   Debt,
   DebtGoal,
   DebtPayment,
+  FixedExpense,
   Reminder,
   WorkSession,
   ReminderCategory,
@@ -393,6 +394,15 @@ export interface DailyTargets {
   cardDaysToDue: number
   allDaysToDue: number
   cardHoursPerDay: number | null
+  // Fixed monthly expenses (rent, utilities, subscriptions…)
+  hasFixed: boolean
+  fixedTotal: number
+  fixedNetPerDay: number
+  // "Cover everything": fixed expenses + all debt minimums
+  totalNetPerDay: number
+  totalPerDay: number
+  totalHoursPerDay: number | null
+  totalDaysToDue: number
 }
 
 /**
@@ -405,10 +415,12 @@ export function dailyEarningTargets(
   debtPayments: DebtPayment[],
   netPerHour = 0,
   ref = new Date(),
+  fixedExpenses: FixedExpense[] = [],
   fuelFactor = FUEL_FACTOR,
 ): DailyTargets {
   const active = debts.filter((d) => d.status === 'active')
   const cards = active.filter((d) => d.type === 'credit_card')
+  const activeFixed = fixedExpenses.filter((f) => f.active && f.amount > 0)
   const monthKey = format(ref, 'yyyy-MM')
   const daysLeftInMonth = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
 
@@ -418,11 +430,12 @@ export function dailyEarningTargets(
     paidThisMonth.set(p.debt_id, (paidThisMonth.get(p.debt_id) ?? 0) + p.amount)
   }
 
-  // Days until this debt's next payment date (fallback: end of month).
-  const daysToDue = (d: Debt) =>
-    d.due_day
-      ? Math.max(1, differenceInCalendarDays(nextMonthlyDate(d.due_day, ref), ref))
+  // Days until a due day's next occurrence (fallback: end of month).
+  const daysToDueDay = (dueDay: number | null) =>
+    dueDay
+      ? Math.max(1, differenceInCalendarDays(nextMonthlyDate(dueDay, ref), ref))
       : daysLeftInMonth
+  const daysToDue = (d: Debt) => daysToDueDay(d.due_day)
 
   const remainingOf = (d: Debt, pick: (d: Debt) => number) =>
     Math.max(0, pick(d) - (paidThisMonth.get(d.id) ?? 0))
@@ -438,6 +451,16 @@ export function dailyEarningTargets(
   const cardNetPerDay = netPerDayFor(cards, (d) => d.min_payment)
   const allNetPerDay = netPerDayFor(active, (d) => d.min_payment)
   const targetNetPerDay = netPerDayFor(active, (d) => d.target_payment || d.min_payment)
+
+  // Fixed expenses spread over their own due dates
+  const fixedTotal = activeFixed.reduce((a, f) => a + f.amount, 0)
+  const fixedNetPerDay = activeFixed.reduce((a, f) => a + f.amount / daysToDueDay(f.due_day), 0)
+
+  const totalNetPerDay = allNetPerDay + fixedNetPerDay
+  const dueCandidates = [
+    ...active.filter((d) => remainingOf(d, (x) => x.min_payment) > 0).map(daysToDue),
+    ...activeFixed.map((f) => daysToDueDay(f.due_day)),
+  ]
 
   return {
     daysLeftInMonth,
@@ -457,6 +480,13 @@ export function dailyEarningTargets(
     cardDaysToDue: nearestDue(cards),
     allDaysToDue: nearestDue(active),
     cardHoursPerDay: netPerHour > 0 ? cardNetPerDay / netPerHour : null,
+    hasFixed: activeFixed.length > 0,
+    fixedTotal,
+    fixedNetPerDay,
+    totalNetPerDay,
+    totalPerDay: totalNetPerDay * fuelFactor,
+    totalHoursPerDay: netPerHour > 0 ? totalNetPerDay / netPerHour : null,
+    totalDaysToDue: dueCandidates.length ? Math.min(...dueCandidates) : daysLeftInMonth,
   }
 }
 
@@ -512,7 +542,7 @@ export interface CalendarItem {
   urgency: Urgency
 }
 
-function nextMonthlyDate(day: number, ref: Date): Date {
+export function nextMonthlyDate(day: number, ref: Date): Date {
   const d = new Date(ref.getFullYear(), ref.getMonth(), day)
   if (d < new Date(ref.getFullYear(), ref.getMonth(), ref.getDate())) {
     return new Date(ref.getFullYear(), ref.getMonth() + 1, day)
@@ -526,9 +556,29 @@ function urgencyFor(days: number): Urgency {
   return 'green'
 }
 
-/** Debt cut/due dates + reminders, sorted by proximity. */
-export function buildCalendar(debts: Debt[], reminders: Reminder[], ref = new Date()): CalendarItem[] {
+/** Debt cut/due dates + fixed expenses + reminders, sorted by proximity. */
+export function buildCalendar(
+  debts: Debt[],
+  reminders: Reminder[],
+  ref = new Date(),
+  fixedExpenses: FixedExpense[] = [],
+): CalendarItem[] {
   const items: CalendarItem[] = []
+
+  for (const f of fixedExpenses.filter((x) => x.active && x.due_day)) {
+    const date = nextMonthlyDate(f.due_day!, ref)
+    const days = differenceInCalendarDays(date, ref)
+    items.push({
+      id: `fix-${f.id}`,
+      date,
+      daysUntil: days,
+      title: f.name,
+      subtitle: 'Gasto fijo',
+      amount: f.amount || null,
+      category: 'fijo',
+      urgency: urgencyFor(days),
+    })
+  }
 
   for (const d of debts.filter((x) => x.status === 'active')) {
     if (d.due_day) {

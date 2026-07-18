@@ -10,21 +10,24 @@ import { PaymentForm } from '@/components/debt/PaymentForm'
 import { GoalForm } from '@/components/debt/GoalForm'
 import { WorkSessionForm } from '@/components/debt/WorkSessionForm'
 import { ReminderForm } from '@/components/debt/ReminderForm'
+import { FixedExpenseForm } from '@/components/debt/FixedExpenseForm'
 import { PlanOverview } from '@/components/debt/PlanOverview'
 import { DebtsTab } from '@/components/debt/DebtsTab'
 import { PaymentsTab } from '@/components/debt/PaymentsTab'
+import { FixedTab } from '@/components/debt/FixedTab'
 import { SimulatorTab } from '@/components/debt/SimulatorTab'
 import { UberTab } from '@/components/debt/UberTab'
 import { GoalsTab } from '@/components/debt/GoalsTab'
 import { CalendarTab } from '@/components/debt/CalendarTab'
 import { cn } from '@/lib/utils'
 
-type Tab = 'plan' | 'deudas' | 'pagos' | 'simulador' | 'uber' | 'metas' | 'calendario'
+type Tab = 'plan' | 'deudas' | 'pagos' | 'fijos' | 'simulador' | 'uber' | 'metas' | 'calendario'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Plan' },
   { id: 'deudas', label: 'Deudas' },
   { id: 'pagos', label: 'Pagos' },
+  { id: 'fijos', label: 'Fijos' },
   { id: 'simulador', label: 'Simulador' },
   { id: 'uber', label: 'Uber' },
   { id: 'metas', label: 'Metas' },
@@ -37,6 +40,7 @@ const MODAL_TITLES: Record<Exclude<DebtModal['type'], 'none'>, string> = {
   goal: 'Meta',
   work: 'Registrar jornada de Uber',
   reminder: 'Recordatorio',
+  fixed: 'Gasto fijo',
 }
 
 export function DebtPlan() {
@@ -98,6 +102,7 @@ export function DebtPlan() {
         {tab === 'plan' && <PlanOverview />}
         {tab === 'deudas' && <DebtsTab />}
         {tab === 'pagos' && <PaymentsTab />}
+        {tab === 'fijos' && <FixedTab />}
         {tab === 'simulador' && <SimulatorTab />}
         {tab === 'uber' && <UberTab />}
         {tab === 'metas' && <GoalsTab />}
@@ -114,6 +119,7 @@ export function DebtPlan() {
         {modal.type === 'goal' && <GoalForm editing={modal.editing} onDone={close} />}
         {modal.type === 'work' && <WorkSessionForm onDone={close} />}
         {modal.type === 'reminder' && <ReminderForm editing={modal.editing} onDone={close} />}
+        {modal.type === 'fixed' && <FixedExpenseForm editing={modal.editing} onDone={close} />}
       </Modal>
     </DebtModalContext.Provider>
   )

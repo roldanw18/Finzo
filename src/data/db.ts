@@ -6,6 +6,7 @@ import type {
   DebtStatus,
   DebtType,
   Expense,
+  FixedExpense,
   GoalKind,
   Income,
   IncomeSource,
@@ -87,6 +88,14 @@ export interface ReminderInput {
   note?: string | null
 }
 
+export interface FixedExpenseInput {
+  name: string
+  amount: number
+  category_id?: string | null
+  due_day?: number | null
+  active?: boolean
+}
+
 export interface Snapshot {
   profile: Profile
   categories: Category[]
@@ -97,6 +106,7 @@ export interface Snapshot {
   goals: DebtGoal[]
   workSessions: WorkSession[]
   reminders: Reminder[]
+  fixedExpenses: FixedExpense[]
 }
 
 /** Storage-agnostic data access contract. */
@@ -137,6 +147,10 @@ export interface Database {
   createReminder(input: ReminderInput): Promise<Reminder>
   updateReminder(id: string, patch: Partial<ReminderInput>): Promise<Reminder>
   deleteReminder(id: string): Promise<void>
+
+  createFixedExpense(input: FixedExpenseInput): Promise<FixedExpense>
+  updateFixedExpense(id: string, patch: Partial<FixedExpenseInput>): Promise<FixedExpense>
+  deleteFixedExpense(id: string): Promise<void>
 
   /** Replace all data (used by import). */
   importAll(data: Partial<Snapshot>): Promise<Snapshot>

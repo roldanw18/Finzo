@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Gauge, Fuel, Clock, CheckCircle2, Target } from 'lucide-react'
+import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2 } from 'lucide-react'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
 
@@ -7,25 +7,14 @@ export function DailyTargetCard() {
   const { dailyTargets: dt } = useDebt()
   const { money } = useMoney()
 
-  if (!dt.hasDebts) return null
+  if (!dt.hasDebts && !dt.hasFixed) return null
 
-  const primary = dt.hasCards
-    ? {
-        remaining: dt.cardRemaining,
-        perDay: dt.cardPerDay,
-        netPerDay: dt.cardNetPerDay,
-        daysToDue: dt.cardDaysToDue,
-        label: 'el mínimo de tus tarjetas',
-      }
-    : {
-        remaining: dt.allRemaining,
-        perDay: dt.allPerDay,
-        netPerDay: dt.allNetPerDay,
-        daysToDue: dt.allDaysToDue,
-        label: 'tus pagos mínimos',
-      }
-
-  const covered = primary.remaining <= 0.5
+  // Headline = cover everything: fixed expenses + all debt minimums.
+  const perDay = dt.totalPerDay
+  const netPerDay = dt.totalNetPerDay
+  const gas = Math.max(0, perDay - netPerDay)
+  const label = dt.hasFixed ? 'tus gastos fijos + los mínimos de deudas' : 'tus pagos mínimos'
+  const covered = perDay <= 0.5
 
   return (
     <motion.div
@@ -39,27 +28,17 @@ export function DailyTargetCard() {
       </div>
 
       {covered ? (
-        <div>
-          <div className="flex items-center gap-2 text-income">
-            <CheckCircle2 size={22} />
-            <p className="font-display text-xl font-bold text-content">
-              ¡Ya cubriste {primary.label} este mes! 🎉
-            </p>
-          </div>
-          {dt.targetPerDay > 0 && (
-            <p className="mt-2 text-sm text-muted">
-              Para tu <b>ritmo objetivo</b> (pagar más que el mínimo), apunta a{' '}
-              <b className="text-content">{money(dt.targetPerDay)}/día</b>.
-            </p>
-          )}
+        <div className="flex items-center gap-2 text-income">
+          <CheckCircle2 size={22} />
+          <p className="font-display text-xl font-bold text-content">
+            ¡Ya cubriste tus obligaciones de este mes! 🎉
+          </p>
         </div>
       ) : (
         <div>
-          <p className="text-sm text-muted">
-            Para cubrir {primary.label}, produce cada día
-          </p>
+          <p className="text-sm text-muted">Para cubrir {label}, produce cada día</p>
           <p className="tnum font-display text-4xl font-bold text-income">
-            {money(primary.perDay)}
+            {money(perDay)}
             <span className="ml-1 text-base font-medium text-muted">/día</span>
           </p>
 
@@ -67,20 +46,42 @@ export function DailyTargetCard() {
             <span className="chip bg-warning/12 text-xs font-medium text-warning">
               <Fuel size={12} /> incluye gasolina (×{dt.fuelFactor})
             </span>
-            {dt.cardHoursPerDay !== null && (
+            {dt.totalHoursPerDay !== null && (
               <span className="chip bg-info/12 text-xs font-medium text-info">
-                <Clock size={12} /> ≈ {Math.ceil(dt.cardHoursPerDay)}h/día
+                <Clock size={12} /> ≈ {Math.ceil(dt.totalHoursPerDay)}h/día
               </span>
             )}
             <span className="chip bg-surface-2 text-xs text-muted">
-              {primary.daysToDue} días para el próximo pago
+              {dt.totalDaysToDue} días para el próximo pago
             </span>
           </div>
 
+          {/* Breakdown fijos vs deudas */}
+          {dt.hasFixed && dt.hasDebts && (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-surface-2/60 p-2.5">
+                <p className="flex items-center gap-1 text-[11px] text-muted">
+                  <Repeat size={11} /> Gastos fijos
+                </p>
+                <p className="tnum text-sm font-semibold text-content">
+                  {money(dt.fixedNetPerDay * dt.fuelFactor, { compact: true })}/día
+                </p>
+              </div>
+              <div className="rounded-xl bg-surface-2/60 p-2.5">
+                <p className="flex items-center gap-1 text-[11px] text-muted">
+                  <Landmark size={11} /> Mínimos deudas
+                </p>
+                <p className="tnum text-sm font-semibold text-content">
+                  {money(dt.allNetPerDay * dt.fuelFactor, { compact: true })}/día
+                </p>
+              </div>
+            </div>
+          )}
+
           <p className="mt-3 text-xs text-muted">
-            De eso, <b className="text-content">{money(primary.perDay - primary.netPerDay, { compact: true })}</b> es
-            gasolina y te queda libre el pago de <b className="text-content">{money(primary.netPerDay, { compact: true })}/día</b>{' '}
-            para las deudas.
+            De eso, <b className="text-content">{money(gas, { compact: true })}</b> es gasolina y te
+            queda libre <b className="text-content">{money(netPerDay, { compact: true })}/día</b> para tus
+            obligaciones.
           </p>
         </div>
       )}
@@ -90,17 +91,23 @@ export function DailyTargetCard() {
         <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border/60 pt-3">
           <div>
             <p className="flex items-center gap-1 text-[11px] text-muted">
-              <Target size={11} /> Todos los mínimos
+              <Target size={11} /> Solo tarjetas
             </p>
-            <p className="tnum text-sm font-semibold text-content">{money(dt.allPerDay)}/día</p>
+            <p className="tnum text-sm font-semibold text-content">{money(dt.cardPerDay)}/día</p>
           </div>
           <div>
             <p className="flex items-center gap-1 text-[11px] text-muted">
-              <Target size={11} /> Ritmo objetivo
+              <Target size={11} /> Ritmo objetivo (deudas)
             </p>
             <p className="tnum text-sm font-semibold text-content">{money(dt.targetPerDay)}/día</p>
           </div>
         </div>
+      )}
+
+      {dt.hasFixed && (
+        <p className="mt-3 text-[11px] text-subtle">
+          Gastos fijos del mes: {money(dt.fixedTotal)} · configúralos en la pestaña <b>Fijos</b>.
+        </p>
       )}
     </motion.div>
   )

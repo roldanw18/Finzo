@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Debt, DebtGoal, Reminder } from '@/types'
+import type { Debt, DebtGoal, FixedExpense, Reminder } from '@/types'
 
 export type DebtModal =
   | { type: 'none' }
@@ -8,6 +8,7 @@ export type DebtModal =
   | { type: 'goal'; editing?: DebtGoal }
   | { type: 'work' }
   | { type: 'reminder'; editing?: Reminder }
+  | { type: 'fixed'; editing?: FixedExpense }
 
 export const DebtModalContext = createContext<(m: DebtModal) => void>(() => {})
 export const useDebtModal = () => useContext(DebtModalContext)

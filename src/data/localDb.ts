@@ -4,6 +4,7 @@ import type {
   DebtGoal,
   DebtPayment,
   Expense,
+  FixedExpense,
   Income,
   Profile,
   Reminder,
@@ -16,6 +17,7 @@ import type {
   Database,
   DebtInput,
   ExpenseInput,
+  FixedExpenseInput,
   GoalInput,
   IncomeInput,
   PaymentInput,
@@ -37,6 +39,7 @@ interface Store {
   goals: DebtGoal[]
   workSessions: WorkSession[]
   reminders: Reminder[]
+  fixedExpenses: FixedExpense[]
 }
 
 function defaultProfile(): Profile {
@@ -79,6 +82,7 @@ function read(): Store {
       parsed.goals ??= []
       parsed.workSessions ??= []
       parsed.reminders ??= []
+      parsed.fixedExpenses ??= []
       return parsed
     }
   } catch {
@@ -94,6 +98,7 @@ function read(): Store {
     goals: [],
     workSessions: [],
     reminders: [],
+    fixedExpenses: [],
   }
   write(fresh)
   return fresh
@@ -381,6 +386,38 @@ export class LocalDatabase implements Database {
     write(s)
   }
 
+  async createFixedExpense(input: FixedExpenseInput): Promise<FixedExpense> {
+    const s = read()
+    const fx: FixedExpense = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      name: input.name,
+      amount: input.amount,
+      category_id: input.category_id ?? null,
+      due_day: input.due_day ?? null,
+      active: input.active ?? true,
+      created_at: new Date().toISOString(),
+    }
+    s.fixedExpenses.push(fx)
+    write(s)
+    return fx
+  }
+
+  async updateFixedExpense(id: string, patch: Partial<FixedExpenseInput>): Promise<FixedExpense> {
+    const s = read()
+    const fx = s.fixedExpenses.find((f) => f.id === id)
+    if (!fx) throw new Error('Gasto fijo no encontrado')
+    Object.assign(fx, patch)
+    write(s)
+    return fx
+  }
+
+  async deleteFixedExpense(id: string): Promise<void> {
+    const s = read()
+    s.fixedExpenses = s.fixedExpenses.filter((f) => f.id !== id)
+    write(s)
+  }
+
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {
     const s = read()
     const next: Store = {
@@ -393,6 +430,7 @@ export class LocalDatabase implements Database {
       goals: data.goals ?? s.goals,
       workSessions: data.workSessions ?? s.workSessions,
       reminders: data.reminders ?? s.reminders,
+      fixedExpenses: data.fixedExpenses ?? s.fixedExpenses,
     }
     write(next)
     return structuredClone(next)
@@ -514,6 +552,24 @@ export function generateDemoData(): void {
       note: 'Abono extra',
       created_at: now,
     },
+  ]
+
+  // Demo fixed expenses
+  const mkFixed = (name: string, amount: number, due: number): FixedExpense => ({
+    id: uid(),
+    user_id: LOCAL_USER,
+    name,
+    amount,
+    category_id: null,
+    due_day: due,
+    active: true,
+    created_at: now,
+  })
+  s.fixedExpenses = [
+    mkFixed('Arriendo', 900000, 5),
+    mkFixed('Internet + TV', 90000, 12),
+    mkFixed('Plan celular', 55000, 20),
+    mkFixed('Suscripciones', 45000, 1),
   ]
   write(s)
 }

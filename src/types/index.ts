@@ -121,9 +121,21 @@ export interface WorkSession {
   created_at: string
 }
 
+export interface FixedExpense {
+  id: string
+  user_id: string
+  name: string
+  amount: number
+  category_id: string | null
+  due_day: number | null
+  active: boolean
+  created_at: string
+}
+
 export type ReminderCategory =
   | 'corte'
   | 'pago'
+  | 'fijo'
   | 'servicio'
   | 'impuesto'
   | 'soat'
@@ -159,6 +171,7 @@ export function debtTypeMeta(t: DebtType) {
 export const REMINDER_CATEGORIES: { value: ReminderCategory; label: string; icon: string; color: string }[] = [
   { value: 'corte', label: 'Fecha de corte', icon: 'Scissors', color: '#f0b90b' },
   { value: 'pago', label: 'Fecha de pago', icon: 'CalendarCheck', color: '#f6465d' },
+  { value: 'fijo', label: 'Gasto fijo', icon: 'Repeat', color: '#8b5cf6' },
   { value: 'servicio', label: 'Servicio', icon: 'Zap', color: '#50a0ff' },
   { value: 'impuesto', label: 'Impuesto', icon: 'Landmark', color: '#ec4899' },
   { value: 'soat', label: 'SOAT', icon: 'ShieldCheck', color: '#14b8a6' },

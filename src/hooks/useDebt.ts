@@ -22,6 +22,7 @@ export function useDebt() {
   const goals = useStore((s) => s.goals)
   const workSessions = useStore((s) => s.workSessions)
   const reminders = useStore((s) => s.reminders)
+  const fixedExpenses = useStore((s) => s.fixedExpenses)
 
   const active = useMemo(
     () => debts.filter((d) => d.status === 'active'),
@@ -32,11 +33,14 @@ export function useDebt() {
   const recommendation = useMemo(() => nextRecommendedDebt(debts), [debts])
   const alerts = useMemo(() => generateDebtAlerts(debts, payments), [debts, payments])
   const uber = useMemo(() => uberStats(workSessions), [workSessions])
-  const calendar = useMemo(() => buildCalendar(debts, reminders), [debts, reminders])
+  const calendar = useMemo(
+    () => buildCalendar(debts, reminders, new Date(), fixedExpenses),
+    [debts, reminders, fixedExpenses],
+  )
   const basePlan = useMemo(() => simulatePayoff(debts, 0), [debts])
   const dailyTargets = useMemo(
-    () => dailyEarningTargets(debts, payments, uber.netPerHour),
-    [debts, payments, uber.netPerHour],
+    () => dailyEarningTargets(debts, payments, uber.netPerHour, new Date(), fixedExpenses),
+    [debts, payments, uber.netPerHour, fixedExpenses],
   )
   const allocation = useMemo(() => monthlyAllocation(debts, 0), [debts])
   const projection = useMemo(() => projectDebts(debts, 0), [debts])
@@ -68,6 +72,7 @@ export function useDebt() {
     goals,
     workSessions,
     reminders,
+    fixedExpenses,
     summary,
     avalanche,
     recommendation,

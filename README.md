@@ -57,6 +57,8 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
    - [`0002_tips.sql`](supabase/migrations/0002_tips.sql) — columna de propinas.
    - [`0003_debt_plan.sql`](supabase/migrations/0003_debt_plan.sql) — Plan de Libertad Financiera
      (deudas, pagos, metas, jornadas de Uber, recordatorios) + RLS.
+   - [`0004_fixed_expenses.sql`](supabase/migrations/0004_fixed_expenses.sql) — gastos fijos
+     mensuales (arriendo, servicios, suscripciones) + RLS.
    Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:

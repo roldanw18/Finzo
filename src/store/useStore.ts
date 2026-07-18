@@ -6,6 +6,7 @@ import type {
   DebtGoal,
   DebtPayment,
   Expense,
+  FixedExpense,
   Income,
   Profile,
   Reminder,
@@ -17,6 +18,7 @@ import type {
   Database,
   DebtInput,
   ExpenseInput,
+  FixedExpenseInput,
   GoalInput,
   IncomeInput,
   PaymentInput,
@@ -47,6 +49,7 @@ interface AppState {
   goals: DebtGoal[]
   workSessions: WorkSession[]
   reminders: Reminder[]
+  fixedExpenses: FixedExpense[]
 
   init: () => Promise<void>
   refresh: () => Promise<void>
@@ -89,6 +92,9 @@ interface AppState {
   addReminder: (input: ReminderInput) => Promise<void>
   editReminder: (id: string, patch: Partial<ReminderInput>) => Promise<void>
   removeReminder: (id: string) => Promise<void>
+  addFixedExpense: (input: FixedExpenseInput) => Promise<void>
+  editFixedExpense: (id: string, patch: Partial<FixedExpenseInput>) => Promise<void>
+  removeFixedExpense: (id: string) => Promise<void>
 
   // Data management
   loadDemoData: () => Promise<void>
@@ -118,6 +124,7 @@ export const useStore = create<AppState>((set, get) => {
       goals: s.goals,
       workSessions: s.workSessions,
       reminders: s.reminders,
+      fixedExpenses: s.fixedExpenses,
     })
   }
 
@@ -142,6 +149,7 @@ export const useStore = create<AppState>((set, get) => {
     goals: [],
     workSessions: [],
     reminders: [],
+    fixedExpenses: [],
 
     async init() {
       set({ status: 'loading', error: null })
@@ -218,6 +226,7 @@ export const useStore = create<AppState>((set, get) => {
         goals: [],
         workSessions: [],
         reminders: [],
+        fixedExpenses: [],
       })
     },
 
@@ -379,6 +388,18 @@ export const useStore = create<AppState>((set, get) => {
     async removeReminder(id) {
       await get().db!.deleteReminder(id)
       set((s) => ({ reminders: s.reminders.filter((r) => r.id !== id) }))
+    },
+    async addFixedExpense(input) {
+      const fx = await get().db!.createFixedExpense(input)
+      set((s) => ({ fixedExpenses: [...s.fixedExpenses, fx] }))
+    },
+    async editFixedExpense(id, patch) {
+      const fx = await get().db!.updateFixedExpense(id, patch)
+      set((s) => ({ fixedExpenses: s.fixedExpenses.map((f) => (f.id === id ? fx : f)) }))
+    },
+    async removeFixedExpense(id) {
+      await get().db!.deleteFixedExpense(id)
+      set((s) => ({ fixedExpenses: s.fixedExpenses.filter((f) => f.id !== id) }))
     },
 
     async loadDemoData() {

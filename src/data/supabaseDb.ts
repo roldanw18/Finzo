@@ -5,6 +5,7 @@ import type {
   DebtGoal,
   DebtPayment,
   Expense,
+  FixedExpense,
   Income,
   Profile,
   Reminder,
@@ -16,6 +17,7 @@ import type {
   Database,
   DebtInput,
   ExpenseInput,
+  FixedExpenseInput,
   GoalInput,
   IncomeInput,
   PaymentInput,
@@ -38,7 +40,7 @@ export class SupabaseDatabase implements Database {
     if (categories.length === 0) {
       categories = await this.seedCategories()
     }
-    const [incomes, expenses, debts, debtPayments, goals, workSessions, reminders] =
+    const [incomes, expenses, debts, debtPayments, goals, workSessions, reminders, fixedExpenses] =
       await Promise.all([
         this.fetchIncomes(),
         this.fetchExpenses(),
@@ -47,6 +49,7 @@ export class SupabaseDatabase implements Database {
         this.safeList<DebtGoal>('debt_goals', 'created_at', true),
         this.safeList<WorkSession>('work_sessions', 'date', false),
         this.safeList<Reminder>('reminders', 'date', true),
+        this.safeList<FixedExpense>('fixed_expenses', 'created_at', true),
       ])
     return {
       profile,
@@ -58,6 +61,7 @@ export class SupabaseDatabase implements Database {
       goals,
       workSessions,
       reminders,
+      fixedExpenses,
     }
   }
 
@@ -370,6 +374,22 @@ export class SupabaseDatabase implements Database {
   }
   deleteReminder(id: string) {
     return this.remove('reminders', id)
+  }
+
+  createFixedExpense(input: FixedExpenseInput) {
+    return this.insert<FixedExpense>('fixed_expenses', {
+      name: input.name,
+      amount: input.amount,
+      category_id: input.category_id ?? null,
+      due_day: input.due_day ?? null,
+      active: input.active ?? true,
+    })
+  }
+  updateFixedExpense(id: string, patch: Partial<FixedExpenseInput>) {
+    return this.patch<FixedExpense>('fixed_expenses', id, patch)
+  }
+  deleteFixedExpense(id: string) {
+    return this.remove('fixed_expenses', id)
   }
 
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {

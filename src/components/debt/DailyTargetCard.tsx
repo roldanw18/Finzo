@@ -28,11 +28,21 @@ export function DailyTargetCard() {
       </div>
 
       {covered ? (
-        <div className="flex items-center gap-2 text-income">
-          <CheckCircle2 size={22} />
-          <p className="font-display text-xl font-bold text-content">
-            ¡Ya cubriste tus obligaciones de este mes! 🎉
+        <div>
+          <div className="mb-2 flex items-center gap-2 rounded-xl bg-income/12 px-3 py-2 text-income">
+            <CheckCircle2 size={18} />
+            <p className="text-sm font-semibold">
+              ¡Ya cubriste tus obligaciones de este ciclo! 🎉
+            </p>
+          </div>
+          <p className="text-sm text-muted">Para el próximo ciclo, produce cada día</p>
+          <p className="tnum font-display text-4xl font-bold text-income">
+            {money(dt.totalPerDayFull)}
+            <span className="ml-1 text-base font-medium text-muted">/día</span>
           </p>
+          <span className="chip mt-2 bg-warning/12 text-xs font-medium text-warning">
+            <Fuel size={12} /> incluye gasolina (×{dt.fuelFactor})
+          </span>
         </div>
       ) : (
         <div>

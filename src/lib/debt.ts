@@ -403,6 +403,8 @@ export interface DailyTargets {
   totalPerDay: number
   totalHoursPerDay: number | null
   totalDaysToDue: number
+  /** Same target ignoring what's already paid — used for the next cycle. */
+  totalPerDayFull: number
 }
 
 /**
@@ -459,6 +461,9 @@ export function dailyEarningTargets(
   const fixedNetPerDay = activeFixed.reduce((a, f) => a + f.amount / daysToDueDay(f.due_day), 0)
 
   const totalNetPerDay = allNetPerDay + fixedNetPerDay
+  // Same figure ignoring payments already made (what a full cycle demands).
+  const totalNetPerDayFull =
+    counted.reduce((a, d) => a + d.min_payment / daysToDue(d), 0) + fixedNetPerDay
   const dueCandidates = [
     ...counted.filter((d) => remainingOf(d, (x) => x.min_payment) > 0).map(daysToDue),
     ...activeFixed.map((f) => daysToDueDay(f.due_day)),
@@ -489,6 +494,7 @@ export function dailyEarningTargets(
     totalPerDay: totalNetPerDay * fuelFactor,
     totalHoursPerDay: netPerHour > 0 ? totalNetPerDay / netPerHour : null,
     totalDaysToDue: dueCandidates.length ? Math.min(...dueCandidates) : daysLeftInMonth,
+    totalPerDayFull: totalNetPerDayFull * fuelFactor,
   }
 }
 

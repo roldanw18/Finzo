@@ -31,6 +31,7 @@ export function DebtForm({ editing, onDone }: Props) {
   const [cutDay, setCutDay] = useState<string>(editing?.cut_day?.toString() ?? '')
   const [dueDay, setDueDay] = useState<string>(editing?.due_day?.toString() ?? '')
   const [paid, setPaid] = useState(editing?.status === 'paid')
+  const [countInTarget, setCountInTarget] = useState(editing?.count_in_target !== false)
   const [saving, setSaving] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -50,6 +51,7 @@ export function DebtForm({ editing, onDone }: Props) {
         cut_day: cutDay ? Number(cutDay) : null,
         due_day: dueDay ? Number(dueDay) : null,
         status: (paid ? 'paid' : 'active') as 'paid' | 'active',
+        count_in_target: countInTarget,
       }
       if (editing) {
         await editDebt(editing.id, payload)
@@ -204,6 +206,25 @@ export function DebtForm({ editing, onDone }: Props) {
           />
         </div>
       </div>
+
+      {/* Count toward the daily income goal */}
+      <label className="flex items-start justify-between gap-3 rounded-xl border border-income/25 bg-income/[0.06] p-3">
+        <span>
+          <span className="block text-sm font-medium text-content">
+            Contar en la meta diaria de ingresos
+          </span>
+          <span className="mt-0.5 block text-xs text-muted">
+            Si la desmarcas, esta deuda sigue en tu plan pero no se suma a lo que debes
+            producir cada día.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={countInTarget}
+          onChange={(e) => setCountInTarget(e.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-income"
+        />
+      </label>
 
       {editing && (
         <label className="flex items-center justify-between rounded-xl border border-border bg-surface-2/50 p-3">

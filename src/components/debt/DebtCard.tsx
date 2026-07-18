@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Pencil, CheckCircle2 } from 'lucide-react'
+import { Pencil, CheckCircle2, EyeOff } from 'lucide-react'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
 import { debtTypeMeta, type Debt } from '@/types'
@@ -41,6 +41,11 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
           <p className="truncate text-xs text-muted">
             {debt.creditor || meta.label}
           </p>
+          {debt.count_in_target === false && (
+            <span className="chip mt-1 bg-surface-2 text-[10px] text-subtle">
+              <EyeOff size={10} /> fuera de la meta diaria
+            </span>
+          )}
         </div>
         <div className="text-right">
           <p className="tnum font-display text-base font-bold text-content">

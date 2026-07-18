@@ -309,6 +309,7 @@ export class SupabaseDatabase implements Database {
       due_day: input.due_day ?? null,
       priority: input.priority ?? 0,
       status: input.status ?? 'active',
+      count_in_target: input.count_in_target ?? true,
     })
   }
   updateDebt(id: string, patch: Partial<DebtInput>) {

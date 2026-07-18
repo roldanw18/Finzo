@@ -59,6 +59,8 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
      (deudas, pagos, metas, jornadas de Uber, recordatorios) + RLS.
    - [`0004_fixed_expenses.sql`](supabase/migrations/0004_fixed_expenses.sql) — gastos fijos
      mensuales (arriendo, servicios, suscripciones) + RLS.
+   - [`0005_debt_count_in_target.sql`](supabase/migrations/0005_debt_count_in_target.sql) — casilla
+     para elegir qué deudas cuentan en la meta diaria de ingresos.
    Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:

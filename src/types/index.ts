@@ -84,6 +84,8 @@ export interface Debt {
   due_day: number | null
   priority: number
   status: DebtStatus
+  /** Whether this debt counts toward the daily income goal. Defaults to true. */
+  count_in_target?: boolean
   created_at: string
 }
 

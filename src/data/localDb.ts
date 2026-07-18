@@ -252,6 +252,7 @@ export class LocalDatabase implements Database {
       due_day: input.due_day ?? null,
       priority: input.priority ?? s.debts.length,
       status: input.status ?? 'active',
+      count_in_target: input.count_in_target ?? true,
       created_at: new Date().toISOString(),
     }
     s.debts.push(debt)

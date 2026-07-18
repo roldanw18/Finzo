@@ -419,7 +419,9 @@ export function dailyEarningTargets(
   fuelFactor = FUEL_FACTOR,
 ): DailyTargets {
   const active = debts.filter((d) => d.status === 'active')
-  const cards = active.filter((d) => d.type === 'credit_card')
+  // Only debts marked to count toward the daily goal (default: yes).
+  const counted = active.filter((d) => d.count_in_target !== false)
+  const cards = counted.filter((d) => d.type === 'credit_card')
   const activeFixed = fixedExpenses.filter((f) => f.active && f.amount > 0)
   const monthKey = format(ref, 'yyyy-MM')
   const daysLeftInMonth = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
@@ -449,8 +451,8 @@ export function dailyEarningTargets(
   }
 
   const cardNetPerDay = netPerDayFor(cards, (d) => d.min_payment)
-  const allNetPerDay = netPerDayFor(active, (d) => d.min_payment)
-  const targetNetPerDay = netPerDayFor(active, (d) => d.target_payment || d.min_payment)
+  const allNetPerDay = netPerDayFor(counted, (d) => d.min_payment)
+  const targetNetPerDay = netPerDayFor(counted, (d) => d.target_payment || d.min_payment)
 
   // Fixed expenses spread over their own due dates
   const fixedTotal = activeFixed.reduce((a, f) => a + f.amount, 0)
@@ -458,7 +460,7 @@ export function dailyEarningTargets(
 
   const totalNetPerDay = allNetPerDay + fixedNetPerDay
   const dueCandidates = [
-    ...active.filter((d) => remainingOf(d, (x) => x.min_payment) > 0).map(daysToDue),
+    ...counted.filter((d) => remainingOf(d, (x) => x.min_payment) > 0).map(daysToDue),
     ...activeFixed.map((f) => daysToDueDay(f.due_day)),
   ]
 
@@ -466,19 +468,19 @@ export function dailyEarningTargets(
     daysLeftInMonth,
     fuelFactor,
     hasCards: cards.length > 0,
-    hasDebts: active.length > 0,
+    hasDebts: counted.length > 0,
     cardRemaining: remainingSum(cards, (d) => d.min_payment),
-    allRemaining: remainingSum(active, (d) => d.min_payment),
-    targetRemaining: remainingSum(active, (d) => d.target_payment || d.min_payment),
+    allRemaining: remainingSum(counted, (d) => d.min_payment),
+    targetRemaining: remainingSum(counted, (d) => d.target_payment || d.min_payment),
     cardMinimums: cards.reduce((a, d) => a + d.min_payment, 0),
-    allMinimums: active.reduce((a, d) => a + d.min_payment, 0),
+    allMinimums: counted.reduce((a, d) => a + d.min_payment, 0),
     cardPerDay: cardNetPerDay * fuelFactor,
     allPerDay: allNetPerDay * fuelFactor,
     targetPerDay: targetNetPerDay * fuelFactor,
     cardNetPerDay,
     allNetPerDay,
     cardDaysToDue: nearestDue(cards),
-    allDaysToDue: nearestDue(active),
+    allDaysToDue: nearestDue(counted),
     cardHoursPerDay: netPerHour > 0 ? cardNetPerDay / netPerHour : null,
     hasFixed: activeFixed.length > 0,
     fixedTotal,

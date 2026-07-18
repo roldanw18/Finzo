@@ -54,6 +54,7 @@ export interface DebtInput {
   due_day?: number | null
   priority?: number
   status?: DebtStatus
+  count_in_target?: boolean
 }
 
 export interface PaymentInput {

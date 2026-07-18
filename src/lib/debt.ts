@@ -367,6 +367,26 @@ export function hoursToPay(balance: number, netPerHour: number): number {
   return netPerHour > 0 ? balance / netPerHour : 0
 }
 
+/**
+ * Minimum debt payments still pending this month, across ALL active debts
+ * (independent of the daily-goal checkbox).
+ */
+export function pendingDebtThisMonth(
+  debts: Debt[],
+  debtPayments: DebtPayment[],
+  ref = new Date(),
+): number {
+  const monthKey = format(ref, 'yyyy-MM')
+  const paid = new Map<string, number>()
+  for (const p of debtPayments) {
+    if (p.date.slice(0, 7) !== monthKey) continue
+    paid.set(p.debt_id, (paid.get(p.debt_id) ?? 0) + p.amount)
+  }
+  return debts
+    .filter((d) => d.status === 'active')
+    .reduce((a, d) => a + Math.max(0, d.min_payment - (paid.get(d.id) ?? 0)), 0)
+}
+
 /* --------------------------------------------- Daily income target */
 
 /** Fuel overhead: earn 30% extra so the payment stays "free" after gas. */

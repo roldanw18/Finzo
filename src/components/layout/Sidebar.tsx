@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { pendingDebtThisMonth } from '@/lib/debt'
 import { cn, initials } from '@/lib/utils'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 
@@ -15,9 +16,10 @@ export function Sidebar() {
   const mode = useStore((s) => s.mode)
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
-  const { currency } = useMoney()
-  const { kpis } = useAnalytics()
+  const { currency, money } = useMoney()
+  const { kpis, debts, debtPayments } = useAnalytics()
 
+  const pendingDebt = pendingDebtThisMonth(debts, debtPayments)
   const dark = profile?.theme !== 'light'
 
   return (
@@ -41,6 +43,18 @@ export function Sidebar() {
           currency={currency}
           className="tnum mt-1 block font-display text-2xl font-bold text-content"
         />
+        {debts.length > 0 && (
+          <p className="mt-1 text-[11px] leading-snug text-muted">
+            {pendingDebt > 0 ? (
+              <>
+                Falta pagar <b className="tnum text-expense">{money(pendingDebt, { compact: true })}</b> de
+                deudas este mes
+              </>
+            ) : (
+              <span className="text-income">✓ Deudas del mes al día</span>
+            )}
+          </p>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button
             onClick={() => openIncome()}

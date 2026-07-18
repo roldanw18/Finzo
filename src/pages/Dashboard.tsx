@@ -33,6 +33,7 @@ import {
   dailySeries,
   expensesByCategory,
 } from '@/lib/analytics'
+import { pendingDebtThisMonth } from '@/lib/debt'
 import { startOfMonth, endOfMonth, fmtLong } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 
@@ -44,7 +45,8 @@ function greeting(): string {
 }
 
 export function Dashboard() {
-  const { incomes, expenses, categories, debtPayments, profile, kpis, movements } = useAnalytics()
+  const { incomes, expenses, categories, debtPayments, debts, profile, kpis, movements } =
+    useAnalytics()
   const { money } = useMoney()
   const openExpense = useUI((s) => s.openExpense)
   const openIncome = useUI((s) => s.openIncome)
@@ -64,6 +66,10 @@ export function Dashboard() {
     [expenses, categories, debtPayments],
   )
   const recent = movements.slice(0, 6)
+  const pendingDebt = useMemo(
+    () => pendingDebtThisMonth(debts, debtPayments),
+    [debts, debtPayments],
+  )
 
   const incomeSpark = months.map((m) => m.income)
   const expenseSpark = months.map((m) => m.expense)
@@ -116,6 +122,18 @@ export function Dashboard() {
               currency={profile?.currency ?? 'COP'}
               className="tnum mt-1 block font-display text-4xl font-bold tracking-tight sm:text-5xl"
             />
+            {debts.length > 0 && (
+              <p className="mt-1.5 text-xs text-muted">
+                {pendingDebt > 0 ? (
+                  <>
+                    Te falta pagar{' '}
+                    <b className="tnum text-expense">{money(pendingDebt)}</b> de deudas este mes
+                  </>
+                ) : (
+                  <span className="text-income">✓ Deudas del mes al día</span>
+                )}
+              </p>
+            )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span
                 className={cn(

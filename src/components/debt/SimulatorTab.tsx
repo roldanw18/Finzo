@@ -158,10 +158,10 @@ export function SimulatorTab() {
             <div key={it.debt.id} className="flex items-center gap-3">
               <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorMap.get(it.debt.id) }} />
               <span className="min-w-0 flex-1 truncate text-sm text-content">{it.debt.name}</span>
-              <div className="text-right text-xs">
+              <div className="shrink-0 text-right text-xs">
                 <span className="tnum font-semibold text-content">{money(it.total, { compact: true })}</span>
                 {it.extra > 0 && (
-                  <span className="ml-1.5 text-income">
+                  <span className="ml-1.5 hidden text-income sm:inline">
                     (mín {money(it.base, { compact: true })} + extra {money(it.extra, { compact: true })})
                   </span>
                 )}
@@ -194,8 +194,8 @@ export function SimulatorTab() {
               {projection.payoff.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 text-sm">
                   <CheckCircle2 size={15} style={{ color: p.color }} />
-                  <span className="flex-1 truncate text-content">{p.name}</span>
-                  <span className="text-muted">
+                  <span className="min-w-0 flex-1 truncate text-content">{p.name}</span>
+                  <span className="shrink-0 text-muted">
                     {fmtShort(p.date.toISOString().slice(0, 10))} {p.date.getFullYear()}
                   </span>
                   <span className="chip bg-surface-2 text-[11px] text-muted">{p.month} meses</span>

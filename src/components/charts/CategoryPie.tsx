@@ -48,15 +48,15 @@ export function CategoryPie({ data }: { data: CategorySlice[] }) {
         </div>
       </div>
 
-      <div className="w-full flex-1 space-y-2">
+      <div className="w-full min-w-0 flex-1 space-y-2">
         {top.map((s) => (
-          <div key={s.id} className="flex items-center gap-2.5">
+          <div key={s.id} className="flex min-w-0 items-center gap-2.5">
             <CategoryIcon icon={s.icon} color={s.color} size={14} />
-            <span className="flex-1 truncate text-sm text-content">{s.name}</span>
-            <span className="tnum text-sm font-semibold text-content">
+            <span className="min-w-0 flex-1 truncate text-sm text-content">{s.name}</span>
+            <span className="tnum shrink-0 text-sm font-semibold text-content">
               {money(s.value, { compact: true })}
             </span>
-            <span className="tnum w-11 text-right text-xs text-muted">
+            <span className="tnum w-11 shrink-0 text-right text-xs text-muted">
               {s.pct.toFixed(0)}%
             </span>
           </div>

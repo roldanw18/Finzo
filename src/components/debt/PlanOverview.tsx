@@ -319,10 +319,10 @@ export function PlanOverview() {
                     style={{ background: colorMap.get(it.debt.id) }}
                   />
                   <span className="min-w-0 flex-1 truncate text-content">{it.debt.name}</span>
-                  <span className="tnum font-semibold text-content">
+                  <span className="tnum shrink-0 font-semibold text-content">
                     {money(it.total, { compact: true })}
                   </span>
-                  <span className="tnum w-10 text-right text-xs text-muted">
+                  <span className="tnum w-10 shrink-0 text-right text-xs text-muted">
                     {it.pct.toFixed(0)}%
                   </span>
                 </div>
@@ -343,8 +343,8 @@ export function PlanOverview() {
                     {projection.payoff.slice(0, 4).map((p) => (
                       <div key={p.id} className="flex items-center gap-2.5 text-sm">
                         <CheckCircle2 size={14} style={{ color: p.color }} />
-                        <span className="flex-1 truncate text-content">{p.name}</span>
-                        <span className="text-xs text-muted">
+                        <span className="min-w-0 flex-1 truncate text-content">{p.name}</span>
+                        <span className="shrink-0 text-xs text-muted">
                           {fmtShort(p.date.toISOString().slice(0, 10))} {p.date.getFullYear()}
                         </span>
                       </div>

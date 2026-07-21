@@ -17,9 +17,13 @@ export function useAnalytics() {
     [incomes, expenses, opening, debtPayments],
   )
 
+  const incomeLabel = profile?.income_label
   const movements = useMemo(
-    () => toMovements(incomes, expenses, categories, debtPayments, debts),
-    [incomes, expenses, categories, debtPayments, debts],
+    () =>
+      toMovements(incomes, expenses, categories, debtPayments, debts, {
+        label: incomeLabel,
+      }),
+    [incomes, expenses, categories, debtPayments, debts, incomeLabel],
   )
 
   return {

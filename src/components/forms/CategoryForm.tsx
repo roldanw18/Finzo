@@ -91,7 +91,7 @@ export function CategoryForm({ editing, onDone }: Props) {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Gasolina"
+          placeholder="Ej. Transporte"
           className="input"
           autoFocus
         />

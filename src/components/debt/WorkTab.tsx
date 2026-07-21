@@ -1,16 +1,20 @@
-import { Plus, Trash2, Clock, Fuel, Gauge, Car } from 'lucide-react'
+import { Plus, Trash2, Clock, Coins, Gauge } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
+import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 import { useDebtModal } from './modalContext'
 import { hoursToPay } from '@/lib/debt'
 import { fmtShort } from '@/lib/dates'
+import { getIcon } from '@/lib/icons'
 import { DailyTargetCard } from './DailyTargetCard'
 
-export function UberTab() {
+export function WorkTab() {
   const { uber, workSessions, active } = useDebt()
+  const { costLabel, workLabel, incomeLabel, icon } = useActivity()
+  const ActivityIcon = getIcon(icon)
   const { money } = useMoney()
   const open = useDebtModal()
   const removeWorkSession = useStore((s) => s.removeWorkSession)
@@ -20,15 +24,15 @@ export function UberTab() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
-            <Car size={20} />
+            <ActivityIcon size={20} />
           </span>
           <div>
-            <h2 className="font-display text-lg font-bold leading-none">Trabajo en Uber</h2>
-            <p className="text-xs text-muted">Tu productividad para pagar deudas</p>
+            <h2 className="font-display text-lg font-bold leading-none">Mi trabajo</h2>
+            <p className="text-xs text-muted">{workLabel} y productividad para pagar deudas</p>
           </div>
         </div>
         <button onClick={() => open({ type: 'work' })} className="btn-primary">
-          <Plus size={16} /> Jornada
+          <Plus size={16} /> Registrar
         </button>
       </div>
 
@@ -43,12 +47,12 @@ export function UberTab() {
           <p className="tnum mt-1 font-display text-xl font-bold text-content">{uber.totalHours.toFixed(0)}h</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><Car size={15} /><span className="text-xs">Ganancia neta</span></div>
+          <div className="flex items-center gap-2 text-muted"><ActivityIcon size={15} /><span className="text-xs">Ganancia neta</span></div>
           <p className="tnum mt-1 font-display text-xl font-bold text-content">{money(uber.netTotal, { compact: true })}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><Fuel size={15} /><span className="text-xs">Gasolina total</span></div>
-          <p className="tnum mt-1 font-display text-xl font-bold text-expense">{money(uber.totalFuel, { compact: true })}</p>
+          <div className="flex items-center gap-2 text-muted"><Coins size={15} /><span className="text-xs">{costLabel} total</span></div>
+          <p className="tnum mt-1 font-display text-xl font-bold text-expense">{money(uber.totalCost, { compact: true })}</p>
         </div>
       </div>
 
@@ -57,7 +61,7 @@ export function UberTab() {
 
       {/* Hours to pay each debt */}
       <Card>
-        <CardHeader title="¿Cuántas horas para pagar cada deuda?" subtitle={uber.netPerHour > 0 ? `A ${money(uber.netPerHour)}/hora neto` : 'Registra jornadas para calcularlo'} />
+        <CardHeader title="¿Cuántas horas para pagar cada deuda?" subtitle={uber.netPerHour > 0 ? `A ${money(uber.netPerHour)}/hora neto` : `Registra ${workLabel.toLowerCase()} para calcularlo`} />
         {uber.netPerHour <= 0 ? (
           <EmptyState icon={<Clock size={22} />} title="Sin datos de trabajo" description="Registra al menos una jornada para calcular cuántas horas necesitas." />
         ) : active.length === 0 ? (
@@ -86,7 +90,7 @@ export function UberTab() {
       {/* Sessions history */}
       <Card className="!p-2">
         {workSessions.length === 0 ? (
-          <EmptyState icon={<Car size={22} />} title="Sin jornadas registradas" description="Registra horas, ingresos y gasolina para conocer tu valor por hora." />
+          <EmptyState icon={<ActivityIcon size={22} />} title={`Sin ${workLabel.toLowerCase()} registradas`} description={`Registra horas, ${incomeLabel.toLowerCase()} y ${costLabel.toLowerCase()} para conocer tu valor por hora.`} />
         ) : (
           <div className="divide-y divide-border/60">
             {workSessions.map((w) => {

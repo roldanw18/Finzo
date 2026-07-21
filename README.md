@@ -1,8 +1,9 @@
 # 💰 Finzo — Gestión financiera personal
 
 Aplicación web de finanzas personales de calidad comercial, inspirada en **Binance / Revolut**.
-Pensada para conductores de Uber: registra ingresos en menos de 10 segundos, controla
-tus gastos por categoría y entiende tus hábitos con análisis, KPIs y gráficos interactivos.
+**Se adapta a tu oficio**: conductor, barbero, domicilios, negocio, freelance o empleado.
+Registra ingresos en menos de 10 segundos, controla tus gastos por categoría y entiende
+tus hábitos con análisis, KPIs y gráficos interactivos.
 
 Hecha con **React + TypeScript + Vite + Tailwind + Recharts + Framer Motion**, con
 backend en **Supabase** (Postgres + Auth + RLS) y modo **local offline** de respaldo.
@@ -11,6 +12,9 @@ backend en **Supabase** (Postgres + Auth + RLS) y modo **local offline** de resp
 
 ## ✨ Funcionalidades
 
+- **Multi-oficio**: un asistente inicial configura la app según a qué te dedicas —
+  ajusta categorías, el nombre de tus ingresos ("Viaje", "Servicio", "Venta"…) y tu
+  costo variable ("Gasolina", "Insumos", "Mercancía"). Editable después en Ajustes.
 - **Registro ultrarrápido de ingresos** (solo monto, fecha y nota opcional) y de gastos
   (monto, categoría, fecha, descripción, método de pago, observaciones).
 - **Categorías 100% administrables**: crear, editar, eliminar, color e ícono.
@@ -61,6 +65,8 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
      mensuales (arriendo, servicios, suscripciones) + RLS.
    - [`0005_debt_count_in_target.sql`](supabase/migrations/0005_debt_count_in_target.sql) — casilla
      para elegir qué deudas cuentan en la meta diaria de ingresos.
+   - [`0006_activity_profile.sql`](supabase/migrations/0006_activity_profile.sql) — perfil de
+     actividad multi-oficio (etiquetas, costo variable, asistente inicial).
    Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:

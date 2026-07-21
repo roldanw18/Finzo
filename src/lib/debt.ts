@@ -334,28 +334,28 @@ export function compareExtra(debts: Debt[], extraMonthly: number, ref = new Date
   }
 }
 
-/* --------------------------------------------------- Uber math */
+/* --------------------------------------------------- Work math */
 
-export interface UberStats {
+export interface WorkStats {
   totalHours: number
   totalEarnings: number
-  totalFuel: number
+  totalCost: number
   netTotal: number
   netPerHour: number
   avgPerDay: number
   sessions: number
 }
 
-export function uberStats(sessions: WorkSession[]): UberStats {
+export function workStats(sessions: WorkSession[]): WorkStats {
   const totalHours = sessions.reduce((a, s) => a + s.hours, 0)
   const totalEarnings = sessions.reduce((a, s) => a + s.earnings, 0)
-  const totalFuel = sessions.reduce((a, s) => a + s.fuel_cost, 0)
-  const netTotal = totalEarnings - totalFuel
+  const totalCost = sessions.reduce((a, s) => a + s.fuel_cost, 0)
+  const netTotal = totalEarnings - totalCost
   const days = new Set(sessions.map((s) => s.date)).size
   return {
     totalHours,
     totalEarnings,
-    totalFuel,
+    totalCost,
     netTotal,
     netPerHour: safeDiv(netTotal, totalHours),
     avgPerDay: safeDiv(netTotal, days),
@@ -389,12 +389,12 @@ export function pendingDebtThisMonth(
 
 /* --------------------------------------------- Daily income target */
 
-/** Fuel overhead: earn 30% extra so the payment stays "free" after gas. */
-export const FUEL_FACTOR = 1.3
+/** Default operating-cost overhead: earn extra so the payment stays "free". */
+export const DEFAULT_COST_FACTOR = 1.2
 
 export interface DailyTargets {
   daysLeftInMonth: number
-  fuelFactor: number
+  costFactor: number
   hasCards: boolean
   hasDebts: boolean
   // Remaining obligation THIS cycle (net, after what's already paid)
@@ -403,7 +403,7 @@ export interface DailyTargets {
   targetRemaining: number
   cardMinimums: number
   allMinimums: number
-  // Gross daily target = net-per-day × fuelFactor (per-debt due dates)
+  // Gross daily target = net-per-day × costFactor (per-debt due dates)
   cardPerDay: number
   allPerDay: number
   targetPerDay: number
@@ -428,7 +428,7 @@ export interface DailyTargets {
 }
 
 /**
- * How much to EARN per day (gross, incl. fuel via `fuelFactor`) so the credit
+ * How much to EARN per day (gross, incl. operating cost via `costFactor`) so the
  * card minimums — and optionally all minimums / target pace — stay covered.
  * Each debt is spread over the days until ITS OWN payment due date.
  */
@@ -438,7 +438,7 @@ export function dailyEarningTargets(
   netPerHour = 0,
   ref = new Date(),
   fixedExpenses: FixedExpense[] = [],
-  fuelFactor = FUEL_FACTOR,
+  costFactor = DEFAULT_COST_FACTOR,
 ): DailyTargets {
   const active = debts.filter((d) => d.status === 'active')
   // Only debts marked to count toward the daily goal (default: yes).
@@ -491,7 +491,7 @@ export function dailyEarningTargets(
 
   return {
     daysLeftInMonth,
-    fuelFactor,
+    costFactor,
     hasCards: cards.length > 0,
     hasDebts: counted.length > 0,
     cardRemaining: remainingSum(cards, (d) => d.min_payment),
@@ -499,9 +499,9 @@ export function dailyEarningTargets(
     targetRemaining: remainingSum(counted, (d) => d.target_payment || d.min_payment),
     cardMinimums: cards.reduce((a, d) => a + d.min_payment, 0),
     allMinimums: counted.reduce((a, d) => a + d.min_payment, 0),
-    cardPerDay: cardNetPerDay * fuelFactor,
-    allPerDay: allNetPerDay * fuelFactor,
-    targetPerDay: targetNetPerDay * fuelFactor,
+    cardPerDay: cardNetPerDay * costFactor,
+    allPerDay: allNetPerDay * costFactor,
+    targetPerDay: targetNetPerDay * costFactor,
     cardNetPerDay,
     allNetPerDay,
     cardDaysToDue: nearestDue(cards),
@@ -511,10 +511,10 @@ export function dailyEarningTargets(
     fixedTotal,
     fixedNetPerDay,
     totalNetPerDay,
-    totalPerDay: totalNetPerDay * fuelFactor,
+    totalPerDay: totalNetPerDay * costFactor,
     totalHoursPerDay: netPerHour > 0 ? totalNetPerDay / netPerHour : null,
     totalDaysToDue: dueCandidates.length ? Math.min(...dueCandidates) : daysLeftInMonth,
-    totalPerDayFull: totalNetPerDayFull * fuelFactor,
+    totalPerDayFull: totalNetPerDayFull * costFactor,
   }
 }
 

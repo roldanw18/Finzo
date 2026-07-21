@@ -2,8 +2,8 @@ export type Currency = 'COP' | 'USD'
 
 export type ThemeMode = 'dark' | 'light'
 
-/** Where an income came from. 'tip' = propina, the rest is Uber income. */
-export type IncomeSource = 'uber' | 'tip'
+/** Where an income came from. 'tip' = propina, 'main' = the user's main activity. */
+export type IncomeSource = 'main' | 'tip' | 'uber'
 
 export type PaymentMethod =
   | 'cash'
@@ -32,7 +32,7 @@ export interface Income {
   amount: number
   date: string // ISO yyyy-MM-dd
   note: string | null
-  /** Defaults to 'uber' for legacy rows without the column. */
+  /** Defaults to 'main' for legacy rows without the column. */
   source?: IncomeSource
   created_at: string
 }
@@ -58,6 +58,16 @@ export interface Profile {
   opening_balance: number
   /** Per-category monthly budgets, keyed by category id. */
   budgets: Record<string, number>
+  /** What the user does for a living — drives wording, categories and costs. */
+  activity_type?: string | null
+  /** How income is named, e.g. "Viaje", "Servicio", "Venta". */
+  income_label?: string
+  /** Variable cost of producing income: "Gasolina", "Insumos", "Mercancía". */
+  cost_label?: string
+  /** Multiplier so obligations stay free after the variable cost (e.g. 1.3). */
+  cost_factor?: number
+  /** False until the setup wizard is completed. */
+  onboarded?: boolean
   created_at: string
 }
 

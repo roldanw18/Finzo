@@ -274,6 +274,7 @@ export function generateRecommendations(
   categories: Category[],
   openingBalance: number,
   ref = new Date(),
+  costCategory?: string,
 ): Recommendation[] {
   const recs: Recommendation[] = []
   const kpis = computeKpis(incomes, expenses, openingBalance, ref)
@@ -339,18 +340,20 @@ export function generateRecommendations(
     }
   }
 
-  // 5. Fuel efficiency hint (Uber-specific)
-  const fuel = byCat.find((c) => /gasolina|combustible/i.test(c.name))
-  if (fuel && kpis.monthIncome > 0) {
-    const fuelRatio = safeDiv(fuel.value, kpis.monthIncome) * 100
-    if (fuelRatio > 25) {
-      recs.push({
-        id: 'fuel',
-        icon: 'Fuel',
-        title: 'Gasolina elevada',
-        detail: `La gasolina representa el ${fuelRatio.toFixed(0)}% de tus ingresos. Optimiza rutas y horarios de mayor demanda.`,
-        potentialSaving: fuel.value * 0.12,
-      })
+  // 5. Operating cost weighs too much on income (fuel, supplies, stock…)
+  if (costCategory && kpis.monthIncome > 0) {
+    const cost = byCat.find((c) => c.name.toLowerCase() === costCategory.toLowerCase())
+    if (cost) {
+      const ratio = safeDiv(cost.value, kpis.monthIncome) * 100
+      if (ratio > 25) {
+        recs.push({
+          id: 'operating-cost',
+          icon: 'Fuel',
+          title: `${cost.name} elevado`,
+          detail: `${cost.name} representa el ${ratio.toFixed(0)}% de tus ingresos. Busca proveedores o formas de reducirlo.`,
+          potentialSaving: cost.value * 0.12,
+        })
+      }
     }
   }
 

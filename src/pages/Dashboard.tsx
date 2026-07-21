@@ -86,7 +86,7 @@ export function Dashboard() {
         <div>
           <p className="text-sm text-muted">{greeting()},</p>
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {profile?.display_name || 'Conductor'} 👋
+            {profile?.display_name || 'de nuevo'} 👋
           </h1>
           <p className="mt-1 text-xs capitalize text-subtle">{fmtLong(new Date())}</p>
         </div>

@@ -5,10 +5,11 @@ import {
   sortAvalanche,
   nextRecommendedDebt,
   generateDebtAlerts,
-  uberStats,
+  workStats,
   buildCalendar,
   simulatePayoff,
   motivationalPhrases,
+  DEFAULT_COST_FACTOR,
   dailyEarningTargets,
   monthlyAllocation,
   projectDebts,
@@ -18,6 +19,7 @@ import { pctChange } from '@/lib/utils'
 /** Shared, memoized debt-plan computations from the store. */
 export function useDebt() {
   const debts = useStore((s) => s.debts)
+  const costFactor = useStore((s) => s.profile?.cost_factor ?? DEFAULT_COST_FACTOR)
   const payments = useStore((s) => s.debtPayments)
   const goals = useStore((s) => s.goals)
   const workSessions = useStore((s) => s.workSessions)
@@ -32,15 +34,23 @@ export function useDebt() {
   const avalanche = useMemo(() => sortAvalanche(debts), [debts])
   const recommendation = useMemo(() => nextRecommendedDebt(debts), [debts])
   const alerts = useMemo(() => generateDebtAlerts(debts, payments), [debts, payments])
-  const uber = useMemo(() => uberStats(workSessions), [workSessions])
+  const uber = useMemo(() => workStats(workSessions), [workSessions])
   const calendar = useMemo(
     () => buildCalendar(debts, reminders, new Date(), fixedExpenses),
     [debts, reminders, fixedExpenses],
   )
   const basePlan = useMemo(() => simulatePayoff(debts, 0), [debts])
   const dailyTargets = useMemo(
-    () => dailyEarningTargets(debts, payments, uber.netPerHour, new Date(), fixedExpenses),
-    [debts, payments, uber.netPerHour, fixedExpenses],
+    () =>
+      dailyEarningTargets(
+        debts,
+        payments,
+        uber.netPerHour,
+        new Date(),
+        fixedExpenses,
+        costFactor,
+      ),
+    [debts, payments, uber.netPerHour, fixedExpenses, costFactor],
   )
   const allocation = useMemo(() => monthlyAllocation(debts, 0), [debts])
   const projection = useMemo(() => projectDebts(debts, 0), [debts])

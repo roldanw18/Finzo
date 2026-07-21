@@ -3,12 +3,14 @@ import { Loader2 } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useActivity } from '@/hooks/useActivity'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { safeDiv } from '@/lib/utils'
 
 export function WorkSessionForm({ onDone }: { onDone: () => void }) {
   const { currency, money } = useMoney()
+  const { costLabel, incomeLabel } = useActivity()
   const addWorkSession = useStore((s) => s.addWorkSession)
 
   const [date, setDate] = useState(todayISO())
@@ -65,11 +67,11 @@ export function WorkSessionForm({ onDone }: { onDone: () => void }) {
       </div>
 
       <div>
-        <label className="label">Ingresos del día (Uber)</label>
+        <label className="label">{incomeLabel} del día</label>
         <AmountInput value={earnings} onChange={setEarnings} currency={currency} size="md" />
       </div>
       <div>
-        <label className="label">Gasto en gasolina</label>
+        <label className="label">Gasto en {costLabel.toLowerCase()}</label>
         <AmountInput value={fuel} onChange={setFuel} currency={currency} size="md" />
       </div>
 
@@ -89,7 +91,7 @@ export function WorkSessionForm({ onDone }: { onDone: () => void }) {
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Ej. turno noche, lluvia"
+          placeholder="Ej. jornada larga, buen día"
           className="input"
         />
       </div>

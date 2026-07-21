@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { Splash } from '@/components/Splash'
 import { Toaster } from '@/components/ui/Toaster'
 import { Login } from '@/pages/Login'
+import { Onboarding } from '@/pages/Onboarding'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
 const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -28,6 +29,7 @@ function PageLoader() {
 export default function App() {
   const status = useStore((s) => s.status)
   const error = useStore((s) => s.error)
+  const onboarded = useStore((s) => s.profile?.onboarded ?? true)
   const init = useStore((s) => s.init)
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function App() {
 
   return (
     <>
-      <AppContent status={status} error={error} retry={init} />
+      <AppContent status={status} error={error} retry={init} onboarded={onboarded} />
       <Toaster />
     </>
   )
@@ -46,10 +48,12 @@ function AppContent({
   status,
   error,
   retry,
+  onboarded,
 }: {
   status: string
   error: string | null
   retry: () => void
+  onboarded: boolean
 }) {
   if (status === 'idle' || status === 'loading') return <Splash />
 
@@ -71,6 +75,9 @@ function AppContent({
   }
 
   if (status === 'auth') return <Login />
+
+  // First run: let the user tell us what they do for a living.
+  if (!onboarded) return <Onboarding />
 
   return (
     <Suspense fallback={<PageLoader />}>

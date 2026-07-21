@@ -3,6 +3,7 @@ import { Card, CardHeader } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
+import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 import { useDebtModal } from './modalContext'
 import { toast } from '@/store/toast'
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
 
 export function FixedTab() {
   const { fixedExpenses, dailyTargets } = useDebt()
+  const { costLabel } = useActivity()
   const { money } = useMoney()
   const open = useDebtModal()
   const addExpense = useStore((s) => s.addExpense)
@@ -65,9 +67,9 @@ export function FixedTab() {
           <p className="text-sm text-content">
             Para cubrir solo tus gastos fijos necesitas producir{' '}
             <b className="text-income">
-              {money(dailyTargets.fixedNetPerDay * dailyTargets.fuelFactor)}/día
+              {money(dailyTargets.fixedNetPerDay * dailyTargets.costFactor)}/día
             </b>{' '}
-            (incluye gasolina ×{dailyTargets.fuelFactor}).
+            (incluye {costLabel.toLowerCase()} ×{dailyTargets.costFactor}).
           </p>
         </div>
       )}

@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion'
 import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2 } from 'lucide-react'
 import { useDebt } from '@/hooks/useDebt'
+import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 
 export function DailyTargetCard() {
   const { dailyTargets: dt } = useDebt()
+  const { costLabel } = useActivity()
   const { money } = useMoney()
 
   if (!dt.hasDebts && !dt.hasFixed) return null
@@ -41,7 +43,7 @@ export function DailyTargetCard() {
             <span className="ml-1 text-base font-medium text-muted">/día</span>
           </p>
           <span className="chip mt-2 bg-warning/12 text-xs font-medium text-warning">
-            <Fuel size={12} /> incluye gasolina (×{dt.fuelFactor})
+            <Fuel size={12} /> incluye {costLabel.toLowerCase()} (×{dt.costFactor})
           </span>
         </div>
       ) : (
@@ -54,7 +56,7 @@ export function DailyTargetCard() {
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="chip bg-warning/12 text-xs font-medium text-warning">
-              <Fuel size={12} /> incluye gasolina (×{dt.fuelFactor})
+              <Fuel size={12} /> incluye {costLabel.toLowerCase()} (×{dt.costFactor})
             </span>
             {dt.totalHoursPerDay !== null && (
               <span className="chip bg-info/12 text-xs font-medium text-info">
@@ -74,7 +76,7 @@ export function DailyTargetCard() {
                   <Repeat size={11} /> Gastos fijos
                 </p>
                 <p className="tnum text-sm font-semibold text-content">
-                  {money(dt.fixedNetPerDay * dt.fuelFactor, { compact: true })}/día
+                  {money(dt.fixedNetPerDay * dt.costFactor, { compact: true })}/día
                 </p>
               </div>
               <div className="rounded-xl bg-surface-2/60 p-2.5">
@@ -82,14 +84,14 @@ export function DailyTargetCard() {
                   <Landmark size={11} /> Mínimos deudas
                 </p>
                 <p className="tnum text-sm font-semibold text-content">
-                  {money(dt.allNetPerDay * dt.fuelFactor, { compact: true })}/día
+                  {money(dt.allNetPerDay * dt.costFactor, { compact: true })}/día
                 </p>
               </div>
             </div>
           )}
 
           <p className="mt-3 text-xs text-muted">
-            De eso, <b className="text-content">{money(gas, { compact: true })}</b> es gasolina y te
+            De eso, <b className="text-content">{money(gas, { compact: true })}</b> es {costLabel.toLowerCase()} y te
             queda libre <b className="text-content">{money(netPerDay, { compact: true })}/día</b> para tus
             obligaciones.
           </p>

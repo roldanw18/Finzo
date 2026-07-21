@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { MovementRow } from '@/components/MovementRow'
 import { ExportButtons } from '@/components/ExportButtons'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 import { fmtLong } from '@/lib/dates'
 import { cn } from '@/lib/utils'
@@ -17,6 +18,7 @@ type Sort = 'recent' | 'amount'
 
 export function History() {
   const { movements, categories, kpis } = useAnalytics()
+  const { incomeLabel } = useActivity()
   const { money } = useMoney()
 
   const [search, setSearch] = useState('')
@@ -186,7 +188,7 @@ export function History() {
                 className="input"
               >
                 <option value="all">Todas</option>
-                <option value="income">Ingresos Uber</option>
+                <option value="income">{incomeLabel}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}

@@ -404,7 +404,10 @@ export function toMovements(
   categories: Category[],
   debtPayments: DebtPayment[] = [],
   debts: Debt[] = [],
+  income: { label?: string; icon?: string } = {},
 ): Movement[] {
+  const incomeLabel = income.label || 'Ingreso'
+  const incomeIcon = income.icon || 'Wallet'
   const catMap = new Map(categories.map((c) => [c.id, c]))
   const debtMap = new Map(debts.map((d) => [d.id, d]))
   const incMovs: Movement[] = incomes.map((i) => {
@@ -415,10 +418,10 @@ export function toMovements(
       amount: i.amount,
       date: i.date,
       categoryId: null,
-      categoryName: isTip ? 'Propina' : 'Ingreso Uber',
+      categoryName: isTip ? 'Propina' : incomeLabel,
       categoryColor: isTip ? '#14b8a6' : '#0ecb81',
-      categoryIcon: isTip ? 'Coins' : 'Car',
-      title: i.note || (isTip ? 'Propina' : 'Ingreso Uber'),
+      categoryIcon: isTip ? 'Coins' : incomeIcon,
+      title: i.note || (isTip ? 'Propina' : incomeLabel),
       paymentMethod: null,
       notes: i.note,
       createdAt: i.created_at,

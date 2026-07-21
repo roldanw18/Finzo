@@ -204,7 +204,7 @@ export function PlanOverview() {
               </p>
               {uber.netPerHour > 0 && (
                 <p className="text-xs text-muted">
-                  ≈ {Math.ceil(hoursToPay(recommendation.debt.balance, uber.netPerHour))} horas de Uber
+                  ≈ {Math.ceil(hoursToPay(recommendation.debt.balance, uber.netPerHour))} horas de trabajo
                 </p>
               )}
             </div>

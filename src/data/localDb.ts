@@ -50,6 +50,11 @@ function defaultProfile(): Profile {
     theme: 'dark',
     opening_balance: 0,
     budgets: {},
+    activity_type: null,
+    income_label: 'Ingreso',
+    cost_label: 'Costos',
+    cost_factor: 1.2,
+    onboarded: false,
     created_at: new Date().toISOString(),
   }
 }
@@ -170,7 +175,7 @@ export class LocalDatabase implements Database {
       amount: input.amount,
       date: input.date,
       note: input.note ?? null,
-      source: input.source ?? 'uber',
+      source: input.source ?? 'main',
       created_at: new Date().toISOString(),
     }
     s.incomes.push(inc)
@@ -454,7 +459,7 @@ export function generateDemoData(): void {
     const iso = date.toISOString().slice(0, 10)
     const dow = date.getDay()
 
-    // Uber income: higher on weekends, some rest days
+    // Main income: higher on weekends, some rest days
     if (Math.random() > 0.12) {
       const base = dow === 0 || dow === 6 ? 180000 : 130000
       const amount = Math.round((base + (Math.random() - 0.4) * 80000) / 1000) * 1000
@@ -464,7 +469,7 @@ export function generateDemoData(): void {
         amount: Math.max(40000, amount),
         date: iso,
         note: null,
-        source: 'uber',
+        source: 'main',
         created_at: date.toISOString(),
       })
     }
@@ -483,24 +488,25 @@ export function generateDemoData(): void {
       })
     }
 
-    // Daily fuel-ish expenses
-    if (Math.random() > 0.25) {
-      const cat = cats.find((c) => c.name === 'Gasolina')!
-      expenses.push(mkExpense(cat.id, iso, date, 35000 + Math.random() * 30000, 'Tanqueo'))
-    }
+    // Everyday expenses — resolve categories safely, whatever the seed set is.
+    const catId = (name: string) =>
+      (cats.find((c) => c.name === name) ?? cats[Math.floor(Math.random() * cats.length)])?.id ??
+      null
+
     if (Math.random() > 0.5) {
-      const cat = cats.find((c) => c.name === 'Alimentación')!
-      expenses.push(mkExpense(cat.id, iso, date, 12000 + Math.random() * 20000, 'Almuerzo'))
+      expenses.push(
+        mkExpense(catId('Alimentación'), iso, date, 12000 + Math.random() * 20000, 'Almuerzo'),
+      )
     }
-    if (Math.random() > 0.7) {
-      const cat = cats.find((c) => c.name === 'Peajes')!
-      expenses.push(mkExpense(cat.id, iso, date, 8000 + Math.random() * 12000, 'Peaje'))
+    if (Math.random() > 0.6) {
+      expenses.push(
+        mkExpense(catId('Transporte'), iso, date, 8000 + Math.random() * 22000, 'Transporte'),
+      )
     }
     if (Math.random() > 0.85) {
-      const pool = ['Mercado', 'Compras', 'Lavado', 'Parqueaderos', 'Entretenimiento']
+      const pool = ['Mercado', 'Compras', 'Servicios', 'Entretenimiento', 'Hogar']
       const name = pool[Math.floor(Math.random() * pool.length)]
-      const cat = cats.find((c) => c.name === name)!
-      expenses.push(mkExpense(cat.id, iso, date, 15000 + Math.random() * 90000, name))
+      expenses.push(mkExpense(catId(name), iso, date, 15000 + Math.random() * 90000, name))
     }
   }
 
@@ -576,7 +582,7 @@ export function generateDemoData(): void {
 }
 
 function mkExpense(
-  categoryId: string,
+  categoryId: string | null,
   iso: string,
   date: Date,
   amount: number,

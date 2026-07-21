@@ -15,6 +15,7 @@ import {
   Sun,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { ActivitySettings } from '@/components/ActivitySettings'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
@@ -120,6 +121,9 @@ export function Settings() {
           </button>
         </div>
       </Card>
+
+      {/* Activity / occupation */}
+      <ActivitySettings />
 
       {/* Currency */}
       <Card>

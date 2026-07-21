@@ -60,8 +60,8 @@ export function Login() {
             Toma el control de tu dinero.
           </h1>
           <p className="mt-4 text-muted">
-            Registra ingresos de Uber en segundos, controla tus gastos y entiende tus
-            hábitos con análisis claros e inteligentes.
+            Registra tus ingresos en segundos, controla tus gastos y entiende tus
+            hábitos con análisis claros e inteligentes. Se adapta a tu oficio.
           </p>
           <div className="mt-8 space-y-3">
             {[

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Car, Loader2, Trash2, Target } from 'lucide-react'
+import { Loader2, Trash2, Target } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
+import { getIcon } from '@/lib/icons'
 import { useStore } from '@/store/useStore'
+import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
@@ -15,6 +17,8 @@ interface Props {
 
 export function IncomeForm({ editing, onDone }: Props) {
   const { currency, money } = useMoney()
+  const { incomeLabel, icon } = useActivity()
+  const ActivityIcon = getIcon(icon)
   const addIncome = useStore((s) => s.addIncome)
   const editIncome = useStore((s) => s.editIncome)
   const removeIncome = useStore((s) => s.removeIncome)
@@ -80,10 +84,10 @@ export function IncomeForm({ editing, onDone }: Props) {
     <form onSubmit={submit} className="space-y-5">
       <div className="flex items-center gap-3 rounded-2xl bg-income/10 p-3.5">
         <span className="grid h-11 w-11 place-items-center rounded-xl bg-income/15 text-income">
-          <Car size={22} />
+          <ActivityIcon size={22} />
         </span>
         <div>
-          <p className="font-medium text-content">Ingreso de Uber</p>
+          <p className="font-medium text-content">Registrar {incomeLabel.toLowerCase()}</p>
           <p className="text-xs text-muted">Registro rápido en menos de 10 segundos</p>
         </div>
       </div>
@@ -110,7 +114,7 @@ export function IncomeForm({ editing, onDone }: Props) {
             type="text"
             value={note ?? ''}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Ej. turno noche"
+            placeholder="Ej. jornada de la tarde"
             className="input"
           />
         </div>

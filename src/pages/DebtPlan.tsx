@@ -16,12 +16,12 @@ import { DebtsTab } from '@/components/debt/DebtsTab'
 import { PaymentsTab } from '@/components/debt/PaymentsTab'
 import { FixedTab } from '@/components/debt/FixedTab'
 import { SimulatorTab } from '@/components/debt/SimulatorTab'
-import { UberTab } from '@/components/debt/UberTab'
+import { WorkTab } from '@/components/debt/WorkTab'
 import { GoalsTab } from '@/components/debt/GoalsTab'
 import { CalendarTab } from '@/components/debt/CalendarTab'
 import { cn } from '@/lib/utils'
 
-type Tab = 'plan' | 'deudas' | 'pagos' | 'fijos' | 'simulador' | 'uber' | 'metas' | 'calendario'
+type Tab = 'plan' | 'deudas' | 'pagos' | 'fijos' | 'simulador' | 'trabajo' | 'metas' | 'calendario'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Plan' },
@@ -29,7 +29,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'pagos', label: 'Pagos' },
   { id: 'fijos', label: 'Fijos' },
   { id: 'simulador', label: 'Simulador' },
-  { id: 'uber', label: 'Uber' },
+  { id: 'trabajo', label: 'Trabajo' },
   { id: 'metas', label: 'Metas' },
   { id: 'calendario', label: 'Calendario' },
 ]
@@ -38,7 +38,7 @@ const MODAL_TITLES: Record<Exclude<DebtModal['type'], 'none'>, string> = {
   debt: 'Deuda',
   payment: 'Registrar pago',
   goal: 'Meta',
-  work: 'Registrar jornada de Uber',
+  work: 'Registrar jornada',
   reminder: 'Recordatorio',
   fixed: 'Gasto fijo',
 }
@@ -104,7 +104,7 @@ export function DebtPlan() {
         {tab === 'pagos' && <PaymentsTab />}
         {tab === 'fijos' && <FixedTab />}
         {tab === 'simulador' && <SimulatorTab />}
-        {tab === 'uber' && <UberTab />}
+        {tab === 'trabajo' && <WorkTab />}
         {tab === 'metas' && <GoalsTab />}
         {tab === 'calendario' && <CalendarTab />}
       </motion.div>

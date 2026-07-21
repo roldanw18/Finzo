@@ -95,6 +95,11 @@ export class SupabaseDatabase implements Database {
       theme: 'dark',
       opening_balance: 0,
       budgets: {},
+      activity_type: null,
+      income_label: 'Ingreso',
+      cost_label: 'Costos',
+      cost_factor: 1.2,
+      onboarded: false,
     }
     const { data: created, error: insErr } = await this.sb
       .from('profiles')
@@ -200,7 +205,7 @@ export class SupabaseDatabase implements Database {
         amount: input.amount,
         date: input.date,
         note: input.note ?? null,
-        source: input.source ?? 'uber',
+        source: input.source ?? 'main',
       })
       .select()
       .single()

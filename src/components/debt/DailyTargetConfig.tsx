@@ -1,7 +1,9 @@
-import { CreditCard, Repeat, Info, Gauge } from 'lucide-react'
+import { useState } from 'react'
+import { CreditCard, Repeat, Info, Gauge, Wallet, CheckCircle2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
 import { debtTypeMeta } from '@/types'
@@ -13,6 +15,7 @@ import { cn } from '@/lib/utils'
  */
 export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { dailyTargets: dt, active, fixedExpenses } = useDebt()
+  const { kpis } = useAnalytics()
   const { costLabel } = useActivity()
   const { money } = useMoney()
   const saveProfile = useStore((s) => s.saveProfile)
@@ -22,22 +25,76 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
 
   const activeFixed = fixedExpenses.filter((f) => f.active)
 
+  // Optional: apply your available cash to the obligations first.
+  const [useAvailable, setUseAvailable] = useState(false)
+  const available = Math.max(0, kpis.available)
+  const totalObligation = dt.allRemaining + dt.fixedTotal // net amount this cycle
+  const remainingObligation = Math.max(0, totalObligation - available)
+  const ratio = totalObligation > 0 ? remainingObligation / totalObligation : 0
+  const shownPerDay = useAvailable ? dt.totalPerDay * ratio : dt.totalPerDay
+  const fullyCovered = useAvailable && remainingObligation <= 0.5
+
   return (
     <Modal open={open} onClose={onClose} title="Configurar meta diaria" maxWidth="max-w-xl">
       <div className="space-y-5">
         {/* Live result */}
-        <div className="flex items-center justify-between rounded-2xl border border-income/25 bg-income/[0.07] p-4">
-          <div className="flex items-center gap-2.5">
-            <Gauge size={20} className="text-income" />
-            <span className="text-sm text-muted">Debes producir</span>
+        <div className="rounded-2xl border border-income/25 bg-income/[0.07] p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <Gauge size={20} className="text-income" />
+              <span className="text-sm text-muted">
+                {fullyCovered ? 'Ya lo cubres' : 'Debes producir'}
+              </span>
+            </div>
+            {fullyCovered ? (
+              <CheckCircle2 size={22} className="text-income" />
+            ) : (
+              <span className="tnum font-display text-2xl font-bold text-income">
+                {money(shownPerDay)}
+                <span className="ml-1 text-sm font-medium text-muted">
+                  /día{workDays < 7 ? ' trab.' : ''}
+                </span>
+              </span>
+            )}
           </div>
-          <span className="tnum font-display text-2xl font-bold text-income">
-            {money(dt.totalPerDay)}
-            <span className="ml-1 text-sm font-medium text-muted">
-              /día{workDays < 7 ? ' trabajado' : ''}
+          {useAvailable && (
+            <p className="mt-2 border-t border-income/20 pt-2 text-xs text-content">
+              {fullyCovered ? (
+                <span className="text-income">
+                  Tu dinero disponible ({money(available)}) cubre todas tus obligaciones de este
+                  ciclo. 🎉
+                </span>
+              ) : (
+                <>
+                  Usando tu disponible ({money(available)}), aún te falta producir{' '}
+                  <b className="text-content">{money(remainingObligation)}</b> en total.
+                </>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Toggle: use available cash */}
+        <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border border-border bg-surface-2/50 p-3.5">
+          <span className="flex items-start gap-2.5">
+            <Wallet size={18} className="mt-0.5 shrink-0 text-info" />
+            <span>
+              <span className="block text-sm font-medium text-content">
+                Contar con mi dinero disponible
+              </span>
+              <span className="mt-0.5 block text-xs text-muted">
+                Resta tus {money(available, { compact: true })} disponibles de las obligaciones y
+                recalcula cuánto te falta producir.
+              </span>
             </span>
           </span>
-        </div>
+          <input
+            type="checkbox"
+            checked={useAvailable}
+            onChange={(e) => setUseAvailable(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-income"
+          />
+        </label>
 
         {/* How it's calculated */}
         <div className="flex items-start gap-2.5 rounded-xl bg-surface-2/60 p-3.5">

@@ -70,6 +70,11 @@ export function Dashboard() {
     () => pendingDebtThisMonth(debts, debtPayments),
     [debts, debtPayments],
   )
+  const totalDebt = useMemo(
+    () => debts.filter((d) => d.status === 'active').reduce((a, d) => a + d.balance, 0),
+    [debts],
+  )
+  const debtAfterAvailable = Math.max(0, totalDebt - Math.max(0, kpis.available))
 
   const incomeSpark = months.map((m) => m.income)
   const expenseSpark = months.map((m) => m.expense)
@@ -131,6 +136,22 @@ export function Dashboard() {
                   </>
                 ) : (
                   <span className="text-income">✓ Deudas del mes al día</span>
+                )}
+              </p>
+            )}
+            {totalDebt > 0 && (
+              <p className="mt-0.5 text-[11px] text-subtle">
+                {kpis.available >= totalDebt ? (
+                  <span className="text-income">
+                    Con tu disponible quedarías libre de deudas ✓
+                  </span>
+                ) : (
+                  <>
+                    Si lo abonas a deudas, quedarían{' '}
+                    <b className="tnum text-content">
+                      {money(debtAfterAvailable, { compact: true })}
+                    </b>
+                  </>
                 )}
               </p>
             )}

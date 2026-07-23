@@ -68,6 +68,8 @@ export interface Profile {
   cost_factor?: number
   /** False until the setup wizard is completed. */
   onboarded?: boolean
+  /** Days worked per week (1-7); the daily goal skips rest days. */
+  work_days_per_week?: number
   created_at: string
 }
 
@@ -141,6 +143,8 @@ export interface FixedExpense {
   category_id: string | null
   due_day: number | null
   active: boolean
+  /** Whether it counts toward the daily income goal. Defaults to true. */
+  count_in_target?: boolean
   created_at: string
 }
 

@@ -427,6 +427,8 @@ export interface DailyTargets {
   nextDueName: string | null
   /** Same target ignoring what's already paid — used for the next cycle. */
   totalPerDayFull: number
+  /** Days worked per week used in the calc (7 = every day). */
+  workDaysPerWeek: number
 }
 
 /**
@@ -441,12 +443,17 @@ export function dailyEarningTargets(
   ref = new Date(),
   fixedExpenses: FixedExpense[] = [],
   costFactor = DEFAULT_COST_FACTOR,
+  workDaysPerWeek = 7,
 ): DailyTargets {
   const active = debts.filter((d) => d.status === 'active')
   // Only debts marked to count toward the daily goal (default: yes).
   const counted = active.filter((d) => d.count_in_target !== false)
   const cards = counted.filter((d) => d.type === 'credit_card')
-  const activeFixed = fixedExpenses.filter((f) => f.active && f.amount > 0)
+  const activeFixed = fixedExpenses.filter(
+    (f) => f.active && f.amount > 0 && f.count_in_target !== false,
+  )
+  // Spread obligations only over the days you actually work.
+  const workFactor = Math.min(1, Math.max(1, workDaysPerWeek) / 7)
   const monthKey = format(ref, 'yyyy-MM')
   const daysLeftInMonth = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
 
@@ -462,11 +469,15 @@ export function dailyEarningTargets(
       ? Math.max(1, differenceInCalendarDays(nextMonthlyDate(dueDay, ref), ref))
       : daysLeftInMonth
   const daysToDue = (d: Debt) => daysToDueDay(d.due_day)
+  // Working days (not calendar days) until the due date — the real divisor.
+  const workDaysToDueDay = (dueDay: number | null) =>
+    Math.max(1, daysToDueDay(dueDay) * workFactor)
+  const workDaysToDue = (d: Debt) => workDaysToDueDay(d.due_day)
 
   const remainingOf = (d: Debt, pick: (d: Debt) => number) =>
     Math.max(0, pick(d) - (paidThisMonth.get(d.id) ?? 0))
   const netPerDayFor = (list: Debt[], pick: (d: Debt) => number) =>
-    list.reduce((a, d) => a + remainingOf(d, pick) / daysToDue(d), 0)
+    list.reduce((a, d) => a + remainingOf(d, pick) / workDaysToDue(d), 0)
   const remainingSum = (list: Debt[], pick: (d: Debt) => number) =>
     list.reduce((a, d) => a + remainingOf(d, pick), 0)
   const nearestDue = (list: Debt[]) => {
@@ -478,14 +489,17 @@ export function dailyEarningTargets(
   const allNetPerDay = netPerDayFor(counted, (d) => d.min_payment)
   const targetNetPerDay = netPerDayFor(counted, (d) => d.target_payment || d.min_payment)
 
-  // Fixed expenses spread over their own due dates
+  // Fixed expenses spread over their own due dates (working days)
   const fixedTotal = activeFixed.reduce((a, f) => a + f.amount, 0)
-  const fixedNetPerDay = activeFixed.reduce((a, f) => a + f.amount / daysToDueDay(f.due_day), 0)
+  const fixedNetPerDay = activeFixed.reduce(
+    (a, f) => a + f.amount / workDaysToDueDay(f.due_day),
+    0,
+  )
 
   const totalNetPerDay = allNetPerDay + fixedNetPerDay
   // Same figure ignoring payments already made (what a full cycle demands).
   const totalNetPerDayFull =
-    counted.reduce((a, d) => a + d.min_payment / daysToDue(d), 0) + fixedNetPerDay
+    counted.reduce((a, d) => a + d.min_payment / workDaysToDue(d), 0) + fixedNetPerDay
 
   // Nearest obligation WITH a real due date, so we can name it.
   const dueItems: { days: number; name: string }[] = [
@@ -525,6 +539,7 @@ export function dailyEarningTargets(
     totalDaysToDue: nextDue ? nextDue.days : daysLeftInMonth,
     nextDueName: nextDue?.name ?? null,
     totalPerDayFull: totalNetPerDayFull * costFactor,
+    workDaysPerWeek: Math.max(1, Math.min(7, workDaysPerWeek)),
   }
 }
 

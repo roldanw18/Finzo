@@ -1,13 +1,16 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2, CalendarClock } from 'lucide-react'
+import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2, CalendarClock, SlidersHorizontal } from 'lucide-react'
 import { useDebt } from '@/hooks/useDebt'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { DailyTargetConfig } from './DailyTargetConfig'
 
 export function DailyTargetCard() {
   const { dailyTargets: dt } = useDebt()
   const { costLabel } = useActivity()
   const { money } = useMoney()
+  const [config, setConfig] = useState(false)
 
   if (!dt.hasDebts && !dt.hasFixed) return null
 
@@ -27,7 +30,15 @@ export function DailyTargetCard() {
       <div className="mb-2 flex items-center gap-2 text-income">
         <Gauge size={18} />
         <span className="text-sm font-semibold uppercase tracking-wide">Meta diaria de ingresos</span>
+        <button
+          onClick={() => setConfig(true)}
+          className="ml-auto flex items-center gap-1 rounded-lg bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted transition hover:text-content"
+        >
+          <SlidersHorizontal size={13} /> Ajustar
+        </button>
       </div>
+
+      <DailyTargetConfig open={config} onClose={() => setConfig(false)} />
 
       {covered ? (
         <div>
@@ -48,7 +59,9 @@ export function DailyTargetCard() {
         </div>
       ) : (
         <div>
-          <p className="text-sm text-muted">Para cubrir {label}, produce cada día</p>
+          <p className="text-sm text-muted">
+            Para cubrir {label}, produce cada día{dt.workDaysPerWeek < 7 ? ' que trabajas' : ''}
+          </p>
           <p className="tnum font-display text-4xl font-bold text-income">
             {money(perDay)}
             <span className="ml-1 text-base font-medium text-muted">/día</span>
@@ -58,6 +71,11 @@ export function DailyTargetCard() {
             <span className="chip bg-warning/12 text-xs font-medium text-warning">
               <Fuel size={12} /> incluye {costLabel.toLowerCase()} (×{dt.costFactor})
             </span>
+            {dt.workDaysPerWeek < 7 && (
+              <span className="chip bg-surface-2 text-xs font-medium text-muted">
+                <CalendarClock size={12} /> {dt.workDaysPerWeek} días/sem
+              </span>
+            )}
             {dt.totalHoursPerDay !== null && (
               <span className="chip bg-info/12 text-xs font-medium text-info">
                 <Clock size={12} /> ≈ {Math.ceil(dt.totalHoursPerDay)}h/día

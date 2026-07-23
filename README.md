@@ -67,6 +67,8 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
      para elegir qué deudas cuentan en la meta diaria de ingresos.
    - [`0006_activity_profile.sql`](supabase/migrations/0006_activity_profile.sql) — perfil de
      actividad multi-oficio (etiquetas, costo variable, asistente inicial).
+   - [`0007_daily_target_config.sql`](supabase/migrations/0007_daily_target_config.sql) — días de
+     trabajo por semana y casilla de gastos fijos para la meta diaria.
    Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:

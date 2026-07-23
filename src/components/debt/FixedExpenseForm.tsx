@@ -22,6 +22,7 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
   const [amount, setAmount] = useState(editing?.amount ?? 0)
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? '')
   const [dueDay, setDueDay] = useState(editing?.due_day?.toString() ?? '')
+  const [countInTarget, setCountInTarget] = useState(editing?.count_in_target !== false)
   const [saving, setSaving] = useState(false)
 
   async function submit(e: React.FormEvent) {
@@ -36,6 +37,7 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
         category_id: categoryId || null,
         due_day: dueDay ? Number(dueDay) : null,
         active: true,
+        count_in_target: countInTarget,
       }
       if (editing) {
         await editFixedExpense(editing.id, payload)
@@ -99,6 +101,24 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
           </select>
         </div>
       </div>
+
+      <label className="flex items-start justify-between gap-3 rounded-xl border border-income/25 bg-income/[0.06] p-3">
+        <span>
+          <span className="block text-sm font-medium text-content">
+            Contar en la meta diaria de ingresos
+          </span>
+          <span className="mt-0.5 block text-xs text-muted">
+            Si la desmarcas, sigue siendo un gasto fijo pero no suma a lo que debes producir
+            cada día.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          checked={countInTarget}
+          onChange={(e) => setCountInTarget(e.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-income"
+        />
+      </label>
 
       <div className="flex gap-3 pt-1">
         {editing && (

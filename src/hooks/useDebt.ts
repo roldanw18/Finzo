@@ -20,6 +20,7 @@ import { pctChange } from '@/lib/utils'
 export function useDebt() {
   const debts = useStore((s) => s.debts)
   const costFactor = useStore((s) => s.profile?.cost_factor ?? DEFAULT_COST_FACTOR)
+  const workDaysPerWeek = useStore((s) => s.profile?.work_days_per_week ?? 7)
   const payments = useStore((s) => s.debtPayments)
   const goals = useStore((s) => s.goals)
   const workSessions = useStore((s) => s.workSessions)
@@ -49,8 +50,9 @@ export function useDebt() {
         new Date(),
         fixedExpenses,
         costFactor,
+        workDaysPerWeek,
       ),
-    [debts, payments, uber.netPerHour, fixedExpenses, costFactor],
+    [debts, payments, uber.netPerHour, fixedExpenses, costFactor, workDaysPerWeek],
   )
   const allocation = useMemo(() => monthlyAllocation(debts, 0), [debts])
   const projection = useMemo(() => projectDebts(debts, 0), [debts])

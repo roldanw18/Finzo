@@ -95,6 +95,7 @@ export interface FixedExpenseInput {
   category_id?: string | null
   due_day?: number | null
   active?: boolean
+  count_in_target?: boolean
 }
 
 export interface Snapshot {

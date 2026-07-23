@@ -51,6 +51,7 @@ function defaultProfile(): Profile {
     opening_balance: 0,
     budgets: {},
     activity_type: null,
+    work_days_per_week: 7,
     income_label: 'Ingreso',
     cost_label: 'Costos',
     cost_factor: 1.2,
@@ -402,6 +403,7 @@ export class LocalDatabase implements Database {
       category_id: input.category_id ?? null,
       due_day: input.due_day ?? null,
       active: input.active ?? true,
+      count_in_target: input.count_in_target ?? true,
       created_at: new Date().toISOString(),
     }
     s.fixedExpenses.push(fx)

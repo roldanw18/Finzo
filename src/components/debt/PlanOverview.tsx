@@ -154,6 +154,52 @@ export function PlanOverview() {
         </div>
       </motion.div>
 
+      {/* If you throw all your available cash at the debt */}
+      {(() => {
+        const available = Math.max(0, kpis.available)
+        const remaining = Math.max(0, summary.totalDebt - available)
+        const wouldClear = available >= summary.totalDebt
+        return (
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-2xl border p-4',
+              wouldClear
+                ? 'border-income/30 bg-income/[0.07]'
+                : 'border-border bg-surface',
+            )}
+          >
+            <span
+              className={cn(
+                'grid h-10 w-10 shrink-0 place-items-center rounded-xl',
+                wouldClear ? 'bg-income/15 text-income' : 'bg-info/12 text-info',
+              )}
+            >
+              <Wallet size={18} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted">
+                Si abonas tu dinero disponible ({money(available, { compact: true })}) a tus deudas
+              </p>
+              {available <= 0 ? (
+                <p className="text-sm font-medium text-content">
+                  Ahora no tienes dinero disponible para abonar.
+                </p>
+              ) : wouldClear ? (
+                <p className="text-sm font-semibold text-income">
+                  ¡Quedarías libre de deudas! Te sobrarían{' '}
+                  {money(available - summary.totalDebt)}.
+                </p>
+              ) : (
+                <p className="text-sm text-content">
+                  Te quedarían{' '}
+                  <b className="tnum text-expense">{money(remaining)}</b> de deuda
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <KpiCard label="Deuda total" value={summary.totalDebt} icon={Landmark} tone="expense" />

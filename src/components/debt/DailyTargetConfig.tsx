@@ -1,11 +1,12 @@
-import { useState } from 'react'
 import { CreditCard, Repeat, Info, Gauge, Wallet, CheckCircle2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { useStore } from '@/store/useStore'
+import { usePrefs } from '@/store/prefs'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { applyAvailableToTarget } from '@/lib/debt'
 import { debtTypeMeta } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -25,14 +26,14 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
 
   const activeFixed = fixedExpenses.filter((f) => f.active)
 
-  // Optional: apply your available cash to the obligations first.
-  const [useAvailable, setUseAvailable] = useState(false)
+  // Optional: apply your available cash to the obligations first (persisted).
+  const useAvailable = usePrefs((s) => s.useAvailableInTarget)
+  const setUseAvailable = usePrefs((s) => s.setUseAvailableInTarget)
   const available = Math.max(0, kpis.available)
-  const totalObligation = dt.allRemaining + dt.fixedTotal // net amount this cycle
-  const remainingObligation = Math.max(0, totalObligation - available)
-  const ratio = totalObligation > 0 ? remainingObligation / totalObligation : 0
-  const shownPerDay = useAvailable ? dt.totalPerDay * ratio : dt.totalPerDay
-  const fullyCovered = useAvailable && remainingObligation <= 0.5
+  const applied = applyAvailableToTarget(dt, available, useAvailable)
+  const remainingObligation = applied.remaining
+  const shownPerDay = dt.totalPerDay * applied.ratio
+  const fullyCovered = applied.fullyCovered
 
   return (
     <Modal open={open} onClose={onClose} title="Configurar meta diaria" maxWidth="max-w-xl">

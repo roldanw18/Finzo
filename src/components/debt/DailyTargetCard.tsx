@@ -1,25 +1,47 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2, CalendarClock, SlidersHorizontal } from 'lucide-react'
+import {
+  Gauge,
+  Fuel,
+  Clock,
+  Target,
+  Repeat,
+  Landmark,
+  CheckCircle2,
+  CalendarClock,
+  SlidersHorizontal,
+  Wallet,
+} from 'lucide-react'
 import { useDebt } from '@/hooks/useDebt'
+import { useAnalytics } from '@/hooks/useAnalytics'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { usePrefs } from '@/store/prefs'
+import { applyAvailableToTarget } from '@/lib/debt'
 import { DailyTargetConfig } from './DailyTargetConfig'
 
 export function DailyTargetCard() {
   const { dailyTargets: dt } = useDebt()
+  const { kpis } = useAnalytics()
   const { costLabel } = useActivity()
   const { money } = useMoney()
+  const useAvailable = usePrefs((s) => s.useAvailableInTarget)
   const [config, setConfig] = useState(false)
 
   if (!dt.hasDebts && !dt.hasFixed) return null
 
-  // Headline = cover everything: fixed expenses + all debt minimums.
-  const perDay = dt.totalPerDay
-  const netPerDay = dt.totalNetPerDay
+  // Optionally subtract available cash from this cycle's obligations.
+  const available = Math.max(0, kpis.available)
+  const applied = applyAvailableToTarget(dt, available, useAvailable)
+  const r = applied.ratio
+
+  const perDay = dt.totalPerDay * r
+  const netPerDay = dt.totalNetPerDay * r
   const gas = Math.max(0, perDay - netPerDay)
+  const hours = dt.totalHoursPerDay !== null ? dt.totalHoursPerDay * r : null
   const label = dt.hasFixed ? 'tus gastos fijos + los mínimos de deudas' : 'tus pagos mínimos'
   const covered = perDay <= 0.5
+  const coveredByAvailable = useAvailable && applied.fullyCovered
 
   return (
     <motion.div
@@ -45,7 +67,9 @@ export function DailyTargetCard() {
           <div className="mb-2 flex items-center gap-2 rounded-xl bg-income/12 px-3 py-2 text-income">
             <CheckCircle2 size={18} />
             <p className="text-sm font-semibold">
-              ¡Ya cubriste tus obligaciones de este ciclo! 🎉
+              {coveredByAvailable
+                ? 'Tu dinero disponible cubre tus obligaciones de este ciclo 🎉'
+                : '¡Ya cubriste tus obligaciones de este ciclo! 🎉'}
             </p>
           </div>
           <p className="text-sm text-muted">Para el próximo ciclo, produce cada día</p>
@@ -67,6 +91,14 @@ export function DailyTargetCard() {
             <span className="ml-1 text-base font-medium text-muted">/día</span>
           </p>
 
+          {useAvailable && (
+            <p className="mt-1 text-xs text-info">
+              <Wallet size={11} className="mb-0.5 mr-1 inline" />
+              Ya resté tu disponible ({money(available, { compact: true })}). Te falta{' '}
+              <b className="text-content">{money(applied.remaining)}</b> en total.
+            </p>
+          )}
+
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="chip bg-warning/12 text-xs font-medium text-warning">
               <Fuel size={12} /> incluye {costLabel.toLowerCase()} (×{dt.costFactor})
@@ -76,9 +108,9 @@ export function DailyTargetCard() {
                 <CalendarClock size={12} /> {dt.workDaysPerWeek} días/sem
               </span>
             )}
-            {dt.totalHoursPerDay !== null && (
+            {hours !== null && (
               <span className="chip bg-info/12 text-xs font-medium text-info">
-                <Clock size={12} /> ≈ {Math.ceil(dt.totalHoursPerDay)}h/día
+                <Clock size={12} /> ≈ {Math.ceil(hours)}h/día
               </span>
             )}
             {dt.nextDueName ? (
@@ -93,8 +125,8 @@ export function DailyTargetCard() {
             )}
           </div>
 
-          {/* Breakdown fijos vs deudas */}
-          {dt.hasFixed && dt.hasDebts && (
+          {/* Breakdown fijos vs deudas (hidden when applying available cash) */}
+          {dt.hasFixed && dt.hasDebts && !useAvailable && (
             <div className="mt-3 grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-surface-2/60 p-2.5">
                 <p className="flex items-center gap-1 text-[11px] text-muted">
@@ -116,15 +148,16 @@ export function DailyTargetCard() {
           )}
 
           <p className="mt-3 text-xs text-muted">
-            De eso, <b className="text-content">{money(gas, { compact: true })}</b> es {costLabel.toLowerCase()} y te
-            queda libre <b className="text-content">{money(netPerDay, { compact: true })}/día</b> para tus
+            De eso, <b className="text-content">{money(gas, { compact: true })}</b> es{' '}
+            {costLabel.toLowerCase()} y te queda libre{' '}
+            <b className="text-content">{money(netPerDay, { compact: true })}/día</b> para tus
             obligaciones.
           </p>
         </div>
       )}
 
       {/* Secondary targets */}
-      {dt.hasDebts && (
+      {dt.hasDebts && !useAvailable && (
         <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border/60 pt-3">
           <div>
             <p className="flex items-center gap-1 text-[11px] text-muted">

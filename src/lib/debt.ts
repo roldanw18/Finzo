@@ -543,6 +543,21 @@ export function dailyEarningTargets(
   }
 }
 
+/**
+ * Optionally subtracts available cash from this cycle's obligations and returns
+ * a scale ratio (0..1) plus the remaining amount to still produce.
+ */
+export function applyAvailableToTarget(dt: DailyTargets, available: number, use: boolean) {
+  const totalObligation = dt.allRemaining + dt.fixedTotal
+  if (!use) {
+    return { ratio: 1, remaining: totalObligation, totalObligation, fullyCovered: false }
+  }
+  const avail = Math.max(0, available)
+  const remaining = Math.max(0, totalObligation - avail)
+  const ratio = totalObligation > 0 ? remaining / totalObligation : 0
+  return { ratio, remaining, totalObligation, fullyCovered: remaining <= 0.5 }
+}
+
 /* --------------------------------------------------- Goals */
 
 export interface GoalProgress {

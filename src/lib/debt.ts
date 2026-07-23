@@ -423,6 +423,8 @@ export interface DailyTargets {
   totalPerDay: number
   totalHoursPerDay: number | null
   totalDaysToDue: number
+  /** Name of the nearest obligation with a due date (debt or fixed expense). */
+  nextDueName: string | null
   /** Same target ignoring what's already paid — used for the next cycle. */
   totalPerDayFull: number
 }
@@ -484,10 +486,17 @@ export function dailyEarningTargets(
   // Same figure ignoring payments already made (what a full cycle demands).
   const totalNetPerDayFull =
     counted.reduce((a, d) => a + d.min_payment / daysToDue(d), 0) + fixedNetPerDay
-  const dueCandidates = [
-    ...counted.filter((d) => remainingOf(d, (x) => x.min_payment) > 0).map(daysToDue),
-    ...activeFixed.map((f) => daysToDueDay(f.due_day)),
-  ]
+
+  // Nearest obligation WITH a real due date, so we can name it.
+  const dueItems: { days: number; name: string }[] = [
+    ...counted
+      .filter((d) => d.due_day && remainingOf(d, (x) => x.min_payment) > 0)
+      .map((d) => ({ days: daysToDue(d), name: d.name })),
+    ...activeFixed
+      .filter((f) => f.due_day)
+      .map((f) => ({ days: daysToDueDay(f.due_day), name: f.name })),
+  ].sort((a, b) => a.days - b.days)
+  const nextDue = dueItems[0]
 
   return {
     daysLeftInMonth,
@@ -513,7 +522,8 @@ export function dailyEarningTargets(
     totalNetPerDay,
     totalPerDay: totalNetPerDay * costFactor,
     totalHoursPerDay: netPerHour > 0 ? totalNetPerDay / netPerHour : null,
-    totalDaysToDue: dueCandidates.length ? Math.min(...dueCandidates) : daysLeftInMonth,
+    totalDaysToDue: nextDue ? nextDue.days : daysLeftInMonth,
+    nextDueName: nextDue?.name ?? null,
     totalPerDayFull: totalNetPerDayFull * costFactor,
   }
 }

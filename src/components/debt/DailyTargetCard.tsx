@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2 } from 'lucide-react'
+import { Gauge, Fuel, Clock, Target, Repeat, Landmark, CheckCircle2, CalendarClock } from 'lucide-react'
 import { useDebt } from '@/hooks/useDebt'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
@@ -63,9 +63,16 @@ export function DailyTargetCard() {
                 <Clock size={12} /> ≈ {Math.ceil(dt.totalHoursPerDay)}h/día
               </span>
             )}
-            <span className="chip bg-surface-2 text-xs text-muted">
-              {dt.totalDaysToDue} días para el próximo pago
-            </span>
+            {dt.nextDueName ? (
+              <span className="chip bg-surface-2 text-xs text-muted">
+                <CalendarClock size={12} /> {dt.nextDueName} en {dt.totalDaysToDue}{' '}
+                {dt.totalDaysToDue === 1 ? 'día' : 'días'}
+              </span>
+            ) : (
+              <span className="chip bg-surface-2 text-xs text-muted">
+                {dt.daysLeftInMonth} días restantes del mes
+              </span>
+            )}
           </div>
 
           {/* Breakdown fijos vs deudas */}

@@ -134,6 +134,16 @@ export const useStore = create<AppState>((set, get) => {
     setSnapshot(snap)
   }
 
+  /** Adjust a debt's balance by delta (used by credit-card purchases). */
+  async function bumpDebt(debtId: string, delta: number) {
+    const debt = get().debts.find((d) => d.id === debtId)
+    if (!debt) return
+    const updated = await get().db!.updateDebt(debt.id, {
+      balance: Math.max(0, debt.balance + delta),
+    })
+    set((s) => ({ debts: s.debts.map((d) => (d.id === updated.id ? updated : d)) }))
+  }
+
   return {
     mode: hasSupabase ? 'remote' : 'local',
     status: 'idle',
@@ -275,15 +285,23 @@ export const useStore = create<AppState>((set, get) => {
     async addExpense(input) {
       const exp = await get().db!.createExpense(input)
       set((s) => ({ expenses: [exp, ...s.expenses] }))
+      // Credit-card purchase: it grows the card's debt, cash stays the same.
+      if (input.on_credit && input.debt_id) await bumpDebt(input.debt_id, input.amount)
       return exp
     },
     async editExpense(id, patch) {
+      const old = get().expenses.find((e) => e.id === id)
       const exp = await get().db!.updateExpense(id, patch)
       set((s) => ({ expenses: s.expenses.map((e) => (e.id === id ? exp : e)) }))
+      // Reconcile the debt effect (revert old charge, apply new).
+      if (old?.on_credit && old.debt_id) await bumpDebt(old.debt_id, -old.amount)
+      if (exp.on_credit && exp.debt_id) await bumpDebt(exp.debt_id, exp.amount)
     },
     async removeExpense(id) {
+      const exp = get().expenses.find((e) => e.id === id)
       await get().db!.deleteExpense(id)
       set((s) => ({ expenses: s.expenses.filter((e) => e.id !== id) }))
+      if (exp?.on_credit && exp.debt_id) await bumpDebt(exp.debt_id, -exp.amount)
     },
 
     async setTheme(theme) {

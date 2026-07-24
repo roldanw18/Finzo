@@ -241,6 +241,8 @@ export class SupabaseDatabase implements Database {
         description: input.description ?? null,
         payment_method: input.payment_method,
         notes: input.notes ?? null,
+        on_credit: input.on_credit ?? false,
+        debt_id: input.debt_id ?? null,
       })
       .select()
       .single()
@@ -316,6 +318,7 @@ export class SupabaseDatabase implements Database {
       priority: input.priority ?? 0,
       status: input.status ?? 'active',
       count_in_target: input.count_in_target ?? true,
+      credit_limit: input.credit_limit ?? null,
     })
   }
   updateDebt(id: string, patch: Partial<DebtInput>) {

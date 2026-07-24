@@ -69,6 +69,8 @@ en el navegador. Para activar la nube, configura Supabase (abajo).
      actividad multi-oficio (etiquetas, costo variable, asistente inicial).
    - [`0007_daily_target_config.sql`](supabase/migrations/0007_daily_target_config.sql) — días de
      trabajo por semana y casilla de gastos fijos para la meta diaria.
+   - [`0008_credit_expenses.sql`](supabase/migrations/0008_credit_expenses.sql) — gastos con
+     tarjeta de crédito (suman a la deuda, no al efectivo) y cupo de las tarjetas.
    Cada usuario solo verá sus propios datos.
 3. Copia `.env.example` a `.env` y completa con los datos de
    **Project Settings → API**:

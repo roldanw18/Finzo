@@ -63,6 +63,17 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
         </div>
       </div>
 
+      {/* Available credit (cupo) */}
+      {debt.type === 'credit_card' && debt.credit_limit != null && debt.credit_limit > 0 && (
+        <p className="mt-2 text-[11px] text-muted">
+          Cupo disponible:{' '}
+          <b className="text-content">
+            {money(Math.max(0, debt.credit_limit - debt.balance), { compact: true })}
+          </b>{' '}
+          de {money(debt.credit_limit, { compact: true })}
+        </p>
+      )}
+
       {/* Progress */}
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between text-[11px] text-muted">

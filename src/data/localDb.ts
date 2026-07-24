@@ -210,6 +210,8 @@ export class LocalDatabase implements Database {
       description: input.description ?? null,
       payment_method: input.payment_method,
       notes: input.notes ?? null,
+      on_credit: input.on_credit ?? false,
+      debt_id: input.debt_id ?? null,
       created_at: new Date().toISOString(),
     }
     s.expenses.push(exp)
@@ -259,6 +261,7 @@ export class LocalDatabase implements Database {
       priority: input.priority ?? s.debts.length,
       status: input.status ?? 'active',
       count_in_target: input.count_in_target ?? true,
+      credit_limit: input.credit_limit ?? null,
       created_at: new Date().toISOString(),
     }
     s.debts.push(debt)

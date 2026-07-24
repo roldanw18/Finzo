@@ -39,6 +39,8 @@ export interface ExpenseInput {
   description?: string | null
   payment_method: PaymentMethod
   notes?: string | null
+  on_credit?: boolean
+  debt_id?: string | null
 }
 
 export interface DebtInput {
@@ -55,6 +57,7 @@ export interface DebtInput {
   priority?: number
   status?: DebtStatus
   count_in_target?: boolean
+  credit_limit?: number | null
 }
 
 export interface PaymentInput {

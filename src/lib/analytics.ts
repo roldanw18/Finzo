@@ -81,6 +81,13 @@ export function computeKpis(
   // Debt payments count as cash outflow (expenses) too.
   const totalDebtPaid = sum(debtPayments, (p) => p.amount)
   const totalExpense = sum(expenses, (e) => e.amount) + totalDebtPaid
+  // Credit-card purchases are NOT cash out (they grow debt), so exclude them
+  // from the "available cash" figure — but they still count as spending above.
+  const totalCashOut =
+    sum(
+      expenses.filter((e) => !e.on_credit),
+      (e) => e.amount,
+    ) + totalDebtPaid
 
   const todayIncome = sum(
     incomes.filter((i) => i.date === todayIso),
@@ -147,13 +154,13 @@ export function computeKpis(
         : 'flat'
 
   return {
-    available: openingBalance + totalIncome - totalExpense,
+    available: openingBalance + totalIncome - totalCashOut,
     todayIncome,
     todayExpense,
     monthIncome,
     monthExpense,
     monthBalance,
-    totalSavings: totalIncome - totalExpense,
+    totalSavings: totalIncome - totalCashOut,
     dailyAvgExpense: safeDiv(monthExpense, daysElapsed),
     dailyAvgIncome: safeDiv(monthIncome, daysElapsed),
     prevMonthExpense,

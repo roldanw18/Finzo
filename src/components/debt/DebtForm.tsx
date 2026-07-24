@@ -30,6 +30,7 @@ export function DebtForm({ editing, onDone }: Props) {
   const [targetPayment, setTargetPayment] = useState(editing?.target_payment ?? 0)
   const [cutDay, setCutDay] = useState<string>(editing?.cut_day?.toString() ?? '')
   const [dueDay, setDueDay] = useState<string>(editing?.due_day?.toString() ?? '')
+  const [creditLimit, setCreditLimit] = useState(editing?.credit_limit ?? 0)
   const [paid, setPaid] = useState(editing?.status === 'paid')
   const [countInTarget, setCountInTarget] = useState(editing?.count_in_target !== false)
   const [saving, setSaving] = useState(false)
@@ -52,6 +53,7 @@ export function DebtForm({ editing, onDone }: Props) {
         due_day: dueDay ? Number(dueDay) : null,
         status: (paid ? 'paid' : 'active') as 'paid' | 'active',
         count_in_target: countInTarget,
+        credit_limit: type === 'credit_card' && creditLimit > 0 ? creditLimit : null,
       }
       if (editing) {
         await editDebt(editing.id, payload)
@@ -163,6 +165,16 @@ export function DebtForm({ editing, onDone }: Props) {
           </p>
         )}
       </div>
+
+      {type === 'credit_card' && (
+        <div>
+          <label className="label">Cupo total de la tarjeta (opcional)</label>
+          <AmountInput value={creditLimit} onChange={setCreditLimit} currency={currency} size="md" />
+          <p className="mt-1 text-xs text-muted">
+            Para ver tu cupo disponible al pagar con esta tarjeta.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>

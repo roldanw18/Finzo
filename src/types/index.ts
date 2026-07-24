@@ -46,6 +46,10 @@ export interface Expense {
   description: string | null
   payment_method: PaymentMethod
   notes: string | null
+  /** Paid with a credit card: adds to debt, doesn't reduce cash. */
+  on_credit?: boolean
+  /** Credit card (debt) this expense was charged to. */
+  debt_id?: string | null
   created_at: string
 }
 
@@ -98,6 +102,8 @@ export interface Debt {
   status: DebtStatus
   /** Whether this debt counts toward the daily income goal. Defaults to true. */
   count_in_target?: boolean
+  /** Credit limit (cupo) for credit cards, to show available credit. */
+  credit_limit?: number | null
   created_at: string
 }
 

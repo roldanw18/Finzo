@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Loader2, Trash2, Plus } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Loader2, Trash2, Plus, Check, CreditCard } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useStore } from '@/store/useStore'
@@ -16,12 +16,18 @@ interface Props {
 }
 
 export function ExpenseForm({ editing, onDone }: Props) {
-  const { currency } = useMoney()
+  const { currency, money } = useMoney()
   const categories = useStore((s) => s.categories.filter((c) => c.type === 'expense'))
+  const debts = useStore((s) => s.debts)
   const addExpense = useStore((s) => s.addExpense)
   const editExpense = useStore((s) => s.editExpense)
   const removeExpense = useStore((s) => s.removeExpense)
   const openCategory = useUI((s) => s.openCategory)
+
+  const creditCards = useMemo(
+    () => debts.filter((d) => d.type === 'credit_card' && d.status === 'active'),
+    [debts],
+  )
 
   const [amount, setAmount] = useState(editing?.amount ?? 0)
   const [categoryId, setCategoryId] = useState<string | null>(
@@ -30,8 +36,13 @@ export function ExpenseForm({ editing, onDone }: Props) {
   const [date, setDate] = useState(editing?.date ?? todayISO())
   const [description, setDescription] = useState(editing?.description ?? '')
   const [method, setMethod] = useState<PaymentMethod>(editing?.payment_method ?? 'cash')
+  const [creditDebtId, setCreditDebtId] = useState<string>(
+    editing?.debt_id ?? creditCards[0]?.id ?? '',
+  )
   const [notes, setNotes] = useState(editing?.notes ?? '')
   const [saving, setSaving] = useState(false)
+
+  const onCredit = method === 'credit' && creditCards.length > 0 && !!creditDebtId
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -46,6 +57,8 @@ export function ExpenseForm({ editing, onDone }: Props) {
         description,
         payment_method: method,
         notes,
+        on_credit: onCredit,
+        debt_id: onCredit ? creditDebtId : null,
       }
       if (editing) {
         await editExpense(editing.id, payload)
@@ -145,6 +158,55 @@ export function ExpenseForm({ editing, onDone }: Props) {
           </select>
         </div>
       </div>
+
+      {/* Credit-card picker: charges to the card's debt, keeps your cash */}
+      {method === 'credit' &&
+        (creditCards.length > 0 ? (
+          <div>
+            <label className="label">¿A cuál tarjeta de crédito?</label>
+            <div className="space-y-1.5">
+              {creditCards.map((card) => {
+                const cupo =
+                  card.credit_limit != null ? Math.max(0, card.credit_limit - card.balance) : null
+                const over = cupo !== null && amount > cupo
+                const active = creditDebtId === card.id
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => setCreditDebtId(card.id)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition',
+                      active ? 'border-primary/60 bg-primary/10' : 'border-border hover:bg-surface-2',
+                    )}
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-expense/12 text-expense">
+                      <CreditCard size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-content">{card.name}</p>
+                      <p className={cn('text-xs', over ? 'text-expense' : 'text-muted')}>
+                        {cupo != null
+                          ? `Cupo disponible: ${money(cupo)}${over ? ' · excede el cupo' : ''}`
+                          : `Deuda actual: ${money(card.balance)}`}
+                      </p>
+                    </div>
+                    {active && <Check size={16} className="shrink-0 text-primary" />}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mt-2 rounded-lg bg-info/10 p-2.5 text-xs text-info">
+              No reduce tu saldo (es deuda): suma {money(amount || 0)} a la tarjeta, y el gasto
+              igual aparece en tu historial y categorías.
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-lg bg-warning/10 p-2.5 text-xs text-warning">
+            No tienes tarjetas de crédito registradas. Agrégalas en <b>Plan → Deudas</b> para que el
+            gasto sume a la deuda sin descontar tu saldo.
+          </p>
+        ))}
 
       <div>
         <label className="label">Descripción</label>

@@ -1,13 +1,18 @@
 import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Wallet, Loader2, Mail, Lock, TrendingUp, PieChart, ShieldCheck } from 'lucide-react'
+import { Wallet, Loader2, Mail, Lock, TrendingUp, PieChart, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { useStore } from '@/store/useStore'
+import { GoogleButton } from '@/components/GoogleButton'
 import { toast } from '@/store/toast'
 
 export function Login() {
   const signIn = useStore((s) => s.signIn)
   const signUp = useStore((s) => s.signUp)
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [params] = useSearchParams()
+  const [mode, setMode] = useState<'signin' | 'signup'>(
+    params.get('signup') ? 'signup' : 'signin',
+  )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -88,6 +93,13 @@ export function Login() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-sm"
         >
+          <Link
+            to="/"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-content"
+          >
+            <ArrowLeft size={15} /> Volver al inicio
+          </Link>
+
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-contrast">
               <Wallet size={22} strokeWidth={2.4} />
@@ -104,7 +116,16 @@ export function Login() {
               : 'Empieza a controlar tus ingresos y gastos'}
           </p>
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
+          <div className="mt-6">
+            <GoogleButton />
+          </div>
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-subtle">o con tu correo</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={submit} className="space-y-4">
             <div>
               <label className="label">Correo electrónico</label>
               <div className="relative">

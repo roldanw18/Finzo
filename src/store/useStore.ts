@@ -56,6 +56,7 @@ interface AppState {
 
   // Auth (remote mode)
   signIn: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   signUp: (email: string, password: string) => Promise<{ needsConfirm: boolean }>
   signOut: () => Promise<void>
 
@@ -211,6 +212,16 @@ export const useStore = create<AppState>((set, get) => {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
       await get().init()
+    },
+
+    async signInWithGoogle() {
+      if (!supabase) throw new Error('Supabase no configurado')
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      })
+      if (error) throw error
+      // Redirects to Google; the session is picked up on return by init().
     },
 
     async signUp(email, password) {

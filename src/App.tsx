@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { Splash } from '@/components/Splash'
 import { Toaster } from '@/components/ui/Toaster'
 import { Login } from '@/pages/Login'
+import { Landing } from '@/pages/Landing'
 import { Onboarding } from '@/pages/Onboarding'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 
@@ -74,7 +75,15 @@ function AppContent({
     )
   }
 
-  if (status === 'auth') return <Login />
+  // Logged out: public marketing landing + login route.
+  if (status === 'auth') {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Landing />} />
+      </Routes>
+    )
+  }
 
   // First run: let the user tell us what they do for a living.
   if (!onboarded) return <Onboarding />

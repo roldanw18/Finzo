@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Lightbulb,
@@ -8,6 +9,7 @@ import {
   ArrowDownRight,
   TrendingUp,
   TrendingDown,
+  Share2,
 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -120,11 +122,16 @@ export function Analytics() {
         title="Análisis"
         subtitle="Entiende tus hábitos y toma mejores decisiones"
         action={
-          <ExportButtons
-            movements={movements}
-            kpis={kpis}
-            periodLabel={`Resumen · ${fmtMonthYear(new Date())}`}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to="/reporte" className="btn-outline">
+              <Share2 size={16} /> Reporte
+            </Link>
+            <ExportButtons
+              movements={movements}
+              kpis={kpis}
+              periodLabel={`Resumen · ${fmtMonthYear(new Date())}`}
+            />
+          </div>
         }
       />
 

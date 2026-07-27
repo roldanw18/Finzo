@@ -13,6 +13,7 @@ import {
   Check,
   Moon,
   Sun,
+  PlayCircle,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { ActivitySettings } from '@/components/ActivitySettings'
@@ -27,6 +28,8 @@ import type { Currency, ThemeMode } from '@/types'
 export function Settings() {
   const profile = useStore((s) => s.profile)
   const mode = useStore((s) => s.mode)
+  const demo = useStore((s) => s.demo)
+  const enterDemo = useStore((s) => s.enterDemo)
   const categories = useStore((s) => s.categories)
   const incomes = useStore((s) => s.incomes)
   const expenses = useStore((s) => s.expenses)
@@ -218,8 +221,26 @@ export function Settings() {
         </div>
       </Card>
 
+      {/* Demo mode */}
+      {!demo && (
+        <Card>
+          <CardHeader
+            title="Explorar modo demo"
+            subtitle="Mira la app llena de datos de ejemplo"
+            icon={<PlayCircle size={18} className="text-primary" />}
+          />
+          <p className="mb-3 text-sm text-muted">
+            Carga varios meses de actividad ficticia para explorar todas las funciones. No afecta
+            tus datos reales; puedes salir cuando quieras.
+          </p>
+          <button onClick={() => enterDemo()} className="btn-outline">
+            <PlayCircle size={16} /> Entrar al modo demo
+          </button>
+        </Card>
+      )}
+
       {/* Account */}
-      {mode === 'remote' && (
+      {mode === 'remote' && !demo && (
         <Card>
           <CardHeader title="Cuenta" icon={<LogOut size={18} className="text-expense" />} />
           <button onClick={() => signOut()} className="btn-danger">

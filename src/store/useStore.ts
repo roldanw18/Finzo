@@ -26,7 +26,14 @@ import type {
   Snapshot,
   WorkSessionInput,
 } from '@/data/db'
-import { LocalDatabase, generateDemoData, wipeLocal } from '@/data/localDb'
+import {
+  LocalDatabase,
+  generateDemoData,
+  wipeLocal,
+  seedDemo,
+  wipeDemo,
+  DEMO_KEY,
+} from '@/data/localDb'
 import { SupabaseDatabase } from '@/data/supabaseDb'
 import { hasSupabase, supabase } from '@/lib/supabase'
 
@@ -37,6 +44,7 @@ interface AppState {
   mode: Mode
   status: Status
   error: string | null
+  demo: boolean
   user: { id: string; email?: string } | null
   db: Database | null
 
@@ -97,6 +105,10 @@ interface AppState {
   editFixedExpense: (id: string, patch: Partial<FixedExpenseInput>) => Promise<void>
   removeFixedExpense: (id: string) => Promise<void>
 
+  // Demo mode (explore with fake data; never touches real data)
+  enterDemo: () => Promise<void>
+  exitDemo: () => Promise<void>
+
   // Data management
   loadDemoData: () => Promise<void>
   resetLocal: () => Promise<void>
@@ -113,6 +125,10 @@ export function applyTheme(theme: ThemeMode) {
 }
 
 export const useStore = create<AppState>((set, get) => {
+  // Stashed real session while exploring the demo, restored on exit.
+  let stashedDb: Database | null = null
+  let stashedStatus: Status = 'auth'
+
   function setSnapshot(s: Snapshot) {
     applyTheme(s.profile.theme)
     set({
@@ -149,6 +165,7 @@ export const useStore = create<AppState>((set, get) => {
     mode: hasSupabase ? 'remote' : 'local',
     status: 'idle',
     error: null,
+    demo: false,
     user: null,
     db: null,
     profile: null,
@@ -429,6 +446,33 @@ export const useStore = create<AppState>((set, get) => {
     async removeFixedExpense(id) {
       await get().db!.deleteFixedExpense(id)
       set((s) => ({ fixedExpenses: s.fixedExpenses.filter((f) => f.id !== id) }))
+    },
+
+    async enterDemo() {
+      if (get().demo) return
+      stashedDb = get().db
+      stashedStatus = get().status
+      const theme = get().profile?.theme ?? 'dark'
+      seedDemo(theme)
+      const demoDb = new LocalDatabase(DEMO_KEY)
+      const snap = await demoDb.bootstrap()
+      set({ db: demoDb, demo: true, status: 'ready', user: { id: 'demo' } })
+      setSnapshot(snap)
+    },
+
+    async exitDemo() {
+      if (!get().demo) return
+      wipeDemo()
+      if (stashedDb) {
+        const db = stashedDb
+        const snap = await db.bootstrap()
+        set({ db, demo: false, status: 'ready' })
+        setSnapshot(snap)
+      } else {
+        // Came from the public landing (no real session).
+        set({ db: null, demo: false, status: stashedStatus, profile: null })
+      }
+      stashedDb = null
     },
 
     async loadDemoData() {

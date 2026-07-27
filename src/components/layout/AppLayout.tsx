@@ -7,11 +7,13 @@ import { MobileHeader } from './MobileHeader'
 import { Fab } from './Fab'
 import { QuickAddModals } from '@/components/QuickAddModals'
 import { DemoBanner } from './DemoBanner'
+import { DemoModeBanner } from './DemoModeBanner'
 
 export function AppLayout() {
   const location = useLocation()
   return (
     <div className="min-h-screen bg-bg">
+      <DemoModeBanner />
       <Sidebar />
       <MobileHeader />
 

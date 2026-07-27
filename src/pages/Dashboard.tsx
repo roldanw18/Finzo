@@ -25,6 +25,7 @@ import { CategoryPie } from '@/components/charts/CategoryPie'
 import { FlowChart } from '@/components/charts/FlowChart'
 import { CategoryRanking } from '@/components/charts/CategoryRanking'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
+import { DueSoonCard } from '@/components/DueSoonCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
 import { useUI } from '@/store/ui'
@@ -270,6 +271,9 @@ export function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* Upcoming due dates + browser reminders */}
+      <DueSoonCard />
 
       {/* Charts row 1 */}
       <div className="grid gap-4 lg:grid-cols-3">

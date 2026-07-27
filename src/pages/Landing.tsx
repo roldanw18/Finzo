@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useStore } from '@/store/useStore'
 import {
   Wallet,
   ArrowRight,
+  PlayCircle,
   TrendingUp,
   PieChart,
   Target,
@@ -50,6 +52,7 @@ const FEATURES = [
 const OCCUPATIONS = ['🚗 Conductor', '💈 Barbería', '🛵 Domicilios', '🏪 Negocio', '💻 Freelance', '💼 Empleado']
 
 export function Landing() {
+  const enterDemo = useStore((s) => s.enterDemo)
   return (
     <div className="min-h-screen bg-bg text-content">
       {/* Nav */}
@@ -62,6 +65,9 @@ export function Landing() {
             <span className="font-display text-xl font-bold">Finzo</span>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => enterDemo()} className="btn-ghost hidden sm:inline-flex">
+              <PlayCircle size={16} /> Probar
+            </button>
             <Link to="/login" className="btn-ghost hidden sm:inline-flex">
               Iniciar sesión
             </Link>
@@ -106,10 +112,13 @@ export function Landing() {
               <Link to="/login?signup=1" className="btn-primary px-6 py-3 text-base">
                 Crear cuenta gratis <ArrowRight size={18} />
               </Link>
-              <Link to="/login" className="btn-outline px-6 py-3 text-base">
-                Ya tengo cuenta
-              </Link>
+              <button onClick={() => enterDemo()} className="btn-outline px-6 py-3 text-base">
+                <PlayCircle size={18} /> Probar la app
+              </button>
             </div>
+            <p className="mt-2 text-xs text-subtle">
+              El modo demo carga datos de ejemplo. No necesitas cuenta ni afecta nada.
+            </p>
             <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
               <span className="flex items-center gap-1.5">
                 <Check size={15} className="text-income" /> Gratis

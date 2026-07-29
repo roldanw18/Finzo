@@ -4,6 +4,7 @@ import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
 import { useActivity } from '@/hooks/useActivity'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { safeDiv } from '@/lib/utils'
@@ -11,6 +12,7 @@ import { safeDiv } from '@/lib/utils'
 export function WorkSessionForm({ onDone }: { onDone: () => void }) {
   const { currency, money } = useMoney()
   const { costLabel, incomeLabel } = useActivity()
+  const { t } = useI18n()
   const addWorkSession = useStore((s) => s.addWorkSession)
 
   const [date, setDate] = useState(todayISO())
@@ -26,12 +28,12 @@ export function WorkSessionForm({ onDone }: { onDone: () => void }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (h <= 0) return toast.error('Ingresa las horas trabajadas')
-    if (earnings <= 0) return toast.error('Ingresa lo que ganaste')
+    if (h <= 0) return toast.error(t('Ingresa las horas trabajadas'))
+    if (earnings <= 0) return toast.error(t('Ingresa lo que ganaste'))
     setSaving(true)
     try {
       await addWorkSession({ date, hours: h, earnings, fuel_cost: fuel, note })
-      toast.success('Jornada registrada ✓')
+      toast.success(t('Jornada registrada ✓'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -44,7 +46,7 @@ export function WorkSessionForm({ onDone }: { onDone: () => void }) {
     <form onSubmit={submit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label">Fecha</label>
+          <label className="label">{t('Fecha')}</label>
           <input
             type="date"
             value={date}
@@ -54,50 +56,50 @@ export function WorkSessionForm({ onDone }: { onDone: () => void }) {
           />
         </div>
         <div>
-          <label className="label">Horas trabajadas</label>
+          <label className="label">{t('Horas trabajadas')}</label>
           <input
             type="number"
             step="0.5"
             value={hours}
             onChange={(e) => setHours(e.target.value)}
-            placeholder="Ej. 8"
+            placeholder={t('Ej. 8')}
             className="input"
           />
         </div>
       </div>
 
       <div>
-        <label className="label">{incomeLabel} del día</label>
+        <label className="label">{t('{l} del día').replace('{l}', incomeLabel)}</label>
         <AmountInput value={earnings} onChange={setEarnings} currency={currency} size="md" />
       </div>
       <div>
-        <label className="label">Gasto en {costLabel.toLowerCase()}</label>
+        <label className="label">{t('Gasto en {c}').replace('{c}', costLabel.toLowerCase())}</label>
         <AmountInput value={fuel} onChange={setFuel} currency={currency} size="md" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-income/10 p-3">
-          <p className="text-xs text-muted">Ganancia neta</p>
+          <p className="text-xs text-muted">{t('Ganancia neta')}</p>
           <p className="tnum font-display text-lg font-bold text-income">{money(net)}</p>
         </div>
         <div className="rounded-xl bg-info/10 p-3">
-          <p className="text-xs text-muted">Valor por hora</p>
+          <p className="text-xs text-muted">{t('Valor por hora')}</p>
           <p className="tnum font-display text-lg font-bold text-info">{money(perHour)}</p>
         </div>
       </div>
 
       <div>
-        <label className="label">Nota (opcional)</label>
+        <label className="label">{t('Nota (opcional)')}</label>
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Ej. jornada larga, buen día"
+          placeholder={t('Ej. jornada larga, buen día')}
           className="input"
         />
       </div>
 
       <button type="submit" disabled={saving} className="btn-primary w-full">
-        {saving ? <Loader2 size={16} className="animate-spin" /> : 'Registrar jornada'}
+        {saving ? <Loader2 size={16} className="animate-spin" /> : t('Registrar jornada')}
       </button>
     </form>
   )

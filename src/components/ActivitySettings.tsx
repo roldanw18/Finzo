@@ -3,6 +3,7 @@ import { Briefcase, Check, Loader2 } from 'lucide-react'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { useStore } from '@/store/useStore'
 import { useActivity } from '@/hooks/useActivity'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { getIcon } from '@/lib/icons'
 import { ACTIVITY_PRESETS, activityPreset, type ActivityType } from '@/config/activities'
@@ -13,6 +14,7 @@ export function ActivitySettings() {
   const categories = useStore((s) => s.categories)
   const addCategory = useStore((s) => s.addCategory)
   const { activityType, incomeLabel, costLabel, costFactor } = useActivity()
+  const { t } = useI18n()
 
   const [type, setType] = useState<ActivityType>((activityType ?? 'other') as ActivityType)
   const [income, setIncome] = useState(incomeLabel)
@@ -45,9 +47,11 @@ export function ActivitySettings() {
           await addCategory({ name: c.name, color: c.color, icon: c.icon })
           added++
         }
-        toast.success(added > 0 ? `${added} categorías agregadas` : 'Ya tenías todas las categorías')
+        toast.success(
+          added > 0 ? `${added} ${t('categorías agregadas')}` : t('Ya tenías todas las categorías'),
+        )
       } else {
-        toast.success('Perfil de actividad actualizado')
+        toast.success(t('Perfil de actividad actualizado'))
       }
     } catch (e) {
       toast.error((e as Error).message)
@@ -59,8 +63,8 @@ export function ActivitySettings() {
   return (
     <Card>
       <CardHeader
-        title="Mi actividad"
-        subtitle="Adapta la app a lo que haces"
+        title={t('Mi actividad')}
+        subtitle={t('Adapta la app a lo que haces')}
         icon={<Briefcase size={18} className="text-primary" />}
       />
 
@@ -79,7 +83,7 @@ export function ActivitySettings() {
               )}
             >
               <Icon size={16} className="shrink-0" />
-              <span className="truncate">{a.label}</span>
+              <span className="truncate">{t(a.label)}</span>
             </button>
           )
         })}
@@ -87,20 +91,20 @@ export function ActivitySettings() {
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Cómo llamas a tus ingresos</label>
+          <label className="label">{t('Cómo llamas a tus ingresos')}</label>
           <input
             value={income}
             onChange={(e) => setIncome(e.target.value)}
-            placeholder="Ej. Servicio, Venta, Viaje"
+            placeholder={t('Ej. Servicio, Venta, Viaje')}
             className="input"
           />
         </div>
         <div>
-          <label className="label">Tu costo variable</label>
+          <label className="label">{t('Tu costo variable')}</label>
           <input
             value={cost}
             onChange={(e) => setCost(e.target.value)}
-            placeholder="Ej. Insumos, Gasolina"
+            placeholder={t('Ej. Insumos, Gasolina')}
             className="input"
           />
         </div>
@@ -108,7 +112,10 @@ export function ActivitySettings() {
 
       <div className="mt-4">
         <label className="label">
-          ¿Cuánto de lo que ganas se va en {cost.toLowerCase() || 'costos'}?
+          {t('¿Cuánto de lo que ganas se va en {c}?').replace(
+            '{c}',
+            cost.toLowerCase() || t('costos'),
+          )}
         </label>
         <div className="flex flex-wrap gap-2">
           {[
@@ -133,18 +140,21 @@ export function ActivitySettings() {
           ))}
         </div>
         <p className="mt-2 text-xs text-muted">
-          Se usa en la meta diaria: multiplica tus obligaciones ×{factor} para que el dinero
-          te quede libre después de pagar {cost.toLowerCase() || 'costos'}.
+          {t(
+            'Se usa en la meta diaria: multiplica tus obligaciones ×{f} para que el dinero te quede libre después de pagar {c}.',
+          )
+            .replace('{f}', String(factor))
+            .replace('{c}', cost.toLowerCase() || t('costos'))}
         </p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button onClick={() => save(false)} disabled={saving} className="btn-primary">
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-          Guardar
+          {t('Guardar')}
         </button>
         <button onClick={() => save(true)} disabled={saving} className="btn-outline">
-          Guardar y agregar categorías del oficio
+          {t('Guardar y agregar categorías del oficio')}
         </button>
       </div>
     </Card>

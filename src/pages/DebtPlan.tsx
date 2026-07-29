@@ -19,6 +19,7 @@ import { SimulatorTab } from '@/components/debt/SimulatorTab'
 import { WorkTab } from '@/components/debt/WorkTab'
 import { GoalsTab } from '@/components/debt/GoalsTab'
 import { CalendarTab } from '@/components/debt/CalendarTab'
+import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 type Tab = 'plan' | 'deudas' | 'pagos' | 'fijos' | 'simulador' | 'trabajo' | 'metas' | 'calendario'
@@ -45,6 +46,7 @@ const MODAL_TITLES: Record<Exclude<DebtModal['type'], 'none'>, string> = {
 
 export function DebtPlan() {
   const mode = useStore((s) => s.mode)
+  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('plan')
   const [modal, setModal] = useState<DebtModal>({ type: 'none' })
   const close = () => setModal({ type: 'none' })
@@ -52,11 +54,11 @@ export function DebtPlan() {
   return (
     <DebtModalContext.Provider value={setModal}>
       <PageHeader
-        title="Plan de Libertad Financiera"
-        subtitle="Tu asesor para salir de deudas con el método Avalancha"
+        title={t('Plan de Libertad Financiera')}
+        subtitle={t('Tu asesor para salir de deudas con el método Avalancha')}
         action={
           <button onClick={() => setModal({ type: 'debt' })} className="btn-primary">
-            <Plus size={16} /> Deuda
+            <Plus size={16} /> {t('Deuda')}
           </button>
         }
       />
@@ -64,23 +66,23 @@ export function DebtPlan() {
       {/* Tabs */}
       <div className="sticky top-14 z-10 -mx-4 mb-5 overflow-x-auto border-b border-border bg-bg/80 px-4 backdrop-blur lg:top-0 lg:mx-0 lg:rounded-xl lg:border lg:bg-surface lg:px-2">
         <div className="flex min-w-max gap-1 py-1.5">
-          {TABS.map((t) => (
+          {TABS.map((tab_) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tab_.id}
+              onClick={() => setTab(tab_.id)}
               className={cn(
                 'relative rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
-                tab === t.id ? 'text-primary-contrast' : 'text-muted hover:text-content',
+                tab === tab_.id ? 'text-primary-contrast' : 'text-muted hover:text-content',
               )}
             >
-              {tab === t.id && (
+              {tab === tab_.id && (
                 <motion.span
                   layoutId="debt-tab"
                   className="absolute inset-0 rounded-lg bg-primary"
                   transition={{ type: 'spring', damping: 26, stiffness: 340 }}
                 />
               )}
-              <span className="relative z-10">{t.label}</span>
+              <span className="relative z-10">{t(tab_.label)}</span>
             </button>
           ))}
         </div>
@@ -88,8 +90,8 @@ export function DebtPlan() {
 
       {mode === 'remote' && (
         <p className="mb-4 rounded-xl border border-info/25 bg-info/10 px-3.5 py-2 text-xs text-info">
-          Si es tu primera vez aquí y algo no guarda, ejecuta la migración{' '}
-          <code>0003_debt_plan.sql</code> en Supabase (SQL Editor).
+          {t('Si es tu primera vez aquí y algo no guarda, ejecuta la migración')}{' '}
+          <code>0003_debt_plan.sql</code> {t('en Supabase (SQL Editor).')}
         </p>
       )}
 
@@ -112,7 +114,7 @@ export function DebtPlan() {
       <Modal
         open={modal.type !== 'none'}
         onClose={close}
-        title={modal.type !== 'none' ? MODAL_TITLES[modal.type] : ''}
+        title={modal.type !== 'none' ? t(MODAL_TITLES[modal.type]) : ''}
       >
         {modal.type === 'debt' && <DebtForm editing={modal.editing} onDone={close} />}
         {modal.type === 'payment' && <PaymentForm debtId={modal.debtId} onDone={close} />}

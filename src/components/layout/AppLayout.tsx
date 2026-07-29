@@ -8,11 +8,15 @@ import { Fab } from './Fab'
 import { QuickAddModals } from '@/components/QuickAddModals'
 import { DemoBanner } from './DemoBanner'
 import { DemoModeBanner } from './DemoModeBanner'
+import { usePrefs } from '@/store/prefs'
 
 export function AppLayout() {
   const location = useLocation()
+  // Remount the tree when language changes so memoized values that embed
+  // translated strings (chart labels, category names) recompute.
+  const lang = usePrefs((s) => s.lang)
   return (
-    <div className="min-h-screen bg-bg">
+    <div key={lang} className="min-h-screen bg-bg">
       <DemoModeBanner />
       <Sidebar />
       <MobileHeader />

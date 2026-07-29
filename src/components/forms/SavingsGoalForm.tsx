@@ -4,6 +4,7 @@ import { getIcon, CATEGORY_COLORS } from '@/lib/icons'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { cn } from '@/lib/utils'
 import type { SavingsGoal } from '@/types'
@@ -30,6 +31,7 @@ interface Props {
 
 export function SavingsGoalForm({ editing, onDone }: Props) {
   const { currency } = useMoney()
+  const { t } = useI18n()
   const addSavingsGoal = useStore((s) => s.addSavingsGoal)
   const editSavingsGoal = useStore((s) => s.editSavingsGoal)
   const removeSavingsGoal = useStore((s) => s.removeSavingsGoal)
@@ -44,8 +46,8 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Ponle nombre a la meta')
-    if (target <= 0) return toast.error('Define un monto objetivo')
+    if (!name.trim()) return toast.error(t('Ponle nombre a la meta'))
+    if (target <= 0) return toast.error(t('Define un monto objetivo'))
     setSaving(true)
     try {
       const payload = {
@@ -58,10 +60,10 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
       }
       if (editing) {
         await editSavingsGoal(editing.id, payload)
-        toast.success('Meta actualizada')
+        toast.success(t('Meta actualizada'))
       } else {
         await addSavingsGoal(payload)
-        toast.success('Meta de ahorro creada ✓')
+        toast.success(t('Meta de ahorro creada ✓'))
       }
       onDone()
     } catch (err) {
@@ -84,34 +86,34 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
           <Preview size={24} strokeWidth={2.2} />
         </span>
         <div className="min-w-0">
-          <p className="truncate font-medium text-content">{name || 'Nombre de la meta'}</p>
-          <p className="text-xs text-muted">Meta de ahorro</p>
+          <p className="truncate font-medium text-content">{name || t('Nombre de la meta')}</p>
+          <p className="text-xs text-muted">{t('Meta de ahorro')}</p>
         </div>
       </div>
 
       <div>
-        <label className="label">Nombre</label>
+        <label className="label">{t('Nombre')}</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Fondo de emergencia"
+          placeholder={t('Ej. Fondo de emergencia')}
           className="input"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="label">Meta a alcanzar</label>
+        <label className="label">{t('Meta a alcanzar')}</label>
         <AmountInput value={target} onChange={setTarget} currency={currency} size="md" />
       </div>
 
       <div>
-        <label className="label">Ya ahorrado</label>
+        <label className="label">{t('Ya ahorrado')}</label>
         <AmountInput value={saved} onChange={setSaved} currency={currency} size="md" />
       </div>
 
       <div>
-        <label className="label">Fecha meta (opcional)</label>
+        <label className="label">{t('Fecha meta (opcional)')}</label>
         <input
           type="date"
           value={targetDate}
@@ -121,7 +123,7 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
       </div>
 
       <div>
-        <label className="label">Color</label>
+        <label className="label">{t('Color')}</label>
         <div className="flex flex-wrap gap-2">
           {CATEGORY_COLORS.map((c) => (
             <button
@@ -136,7 +138,7 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
       </div>
 
       <div>
-        <label className="label">Ícono</label>
+        <label className="label">{t('Ícono')}</label>
         <div className="grid grid-cols-6 gap-2">
           {GOAL_ICONS.map((n) => {
             const Icon = getIcon(n)
@@ -165,9 +167,9 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
           <button
             type="button"
             onClick={async () => {
-              if (!confirm('¿Eliminar esta meta de ahorro?')) return
+              if (!confirm(t('¿Eliminar esta meta de ahorro?'))) return
               await removeSavingsGoal(editing.id)
-              toast.success('Meta eliminada')
+              toast.success(t('Meta eliminada'))
               onDone()
             }}
             className="btn-danger"
@@ -180,9 +182,9 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Crear meta'
+            t('Crear meta')
           )}
         </button>
       </div>

@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { useI18n } from '@/i18n'
 import { pendingDebtThisMonth } from '@/lib/debt'
 import { cn, initials } from '@/lib/utils'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
@@ -18,6 +19,7 @@ export function Sidebar() {
   const openExpense = useUI((s) => s.openExpense)
   const { currency, money } = useMoney()
   const { kpis, debts, debtPayments } = useAnalytics()
+  const { t } = useI18n()
 
   const pendingDebt = pendingDebtThisMonth(debts, debtPayments)
   const dark = profile?.theme !== 'light'
@@ -31,13 +33,13 @@ export function Sidebar() {
         </span>
         <div>
           <p className="font-display text-lg font-bold leading-none">Finzo</p>
-          <p className="text-[10px] text-subtle">Finanzas personales</p>
+          <p className="text-[10px] text-subtle">{t('Finanzas personales')}</p>
         </div>
       </div>
 
       {/* Balance card */}
       <div className="mt-5 rounded-2xl border border-border bg-surface p-4">
-        <p className="text-xs text-muted">Dinero disponible</p>
+        <p className="text-xs text-muted">{t('Dinero disponible')}</p>
         <AnimatedNumber
           value={kpis.available}
           currency={currency}
@@ -47,11 +49,12 @@ export function Sidebar() {
           <p className="mt-1 text-[11px] leading-snug text-muted">
             {pendingDebt > 0 ? (
               <>
-                Falta pagar <b className="tnum text-expense">{money(pendingDebt, { compact: true })}</b> de
-                deudas este mes
+                {t('Falta pagar')}{' '}
+                <b className="tnum text-expense">{money(pendingDebt, { compact: true })}</b>{' '}
+                {t('de deudas este mes')}
               </>
             ) : (
-              <span className="text-income">✓ Deudas del mes al día</span>
+              <span className="text-income">✓ {t('Deudas del mes al día')}</span>
             )}
           </p>
         )}
@@ -60,13 +63,13 @@ export function Sidebar() {
             onClick={() => openIncome()}
             className="flex items-center justify-center gap-1.5 rounded-lg bg-income/12 py-2 text-xs font-semibold text-income transition hover:bg-income/20"
           >
-            <TrendingUp size={14} /> Ingreso
+            <TrendingUp size={14} /> {t('Ingreso')}
           </button>
           <button
             onClick={() => openExpense()}
             className="flex items-center justify-center gap-1.5 rounded-lg bg-expense/12 py-2 text-xs font-semibold text-expense transition hover:bg-expense/20"
           >
-            <TrendingDown size={14} /> Gasto
+            <TrendingDown size={14} /> {t('Gasto')}
           </button>
         </div>
       </div>
@@ -83,7 +86,7 @@ export function Sidebar() {
             }
           >
             <item.icon size={19} />
-            {item.label}
+            {t(item.label)}
           </NavLink>
         ))}
       </nav>
@@ -95,7 +98,7 @@ export function Sidebar() {
           className="nav-link w-full"
         >
           {dark ? <Sun size={19} /> : <Moon size={19} />}
-          {dark ? 'Modo claro' : 'Modo oscuro'}
+          {dark ? t('Modo claro') : t('Modo oscuro')}
         </button>
 
         <div className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2.5">
@@ -103,16 +106,16 @@ export function Sidebar() {
             {initials(profile?.display_name)}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">{profile?.display_name ?? 'Usuario'}</p>
+            <p className="truncate text-sm font-medium">{profile?.display_name ?? t('Usuario')}</p>
             <p className="text-[10px] text-subtle">
-              {mode === 'local' ? 'Modo local' : 'Cuenta en la nube'}
+              {mode === 'local' ? t('Modo local') : t('Cuenta en la nube')}
             </p>
           </div>
           {mode === 'remote' && (
             <button
               onClick={signOut}
               className="grid h-8 w-8 place-items-center rounded-lg text-muted transition hover:bg-surface-2 hover:text-expense"
-              title="Cerrar sesión"
+              title={t('Cerrar sesión')}
             >
               <LogOut size={16} />
             </button>

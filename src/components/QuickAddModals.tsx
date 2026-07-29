@@ -4,6 +4,7 @@ import { ExpenseForm } from './forms/ExpenseForm'
 import { CategoryForm } from './forms/CategoryForm'
 import { TipForm } from './forms/TipForm'
 import { useUI } from '@/store/ui'
+import { useI18n } from '@/i18n'
 
 const TITLES = {
   income: 'Registrar ingreso',
@@ -15,13 +16,14 @@ const TITLES = {
 export function QuickAddModals() {
   const modal = useUI((s) => s.modal)
   const close = useUI((s) => s.closeModal)
+  const { t } = useI18n()
   const open = modal.type !== 'none'
 
   return (
     <Modal
       open={open}
       onClose={close}
-      title={modal.type !== 'none' ? TITLES[modal.type] : ''}
+      title={modal.type !== 'none' ? t(TITLES[modal.type]) : ''}
     >
       {modal.type === 'income' && <IncomeForm editing={modal.editing} onDone={close} />}
       {modal.type === 'expense' && <ExpenseForm editing={modal.editing} onDone={close} />}

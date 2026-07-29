@@ -4,6 +4,7 @@ import { getIcon, ICON_NAMES, CATEGORY_COLORS } from '@/lib/icons'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/types'
@@ -15,6 +16,7 @@ interface Props {
 
 export function CategoryForm({ editing, onDone }: Props) {
   const { currency } = useMoney()
+  const { t } = useI18n()
   const addCategory = useStore((s) => s.addCategory)
   const editCategory = useStore((s) => s.editCategory)
   const removeCategory = useStore((s) => s.removeCategory)
@@ -34,17 +36,17 @@ export function CategoryForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Ingresa un nombre')
+    if (!name.trim()) return toast.error(t('Ingresa un nombre'))
     setSaving(true)
     try {
       if (editing) {
         await editCategory(editing.id, { name: name.trim(), color, icon })
         await setBudget(editing.id, budget)
-        toast.success('Categoría actualizada')
+        toast.success(t('Categoría actualizada'))
       } else {
         const cat = await addCategory({ name: name.trim(), color, icon })
         if (budget > 0) await setBudget(cat.id, budget)
-        toast.success('Categoría creada ✓')
+        toast.success(t('Categoría creada ✓'))
       }
       onDone()
     } catch (err) {
@@ -59,14 +61,17 @@ export function CategoryForm({ editing, onDone }: Props) {
     if (
       usageCount > 0 &&
       !confirm(
-        `Esta categoría tiene ${usageCount} gasto(s). Se quedarán como "Sin categoría". ¿Eliminar?`,
+        t('Esta categoría tiene {n} gasto(s). Se quedarán como "Sin categoría". ¿Eliminar?').replace(
+          '{n}',
+          String(usageCount),
+        ),
       )
     )
       return
     setSaving(true)
     try {
       await removeCategory(editing.id)
-      toast.success('Categoría eliminada')
+      toast.success(t('Categoría eliminada'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -88,25 +93,25 @@ export function CategoryForm({ editing, onDone }: Props) {
           <Preview size={24} strokeWidth={2.2} />
         </span>
         <div className="min-w-0">
-          <p className="truncate font-medium text-content">{name || 'Nombre de categoría'}</p>
-          <p className="text-xs text-muted">Vista previa</p>
+          <p className="truncate font-medium text-content">{name || t('Nombre de categoría')}</p>
+          <p className="text-xs text-muted">{t('Vista previa')}</p>
         </div>
       </div>
 
       <div>
-        <label className="label">Nombre</label>
+        <label className="label">{t('Nombre')}</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Transporte"
+          placeholder={t('Ej. Transporte')}
           className="input"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="label">Color</label>
+        <label className="label">{t('Color')}</label>
         <div className="flex flex-wrap gap-2">
           {CATEGORY_COLORS.map((c) => (
             <button
@@ -124,7 +129,7 @@ export function CategoryForm({ editing, onDone }: Props) {
       </div>
 
       <div>
-        <label className="label">Ícono</label>
+        <label className="label">{t('Ícono')}</label>
         <div className="grid max-h-40 grid-cols-7 gap-2 overflow-y-auto rounded-xl border border-border bg-surface-2/50 p-2 sm:grid-cols-9">
           {ICON_NAMES.map((n) => {
             const active = n === icon
@@ -148,10 +153,10 @@ export function CategoryForm({ editing, onDone }: Props) {
       </div>
 
       <div>
-        <label className="label">Presupuesto mensual (opcional)</label>
+        <label className="label">{t('Presupuesto mensual (opcional)')}</label>
         <AmountInput value={budget} onChange={setBudgetAmount} currency={currency} size="md" />
         <p className="mt-1 text-xs text-muted">
-          Te avisaré cuando te acerques o superes este límite.
+          {t('Te avisaré cuando te acerques o superes este límite.')}
         </p>
       </div>
 
@@ -165,15 +170,15 @@ export function CategoryForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Crear categoría'
+            t('Crear categoría')
           )}
         </button>
       </div>
       {editing?.is_default && (
         <p className="text-center text-xs text-subtle">
-          Las categorías predeterminadas no se pueden eliminar, pero sí editar.
+          {t('Las categorías predeterminadas no se pueden eliminar, pero sí editar.')}
         </p>
       )}
     </form>

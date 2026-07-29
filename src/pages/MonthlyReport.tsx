@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { expensesByCategory, sum } from '@/lib/analytics'
 import {
@@ -30,6 +31,7 @@ import { safeDiv } from '@/lib/utils'
 export function MonthlyReport() {
   const { incomes, expenses, categories, debtPayments, profile } = useAnalytics()
   const { money } = useMoney()
+  const { t } = useI18n()
   const cardRef = useRef<HTMLDivElement>(null)
   const [offset, setOffset] = useState(0) // months back from current
   const [busy, setBusy] = useState(false)
@@ -76,7 +78,7 @@ export function MonthlyReport() {
       const file = new File([blob], `finzo_${fmtMonthYear(ref)}.png`, { type: 'image/png' })
       const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean }
       if (share && nav.canShare?.({ files: [file] })) {
-        await nav.share({ files: [file], title: 'Mi mes en Finzo' })
+        await nav.share({ files: [file], title: t('Mi mes en Finzo') })
       } else {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -84,7 +86,7 @@ export function MonthlyReport() {
         a.download = file.name
         a.click()
         URL.revokeObjectURL(url)
-        toast.success('Imagen descargada')
+        toast.success(t('Imagen descargada'))
       }
     } catch (e) {
       toast.error((e as Error).message)
@@ -95,7 +97,7 @@ export function MonthlyReport() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Reporte mensual" subtitle="Tu resumen listo para compartir" />
+      <PageHeader title={t('Reporte mensual')} subtitle={t('Tu resumen listo para compartir')} />
 
       {/* Month selector */}
       <div className="flex items-center justify-center gap-4">
@@ -136,11 +138,11 @@ export function MonthlyReport() {
           </div>
 
           {!hasData ? (
-            <p className="py-12 text-center text-sm text-muted">Sin movimientos este mes.</p>
+            <p className="py-12 text-center text-sm text-muted">{t('Sin movimientos este mes.')}</p>
           ) : (
             <>
               <div className="mt-6 text-center">
-                <p className="text-xs uppercase tracking-widest text-subtle">Balance del mes</p>
+                <p className="text-xs uppercase tracking-widest text-subtle">{t('Balance del mes')}</p>
                 <p
                   className={`tnum mt-1 font-display text-4xl font-bold ${
                     data.balance >= 0 ? 'text-income' : 'text-expense'
@@ -150,7 +152,7 @@ export function MonthlyReport() {
                 </p>
                 {data.income > 0 && (
                   <p className="mt-1 text-xs text-muted">
-                    Tasa de ahorro {data.savingsRate.toFixed(0)}%
+                    {t('Tasa de ahorro')} {data.savingsRate.toFixed(0)}%
                   </p>
                 )}
               </div>
@@ -158,7 +160,7 @@ export function MonthlyReport() {
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-income/10 p-3.5">
                   <p className="flex items-center gap-1.5 text-[11px] text-muted">
-                    <TrendingUp size={13} className="text-income" /> Ingresos
+                    <TrendingUp size={13} className="text-income" /> {t('Ingresos')}
                   </p>
                   <p className="tnum mt-0.5 font-display text-lg font-bold text-income">
                     {money(data.income, { compact: true })}
@@ -166,7 +168,7 @@ export function MonthlyReport() {
                 </div>
                 <div className="rounded-2xl bg-expense/10 p-3.5">
                   <p className="flex items-center gap-1.5 text-[11px] text-muted">
-                    <TrendingDown size={13} className="text-expense" /> Gastos
+                    <TrendingDown size={13} className="text-expense" /> {t('Gastos')}
                   </p>
                   <p className="tnum mt-0.5 font-display text-lg font-bold text-expense">
                     {money(data.expense, { compact: true })}
@@ -177,7 +179,7 @@ export function MonthlyReport() {
               {data.tips > 0 && (
                 <div className="mt-3 flex items-center justify-between rounded-2xl bg-[#14b8a6]/10 p-3">
                   <span className="flex items-center gap-1.5 text-xs text-muted">
-                    <Coins size={14} className="text-[#14b8a6]" /> Propinas del mes
+                    <Coins size={14} className="text-[#14b8a6]" /> {t('Propinas del mes')}
                   </span>
                   <span className="tnum text-sm font-bold text-[#14b8a6]">
                     {money(data.tips, { compact: true })}
@@ -188,7 +190,7 @@ export function MonthlyReport() {
               {data.cats.length > 0 && (
                 <div className="mt-5">
                   <p className="mb-2 text-xs uppercase tracking-widest text-subtle">
-                    En qué se fue
+                    {t('En qué se fue')}
                   </p>
                   <div className="space-y-2.5">
                     {data.cats.map((c) => (
@@ -214,7 +216,7 @@ export function MonthlyReport() {
 
               <p className="mt-6 text-center text-xs text-subtle">
                 {profile?.display_name ? `${profile.display_name} · ` : ''}
-                Generado con Finzo
+                {t('Generado con Finzo')}
               </p>
             </>
           )}
@@ -226,10 +228,10 @@ export function MonthlyReport() {
         <div className="mx-auto flex max-w-md gap-3">
           <button onClick={() => capture(true)} disabled={busy} className="btn-primary flex-1">
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Share2 size={16} />}
-            Compartir
+            {t('Compartir')}
           </button>
           <button onClick={() => capture(false)} disabled={busy} className="btn-outline">
-            <Download size={16} /> Descargar
+            <Download size={16} /> {t('Descargar')}
           </button>
         </div>
       )}

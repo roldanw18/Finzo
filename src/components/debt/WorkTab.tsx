@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 import { hoursToPay } from '@/lib/debt'
 import { fmtShort } from '@/lib/dates'
@@ -16,6 +17,7 @@ export function WorkTab() {
   const { costLabel, workLabel, incomeLabel, icon } = useActivity()
   const ActivityIcon = getIcon(icon)
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
   const removeWorkSession = useStore((s) => s.removeWorkSession)
 
@@ -27,31 +29,31 @@ export function WorkTab() {
             <ActivityIcon size={20} />
           </span>
           <div>
-            <h2 className="font-display text-lg font-bold leading-none">Mi trabajo</h2>
-            <p className="text-xs text-muted">{workLabel} y productividad para pagar deudas</p>
+            <h2 className="font-display text-lg font-bold leading-none">{t('Mi trabajo')}</h2>
+            <p className="text-xs text-muted">{t('{w} y productividad para pagar deudas').replace('{w}', workLabel)}</p>
           </div>
         </div>
         <button onClick={() => open({ type: 'work' })} className="btn-primary">
-          <Plus size={16} /> Registrar
+          <Plus size={16} /> {t('Registrar')}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><Gauge size={15} /><span className="text-xs">Neto por hora</span></div>
+          <div className="flex items-center gap-2 text-muted"><Gauge size={15} /><span className="text-xs">{t('Neto por hora')}</span></div>
           <p className="tnum mt-1 font-display text-xl font-bold text-income">{money(uber.netPerHour)}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><Clock size={15} /><span className="text-xs">Horas totales</span></div>
+          <div className="flex items-center gap-2 text-muted"><Clock size={15} /><span className="text-xs">{t('Horas totales')}</span></div>
           <p className="tnum mt-1 font-display text-xl font-bold text-content">{uber.totalHours.toFixed(0)}h</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><ActivityIcon size={15} /><span className="text-xs">Ganancia neta</span></div>
+          <div className="flex items-center gap-2 text-muted"><ActivityIcon size={15} /><span className="text-xs">{t('Ganancia neta')}</span></div>
           <p className="tnum mt-1 font-display text-xl font-bold text-content">{money(uber.netTotal, { compact: true })}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-muted"><Coins size={15} /><span className="text-xs">{costLabel} total</span></div>
+          <div className="flex items-center gap-2 text-muted"><Coins size={15} /><span className="text-xs">{t('{c} total').replace('{c}', costLabel)}</span></div>
           <p className="tnum mt-1 font-display text-xl font-bold text-expense">{money(uber.totalCost, { compact: true })}</p>
         </div>
       </div>
@@ -61,11 +63,11 @@ export function WorkTab() {
 
       {/* Hours to pay each debt */}
       <Card>
-        <CardHeader title="¿Cuántas horas para pagar cada deuda?" subtitle={uber.netPerHour > 0 ? `A ${money(uber.netPerHour)}/hora neto` : `Registra ${workLabel.toLowerCase()} para calcularlo`} />
+        <CardHeader title={t('¿Cuántas horas para pagar cada deuda?')} subtitle={uber.netPerHour > 0 ? t('A {m}/hora neto').replace('{m}', money(uber.netPerHour)) : t('Registra {w} para calcularlo').replace('{w}', workLabel.toLowerCase())} />
         {uber.netPerHour <= 0 ? (
-          <EmptyState icon={<Clock size={22} />} title="Sin datos de trabajo" description="Registra al menos una jornada para calcular cuántas horas necesitas." />
+          <EmptyState icon={<Clock size={22} />} title={t('Sin datos de trabajo')} description={t('Registra al menos una jornada para calcular cuántas horas necesitas.')} />
         ) : active.length === 0 ? (
-          <p className="py-3 text-sm text-muted">No tienes deudas activas. ¡Bien!</p>
+          <p className="py-3 text-sm text-muted">{t('No tienes deudas activas. ¡Bien!')}</p>
         ) : (
           <div className="space-y-3">
             {active.map((d) => {
@@ -74,11 +76,11 @@ export function WorkTab() {
                 <div key={d.id} className="flex items-center gap-3 rounded-xl bg-surface-2/50 p-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-content">{d.name}</p>
-                    <p className="text-xs text-muted">Faltan {money(d.balance)}</p>
+                    <p className="text-xs text-muted">{t('Faltan')} {money(d.balance)}</p>
                   </div>
                   <div className="text-right">
                     <p className="tnum font-display text-lg font-bold text-primary">{hours}h</p>
-                    <p className="text-[11px] text-muted">≈ {Math.ceil(hours / 8)} días de 8h</p>
+                    <p className="text-[11px] text-muted">{t('≈ {d} días de 8h').replace('{d}', String(Math.ceil(hours / 8)))}</p>
                   </div>
                 </div>
               )
@@ -90,7 +92,7 @@ export function WorkTab() {
       {/* Sessions history */}
       <Card className="!p-2">
         {workSessions.length === 0 ? (
-          <EmptyState icon={<ActivityIcon size={22} />} title={`Sin ${workLabel.toLowerCase()} registradas`} description={`Registra horas, ${incomeLabel.toLowerCase()} y ${costLabel.toLowerCase()} para conocer tu valor por hora.`} />
+          <EmptyState icon={<ActivityIcon size={22} />} title={t('Sin {w} registradas').replace('{w}', workLabel.toLowerCase())} description={t('Registra horas, {i} y {c} para conocer tu valor por hora.').replace('{i}', incomeLabel.toLowerCase()).replace('{c}', costLabel.toLowerCase())} />
         ) : (
           <div className="divide-y divide-border/60">
             {workSessions.map((w) => {
@@ -102,7 +104,7 @@ export function WorkTab() {
                       {fmtShort(w.date)} · {w.hours}h
                     </p>
                     <p className="text-xs text-muted">
-                      Neto {money(net)} · {money(net / (w.hours || 1))}/h
+                      {t('Neto {m}').replace('{m}', money(net))} · {money(net / (w.hours || 1))}/h
                     </p>
                   </div>
                   <button

@@ -9,6 +9,7 @@ import { ExportButtons } from '@/components/ExportButtons'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { fmtLong } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import type { Movement } from '@/types'
@@ -20,6 +21,7 @@ export function History() {
   const { movements, categories, kpis } = useAnalytics()
   const { incomeLabel } = useActivity()
   const { money } = useMoney()
+  const { t } = useI18n()
 
   const [search, setSearch] = useState('')
   const [kind, setKind] = useState<Kind>('all')
@@ -99,14 +101,14 @@ export function History() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Historial"
-        subtitle={`${totals.count} movimientos`}
+        title={t('Historial')}
+        subtitle={`${totals.count} ${t('movimientos')}`}
         action={
           <ExportButtons
             movements={filtered}
             kpis={kpis}
-            title="Historial de movimientos"
-            periodLabel={from || to ? `${from || '...'} a ${to || '...'}` : 'Todos los movimientos'}
+            title={t('Historial de movimientos')}
+            periodLabel={from || to ? `${from || '...'} ${t('a')} ${to || '...'}` : t('Todos los movimientos')}
           />
         }
       />
@@ -114,19 +116,19 @@ export function History() {
       {/* Summary chips */}
       <div className="grid grid-cols-3 gap-3">
         <div className="card p-3.5">
-          <p className="text-xs text-muted">Ingresos</p>
+          <p className="text-xs text-muted">{t('Ingresos')}</p>
           <p className="tnum mt-0.5 font-display text-base font-bold text-income sm:text-lg">
             {money(totals.inc, { compact: true })}
           </p>
         </div>
         <div className="card p-3.5">
-          <p className="text-xs text-muted">Gastos</p>
+          <p className="text-xs text-muted">{t('Gastos')}</p>
           <p className="tnum mt-0.5 font-display text-base font-bold text-expense sm:text-lg">
             {money(totals.exp, { compact: true })}
           </p>
         </div>
         <div className="card p-3.5">
-          <p className="text-xs text-muted">Neto</p>
+          <p className="text-xs text-muted">{t('Neto')}</p>
           <p
             className={cn(
               'tnum mt-0.5 font-display text-base font-bold sm:text-lg',
@@ -145,7 +147,7 @@ export function History() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por texto, categoría o nota…"
+            placeholder={t('Buscar por texto, categoría o nota…')}
             className="input pl-10"
           />
         </div>
@@ -154,7 +156,7 @@ export function History() {
           className={cn('btn-ghost relative', showFilters && 'bg-surface-3')}
         >
           <SlidersHorizontal size={16} />
-          <span className="hidden sm:inline">Filtros</span>
+          <span className="hidden sm:inline">{t('Filtros')}</span>
           {activeFilters > 0 && (
             <span className="grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-contrast">
               {activeFilters}
@@ -168,26 +170,26 @@ export function History() {
         <Card className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <div>
-              <label className="label">Tipo</label>
+              <label className="label">{t('Tipo')}</label>
               <Segmented
                 value={kind}
                 onChange={setKind}
                 size="sm"
                 options={[
-                  { value: 'all', label: 'Todos' },
-                  { value: 'income', label: 'Ingresos' },
-                  { value: 'expense', label: 'Gastos' },
+                  { value: 'all', label: t('Todos') },
+                  { value: 'income', label: t('Ingresos') },
+                  { value: 'expense', label: t('Gastos') },
                 ]}
               />
             </div>
             <div className="flex-1 min-w-[160px]">
-              <label className="label">Categoría</label>
+              <label className="label">{t('Categoría')}</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="input"
               >
-                <option value="all">Todas</option>
+                <option value="all">{t('Todas')}</option>
                 <option value="income">{incomeLabel}</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -200,15 +202,15 @@ export function History() {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
-              <label className="label">Desde</label>
+              <label className="label">{t('Desde')}</label>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="input" />
             </div>
             <div>
-              <label className="label">Hasta</label>
+              <label className="label">{t('Hasta')}</label>
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="input" />
             </div>
             <div>
-              <label className="label">Monto mín.</label>
+              <label className="label">{t('Monto mín.')}</label>
               <input
                 type="number"
                 value={min}
@@ -218,7 +220,7 @@ export function History() {
               />
             </div>
             <div>
-              <label className="label">Monto máx.</label>
+              <label className="label">{t('Monto máx.')}</label>
               <input
                 type="number"
                 value={max}
@@ -235,11 +237,11 @@ export function History() {
               className="flex items-center gap-1.5 text-sm text-muted hover:text-content"
             >
               <ArrowDownUp size={15} />
-              Orden: {sort === 'recent' ? 'Más reciente' : 'Mayor monto'}
+              {t('Orden:')} {sort === 'recent' ? t('Más reciente') : t('Mayor monto')}
             </button>
             {activeFilters > 0 && (
               <button onClick={clearFilters} className="flex items-center gap-1 text-sm text-expense hover:underline">
-                <X size={15} /> Limpiar filtros
+                <X size={15} /> {t('Limpiar filtros')}
               </button>
             )}
           </div>
@@ -251,8 +253,8 @@ export function History() {
         <Card>
           <EmptyState
             icon={<Search size={22} />}
-            title="Sin resultados"
-            description="Ajusta los filtros o registra nuevos movimientos."
+            title={t('Sin resultados')}
+            description={t('Ajusta los filtros o registra nuevos movimientos.')}
           />
         </Card>
       ) : grouped ? (

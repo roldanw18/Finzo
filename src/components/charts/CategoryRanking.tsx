@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Trophy } from 'lucide-react'
 import type { CategorySlice } from '@/lib/analytics'
@@ -13,6 +14,7 @@ export function CategoryRanking({
   limit?: number
 }) {
   const { money } = useMoney()
+  const { t } = useI18n()
   const items = data.slice(0, limit)
   const max = items[0]?.value ?? 1
 
@@ -20,8 +22,8 @@ export function CategoryRanking({
     return (
       <EmptyState
         icon={<Trophy size={22} />}
-        title="Aún no hay datos"
-        description="Registra gastos para ver el ranking de categorías."
+        title={t('Aún no hay datos')}
+        description={t('Registra gastos para ver el ranking de categorías.')}
       />
     )
   }

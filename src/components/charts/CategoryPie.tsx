@@ -2,12 +2,14 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { CategoryTooltip } from './ChartTooltip'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PieChart as PieIcon } from 'lucide-react'
 import type { CategorySlice } from '@/lib/analytics'
 
 export function CategoryPie({ data }: { data: CategorySlice[] }) {
   const { money } = useMoney()
+  const { t } = useI18n()
   const total = data.reduce((a, s) => a + s.value, 0)
   const top = data.slice(0, 6)
 
@@ -15,8 +17,8 @@ export function CategoryPie({ data }: { data: CategorySlice[] }) {
     return (
       <EmptyState
         icon={<PieIcon size={22} />}
-        title="Sin gastos en el periodo"
-        description="Registra gastos para ver la distribución por categoría."
+        title={t('Sin gastos en el periodo')}
+        description={t('Registra gastos para ver la distribución por categoría.')}
       />
     )
   }
@@ -46,7 +48,7 @@ export function CategoryPie({ data }: { data: CategorySlice[] }) {
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[11px] text-muted">Total</span>
+            <span className="text-[11px] text-muted">{t('Total')}</span>
             <span className="tnum font-display text-lg font-bold">
               {money(total, { compact: true })}
             </span>
@@ -67,7 +69,7 @@ export function CategoryPie({ data }: { data: CategorySlice[] }) {
             </div>
           ))}
           {data.length > 6 && (
-            <p className="pt-1 text-xs text-subtle">+{data.length - 6} categorías más</p>
+            <p className="pt-1 text-xs text-subtle">{t('+{n} categorías más').replace('{n}', String(data.length - 6))}</p>
           )}
         </div>
       </div>

@@ -11,6 +11,7 @@ import { SavingsGoalForm } from '@/components/forms/SavingsGoalForm'
 import { getIcon } from '@/lib/icons'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { fmtShort } from '@/lib/dates'
 import { safeDiv } from '@/lib/utils'
@@ -31,6 +32,7 @@ function daysLeft(iso: string): number {
 export function Savings() {
   const savingsGoals = useStore((s) => s.savingsGoals)
   const { money } = useMoney()
+  const { t } = useI18n()
   const [sheet, setSheet] = useState<Sheet>({ type: 'none' })
   const close = () => setSheet({ type: 'none' })
 
@@ -44,11 +46,11 @@ export function Savings() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Metas de ahorro"
-        subtitle="Aparta dinero para lo que viene y mira tu progreso"
+        title={t('Metas de ahorro')}
+        subtitle={t('Aparta dinero para lo que viene y mira tu progreso')}
         action={
           <button onClick={() => setSheet({ type: 'form' })} className="btn-primary">
-            <Plus size={16} /> Nueva meta
+            <Plus size={16} /> {t('Nueva meta')}
           </button>
         }
       />
@@ -57,11 +59,13 @@ export function Savings() {
         <Card>
           <EmptyState
             icon={<PiggyBank size={22} />}
-            title="Aún no tienes metas de ahorro"
-            description="Crea tu primera meta —un fondo de emergencia, un viaje, un equipo nuevo— y ve creciendo tu ahorro."
+            title={t('Aún no tienes metas de ahorro')}
+            description={t(
+              'Crea tu primera meta —un fondo de emergencia, un viaje, un equipo nuevo— y ve creciendo tu ahorro.',
+            )}
             action={
               <button onClick={() => setSheet({ type: 'form' })} className="btn-primary mt-1">
-                <Plus size={16} /> Crear meta
+                <Plus size={16} /> {t('Crear meta')}
               </button>
             }
           />
@@ -76,16 +80,18 @@ export function Savings() {
           >
             <div className="flex items-center gap-2 text-muted">
               <PiggyBank size={16} />
-              <span className="text-sm">Ahorro total apartado</span>
+              <span className="text-sm">{t('Ahorro total apartado')}</span>
             </div>
             <p className="tnum mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl text-income">
               {money(totals.saved)}
             </p>
             <p className="mt-1 text-xs text-muted">
-              de {money(totals.target)} en {savingsGoals.length}{' '}
-              {savingsGoals.length === 1 ? 'meta' : 'metas'}
+              {t('de')} {money(totals.target)} · {savingsGoals.length}{' '}
+              {savingsGoals.length === 1 ? t('meta') : t('metas')}
               {totals.done > 0 && (
-                <span className="text-income"> · {totals.done} completada{totals.done === 1 ? '' : 's'} ✓</span>
+                <span className="text-income">
+                  {' '}· {totals.done} {totals.done === 1 ? t('completada') : t('completadas')} ✓
+                </span>
               )}
             </p>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-2">
@@ -124,16 +130,16 @@ export function Savings() {
                       <p className="text-xs text-muted">
                         {done ? (
                           <span className="inline-flex items-center gap-1 text-income">
-                            <CheckCircle2 size={12} /> ¡Meta cumplida!
+                            <CheckCircle2 size={12} /> {t('¡Meta cumplida!')}
                           </span>
                         ) : dl !== null ? (
                           dl >= 0 ? (
-                            <>Faltan {dl} día{dl === 1 ? '' : 's'} · {fmtShort(g.target_date!)}</>
+                            <>{t('Faltan')} {dl} {dl === 1 ? t('día') : t('días')} · {fmtShort(g.target_date!)}</>
                           ) : (
-                            <span className="text-expense">Venció {fmtShort(g.target_date!)}</span>
+                            <span className="text-expense">{t('Venció')} {fmtShort(g.target_date!)}</span>
                           )
                         ) : (
-                          <>Faltan {money(remaining, { compact: true })}</>
+                          <>{t('Faltan')} {money(remaining, { compact: true })}</>
                         )}
                       </p>
                     </div>
@@ -169,7 +175,7 @@ export function Savings() {
                     onClick={() => setSheet({ type: 'contribute', goal: g })}
                     className="btn-outline w-full justify-center py-2 text-sm"
                   >
-                    <Plus size={15} /> Registrar aporte
+                    <Plus size={15} /> {t('Registrar aporte')}
                   </button>
                 </motion.div>
               )
@@ -181,7 +187,7 @@ export function Savings() {
       <Modal
         open={sheet.type === 'form'}
         onClose={close}
-        title={sheet.type === 'form' && sheet.editing ? 'Editar meta' : 'Nueva meta de ahorro'}
+        title={sheet.type === 'form' && sheet.editing ? t('Editar meta') : t('Nueva meta de ahorro')}
       >
         {sheet.type === 'form' && (
           <SavingsGoalForm editing={sheet.editing} onDone={close} />
@@ -191,7 +197,7 @@ export function Savings() {
       <Modal
         open={sheet.type === 'contribute'}
         onClose={close}
-        title="Registrar aporte"
+        title={t('Registrar aporte')}
         maxWidth="max-w-sm"
       >
         {sheet.type === 'contribute' && <ContributeForm goal={sheet.goal} onDone={close} />}
@@ -202,6 +208,7 @@ export function Savings() {
 
 function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => void }) {
   const { currency, money } = useMoney()
+  const { t } = useI18n()
   const contributeSavings = useStore((s) => s.contributeSavings)
   const [dir, setDir] = useState<'add' | 'withdraw'>('add')
   const [amount, setAmount] = useState(0)
@@ -211,11 +218,11 @@ function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => voi
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (amount <= 0) return toast.error('Ingresa un monto')
+    if (amount <= 0) return toast.error(t('Ingresa un monto'))
     setBusy(true)
     try {
       await contributeSavings(goal.id, dir === 'add' ? amount : -amount)
-      toast.success(dir === 'add' ? 'Aporte registrado ✓' : 'Retiro registrado')
+      toast.success(dir === 'add' ? t('Aporte registrado ✓') : t('Retiro registrado'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -229,7 +236,7 @@ function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => voi
       <div className="rounded-2xl border border-border bg-surface-2 p-3.5 text-sm">
         <p className="font-medium text-content">{goal.name}</p>
         <p className="mt-0.5 text-xs text-muted">
-          Ahorrado {money(goal.saved_amount)} · faltan{' '}
+          {t('Ahorrado')} {money(goal.saved_amount)} · {t('faltan')}{' '}
           <b className="tnum text-content">{money(remaining)}</b>
         </p>
       </div>
@@ -239,8 +246,8 @@ function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => voi
         onChange={setDir}
         size="sm"
         options={[
-          { value: 'add', label: '＋ Aportar' },
-          { value: 'withdraw', label: '− Retirar' },
+          { value: 'add', label: `＋ ${t('Aportar')}` },
+          { value: 'withdraw', label: `− ${t('Retirar')}` },
         ]}
       />
 
@@ -252,7 +259,7 @@ function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => voi
           onClick={() => setAmount(remaining)}
           className="text-xs font-medium text-primary hover:underline"
         >
-          Completar meta ({money(remaining, { compact: true })})
+          {t('Completar meta')} ({money(remaining, { compact: true })})
         </button>
       )}
 
@@ -261,11 +268,11 @@ function ContributeForm({ goal, onDone }: { goal: SavingsGoal; onDone: () => voi
           <Loader2 size={16} className="animate-spin" />
         ) : dir === 'add' ? (
           <>
-            <Plus size={16} /> Registrar aporte
+            <Plus size={16} /> {t('Registrar aporte')}
           </>
         ) : (
           <>
-            <Minus size={16} /> Registrar retiro
+            <Minus size={16} /> {t('Registrar retiro')}
           </>
         )}
       </button>

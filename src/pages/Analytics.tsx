@@ -25,6 +25,7 @@ import { LineTrend } from '@/components/charts/LineTrend'
 import { FlowChart } from '@/components/charts/FlowChart'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import {
   monthlySeries,
   weeklySeries,
@@ -63,6 +64,7 @@ function rangeFor(sel: RangeKey): DateRange {
 export function Analytics() {
   const { incomes, expenses, categories, debtPayments, opening, kpis, movements } = useAnalytics()
   const { money } = useMoney()
+  const { t } = useI18n()
   const [range, setRange] = useState<RangeKey>('month')
   const [flow, setFlow] = useState<FlowKey>('daily')
 
@@ -119,17 +121,17 @@ export function Analytics() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Análisis"
-        subtitle="Entiende tus hábitos y toma mejores decisiones"
+        title={t('Análisis')}
+        subtitle={t('Entiende tus hábitos y toma mejores decisiones')}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Link to="/reporte" className="btn-outline">
-              <Share2 size={16} /> Reporte
+              <Share2 size={16} /> {t('Reporte')}
             </Link>
             <ExportButtons
               movements={movements}
               kpis={kpis}
-              periodLabel={`Resumen · ${fmtMonthYear(new Date())}`}
+              periodLabel={`${t('Resumen')} · ${fmtMonthYear(new Date())}`}
             />
           </div>
         }
@@ -138,11 +140,11 @@ export function Analytics() {
       {/* Insights */}
       <section>
         <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold">
-          <Lightbulb size={18} className="text-primary" /> Información clave
+          <Lightbulb size={18} className="text-primary" /> {t('Información clave')}
         </h2>
         {insights.length === 0 ? (
           <Card>
-            <EmptyState title="Sin datos suficientes" description="Registra movimientos para generar análisis." />
+            <EmptyState title={t('Sin datos suficientes')} description={t('Registra movimientos para generar análisis.')} />
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -156,14 +158,14 @@ export function Analytics() {
       {/* Alerts */}
       <section>
         <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold">
-          <Bell size={18} className="text-warning" /> Alertas de gasto
+          <Bell size={18} className="text-warning" /> {t('Alertas de gasto')}
         </h2>
         <Card>
           {alerts.length === 0 ? (
             <EmptyState
               icon={<Bell size={22} />}
-              title="Todo en orden"
-              description="No hay variaciones significativas entre este mes y el anterior."
+              title={t('Todo en orden')}
+              description={t('No hay variaciones significativas entre este mes y el anterior.')}
             />
           ) : (
             <div className="space-y-2.5">
@@ -201,11 +203,11 @@ export function Analytics() {
       {/* Recommendations */}
       <section>
         <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-semibold">
-          <Sparkles size={18} className="text-info" /> Recomendaciones de ahorro
+          <Sparkles size={18} className="text-info" /> {t('Recomendaciones de ahorro')}
         </h2>
         {recs.length === 0 ? (
           <Card>
-            <EmptyState title="Sin recomendaciones" description="Cuando tengas más historial, aquí verás sugerencias personalizadas." />
+            <EmptyState title={t('Sin recomendaciones')} description={t('Cuando tengas más historial, aquí verás sugerencias personalizadas.')} />
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -227,7 +229,7 @@ export function Analytics() {
                     <p className="mt-0.5 text-xs leading-snug text-muted">{r.detail}</p>
                     {r.potentialSaving !== undefined && r.potentialSaving > 0 && (
                       <p className="mt-1.5 text-xs font-semibold text-income">
-                        Ahorro potencial: {money(r.potentialSaving, { compact: true })}
+                        {t('Ahorro potencial:')} {money(r.potentialSaving, { compact: true })}
                       </p>
                     )}
                   </div>
@@ -241,28 +243,28 @@ export function Analytics() {
       {/* Distribution + ranking */}
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Distribución de gastos</h2>
+          <h2 className="font-display text-lg font-semibold">{t('Distribución de gastos')}</h2>
           <Segmented
             value={range}
             onChange={setRange}
             size="sm"
             options={[
-              { value: 'month', label: 'Mes' },
-              { value: '3m', label: '3M' },
-              { value: '6m', label: '6M' },
-              { value: 'year', label: 'Año' },
-              { value: 'all', label: 'Todo' },
+              { value: 'month', label: t('Mes') },
+              { value: '3m', label: t('3M') },
+              { value: '6m', label: t('6M') },
+              { value: 'year', label: t('Año') },
+              { value: 'all', label: t('Todo') },
             ]}
           />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <CardHeader title="Por categoría" subtitle="Distribución circular" />
+            <CardHeader title={t('Por categoría')} subtitle={t('Distribución circular')} />
             <CategoryPie data={byCat} />
           </Card>
           <Card>
-            <CardHeader title="Ranking de categorías" subtitle="Mayor a menor gasto" />
+            <CardHeader title={t('Ranking de categorías')} subtitle={t('Mayor a menor gasto')} />
             <CategoryRanking data={byCat} limit={10} />
           </Card>
         </div>
@@ -270,7 +272,7 @@ export function Analytics() {
         {/* Percent distribution bar */}
         {totalRange > 0 && (
           <Card>
-            <CardHeader title="Distribución porcentual" subtitle="Participación de cada categoría" />
+            <CardHeader title={t('Distribución porcentual')} subtitle={t('Participación de cada categoría')} />
             <div className="flex h-4 w-full overflow-hidden rounded-full">
               {byCat.map((s) => (
                 <div
@@ -298,16 +300,16 @@ export function Analytics() {
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader
-            title="Evolución de ingresos"
-            subtitle="Últimos 12 meses"
+            title={t('Evolución de ingresos')}
+            subtitle={t('Últimos 12 meses')}
             icon={<TrendingUp size={18} className="text-income" />}
           />
           <LineTrend data={months12} dataKey="income" xKey="label" color="rgb(var(--c-income))" />
         </Card>
         <Card>
           <CardHeader
-            title="Evolución de gastos"
-            subtitle="Últimos 12 meses"
+            title={t('Evolución de gastos')}
+            subtitle={t('Últimos 12 meses')}
             icon={<TrendingDown size={18} className="text-expense" />}
           />
           <LineTrend data={months12} dataKey="expense" xKey="label" color="rgb(var(--c-expense))" />
@@ -319,18 +321,18 @@ export function Analytics() {
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-2">
             <CardHeader
-              title="Flujo de caja"
-              subtitle="Movimiento neto por periodo"
+              title={t('Flujo de caja')}
+              subtitle={t('Movimiento neto por periodo')}
               action={
                 <Segmented
                   value={flow}
                   onChange={setFlow}
                   size="sm"
                   options={[
-                    { value: 'daily', label: 'Diario' },
-                    { value: 'weekly', label: 'Semanal' },
-                    { value: 'monthly', label: 'Mensual' },
-                    { value: 'annual', label: 'Anual' },
+                    { value: 'daily', label: t('Diario') },
+                    { value: 'weekly', label: t('Semanal') },
+                    { value: 'monthly', label: t('Mensual') },
+                    { value: 'annual', label: t('Anual') },
                   ]}
                 />
               }
@@ -342,9 +344,9 @@ export function Analytics() {
             />
           </Card>
           <Card>
-            <CardHeader title="Comparación anual" subtitle="Ingresos vs gastos por año" />
+            <CardHeader title={t('Comparación anual')} subtitle={t('Ingresos vs gastos por año')} />
             {annual.length === 0 ? (
-              <EmptyState title="Sin datos anuales" />
+              <EmptyState title={t('Sin datos anuales')} />
             ) : (
               <div className="space-y-4 pt-2">
                 {annual.map((y) => (
@@ -378,7 +380,7 @@ export function Analytics() {
         </div>
 
         <Card>
-          <CardHeader title="Ingresos vs Gastos" subtitle="Comparativo mensual · 12 meses" />
+          <CardHeader title={t('Ingresos vs Gastos')} subtitle={t('Comparativo mensual · 12 meses')} />
           <IncomeExpenseBars data={months12} height={300} />
         </Card>
       </section>

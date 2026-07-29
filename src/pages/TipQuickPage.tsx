@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { X, Coins } from 'lucide-react'
 import { TipForm } from '@/components/forms/TipForm'
+import { useI18n } from '@/i18n'
 
 export function TipQuickPage() {
   const navigate = useNavigate()
+  const { t } = useI18n()
 
   return (
     <div className="min-h-screen bg-bg px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1rem)]">
@@ -16,14 +18,14 @@ export function TipQuickPage() {
               <Coins size={22} />
             </span>
             <div>
-              <h1 className="font-display text-xl font-bold leading-none">Propina rápida</h1>
-              <p className="text-xs text-subtle">Registra y listo</p>
+              <h1 className="font-display text-xl font-bold leading-none">{t('Propina rápida')}</h1>
+              <p className="text-xs text-subtle">{t('Registra y listo')}</p>
             </div>
           </div>
           <button
             onClick={() => navigate('/')}
             className="grid h-10 w-10 place-items-center rounded-full bg-surface-2 text-muted transition active:scale-95"
-            aria-label="Cerrar"
+            aria-label={t('Cerrar')}
           >
             <X size={20} />
           </button>
@@ -43,7 +45,7 @@ export function TipQuickPage() {
           onClick={() => navigate('/')}
           className="mt-4 text-center text-sm text-muted hover:text-content"
         >
-          Ir al inicio →
+          {t('Ir al inicio →')}
         </button>
       </div>
     </div>

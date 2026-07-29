@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 
-export function GoogleButton({ label = 'Continuar con Google' }: { label?: string }) {
+export function GoogleButton({ label }: { label?: string }) {
   const signInWithGoogle = useStore((s) => s.signInWithGoogle)
+  const { t } = useI18n()
+  const text = label ?? t('Continuar con Google')
   const [loading, setLoading] = useState(false)
 
   async function go() {
@@ -46,7 +49,7 @@ export function GoogleButton({ label = 'Continuar con Google' }: { label?: strin
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"
             />
           </svg>
-          {label}
+          {text}
         </>
       )}
     </button>

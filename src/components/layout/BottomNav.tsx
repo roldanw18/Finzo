@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { BOTTOM_NAV_ITEMS } from '@/config/nav'
+import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 export function BottomNav() {
+  const { t } = useI18n()
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/90 backdrop-blur-xl lg:hidden">
       <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
@@ -28,7 +30,7 @@ export function BottomNav() {
                 >
                   <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 </span>
-                {item.label}
+                {t(item.label)}
               </>
             )}
           </NavLink>

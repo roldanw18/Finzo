@@ -11,15 +11,22 @@ import {
   eachDayOfInterval,
   isWithinInterval,
 } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
+import { usePrefs } from '@/store/prefs'
+import { translate } from '@/i18n'
 import type { Category, Debt, DebtPayment, Expense, Income, Movement } from '@/types'
 import { paymentMethodLabel } from '@/types'
 import { pctChange, safeDiv } from './utils'
 
+const T = (s: string) => translate(s, usePrefs.getState().lang)
+const dfLocale = () => (usePrefs.getState().lang === 'en' ? enUS : es)
+
 /** Synthetic category used to show debt payments as a spending category. */
 export const DEBT_PAYMENT_CATEGORY = {
   id: 'debt-payments',
-  name: 'Pago de deudas',
+  get name() {
+    return T('Pago de deudas')
+  },
   color: '#8b5cf6',
   icon: 'Landmark',
 }
@@ -211,7 +218,7 @@ export function expensesByCategory(
     const cat = categories.find((c) => c.id === key)
     slices.push({
       id: key,
-      name: cat?.name ?? 'Sin categoría',
+      name: cat?.name ?? T('Sin categoría'),
       color: cat?.color ?? '#94a3b8',
       icon: cat?.icon ?? 'Shapes',
       value: agg.value,
@@ -269,7 +276,7 @@ export function monthlySeries(
       )
     return {
       key,
-      label: format(m, 'MMM', { locale: es }),
+      label: format(m, 'MMM', { locale: dfLocale() }),
       income: inc,
       expense: exp,
       balance: inc - exp,
@@ -313,7 +320,7 @@ export function dailySeries(
     cumulative += net
     return {
       date: key,
-      label: format(d, 'd', { locale: es }),
+      label: format(d, 'd', { locale: dfLocale() }),
       income: inc,
       expense: exp,
       net,
@@ -358,7 +365,7 @@ export function weeklySeries(
       )
     points.push({
       key: format(start, 'yyyy-ww'),
-      label: format(start, 'd MMM', { locale: es }),
+      label: format(start, 'd MMM', { locale: dfLocale() }),
       income: inc,
       expense: exp,
       net: inc - exp,
@@ -413,7 +420,7 @@ export function toMovements(
   debts: Debt[] = [],
   income: { label?: string; icon?: string } = {},
 ): Movement[] {
-  const incomeLabel = income.label || 'Ingreso'
+  const incomeLabel = income.label || T('Ingreso')
   const incomeIcon = income.icon || 'Wallet'
   const catMap = new Map(categories.map((c) => [c.id, c]))
   const debtMap = new Map(debts.map((d) => [d.id, d]))
@@ -425,10 +432,10 @@ export function toMovements(
       amount: i.amount,
       date: i.date,
       categoryId: null,
-      categoryName: isTip ? 'Propina' : incomeLabel,
+      categoryName: isTip ? T('Propina') : incomeLabel,
       categoryColor: isTip ? '#14b8a6' : '#0ecb81',
       categoryIcon: isTip ? 'Coins' : incomeIcon,
-      title: i.note || (isTip ? 'Propina' : incomeLabel),
+      title: i.note || (isTip ? T('Propina') : incomeLabel),
       paymentMethod: null,
       notes: i.note,
       createdAt: i.created_at,
@@ -442,10 +449,10 @@ export function toMovements(
       amount: e.amount,
       date: e.date,
       categoryId: e.category_id,
-      categoryName: cat?.name ?? 'Sin categoría',
+      categoryName: cat?.name ?? T('Sin categoría'),
       categoryColor: cat?.color ?? '#94a3b8',
       categoryIcon: cat?.icon ?? 'Shapes',
-      title: e.description || cat?.name || 'Gasto',
+      title: e.description || cat?.name || T('Gasto'),
       paymentMethod: e.payment_method,
       notes: e.notes,
       createdAt: e.created_at,
@@ -462,7 +469,7 @@ export function toMovements(
       categoryName: DEBT_PAYMENT_CATEGORY.name,
       categoryColor: DEBT_PAYMENT_CATEGORY.color,
       categoryIcon: DEBT_PAYMENT_CATEGORY.icon,
-      title: debt ? `Pago ${debt.name}` : 'Pago de deuda',
+      title: debt ? `${T('Pago')} ${debt.name}` : T('Pago de deuda'),
       paymentMethod: null,
       notes: p.note,
       createdAt: p.created_at,

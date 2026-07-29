@@ -3,6 +3,7 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { nextRecommendedDebt } from '@/lib/debt'
@@ -15,6 +16,7 @@ interface Props {
 
 export function PaymentForm({ debtId, onDone }: Props) {
   const { currency, money } = useMoney()
+  const { t } = useI18n()
   const debts = useStore((s) => s.debts)
   const addPayment = useStore((s) => s.addPayment)
 
@@ -31,12 +33,12 @@ export function PaymentForm({ debtId, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!selected) return toast.error('Selecciona una deuda')
-    if (amount <= 0) return toast.error('Ingresa el monto del pago')
+    if (!selected) return toast.error(t('Selecciona una deuda'))
+    if (amount <= 0) return toast.error(t('Ingresa el monto del pago'))
     setSaving(true)
     try {
       await addPayment({ debt_id: selected, amount, date, note })
-      toast.success('Pago registrado ✓')
+      toast.success(t('Pago registrado ✓'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -48,7 +50,7 @@ export function PaymentForm({ debtId, onDone }: Props) {
   if (active.length === 0) {
     return (
       <p className="py-6 text-center text-sm text-muted">
-        No tienes deudas activas para registrar pagos.
+        {t('No tienes deudas activas para registrar pagos.')}
       </p>
     )
   }
@@ -62,24 +64,24 @@ export function PaymentForm({ debtId, onDone }: Props) {
           className="flex w-full items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-left text-xs text-primary"
         >
           <Sparkles size={14} />
-          Recomendado: abona a <b>{recommended.name}</b> (mayor interés)
+          {t('Recomendado: abona a')} <b>{recommended.name}</b> {t('(mayor interés)')}
         </button>
       )}
 
       <div>
-        <label className="label">Deuda</label>
+        <label className="label">{t('Deuda')}</label>
         <select value={selected} onChange={(e) => setSelected(e.target.value)} className="input">
           {active.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name} — {money(d.balance, { compact: true })}
-              {d.interest_rate ? ` (${d.interest_rate}%)` : ' (sin interés)'}
+              {d.interest_rate ? ` (${d.interest_rate}%)` : t(' (sin interés)')}
             </option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="label">Monto del pago</label>
+        <label className="label">{t('Monto del pago')}</label>
         <AmountInput value={amount} onChange={setAmount} currency={currency} autoFocus size="md" />
         {debt && (
           <div className="mt-2 flex flex-wrap gap-2">
@@ -89,7 +91,7 @@ export function PaymentForm({ debtId, onDone }: Props) {
                 onClick={() => setAmount(debt.min_payment)}
                 className="chip bg-surface-2 text-xs text-muted hover:bg-surface-3"
               >
-                Mínimo {money(debt.min_payment, { compact: true })}
+                {t('Mínimo')} {money(debt.min_payment, { compact: true })}
               </button>
             )}
             {debt.target_payment > 0 && (
@@ -98,7 +100,7 @@ export function PaymentForm({ debtId, onDone }: Props) {
                 onClick={() => setAmount(debt.target_payment)}
                 className="chip bg-surface-2 text-xs text-muted hover:bg-surface-3"
               >
-                Objetivo {money(debt.target_payment, { compact: true })}
+                {t('Objetivo')} {money(debt.target_payment, { compact: true })}
               </button>
             )}
             <button
@@ -106,7 +108,7 @@ export function PaymentForm({ debtId, onDone }: Props) {
               onClick={() => setAmount(debt.balance)}
               className="chip bg-surface-2 text-xs text-muted hover:bg-surface-3"
             >
-              Saldo total {money(debt.balance, { compact: true })}
+              {t('Saldo total')} {money(debt.balance, { compact: true })}
             </button>
           </div>
         )}
@@ -114,7 +116,7 @@ export function PaymentForm({ debtId, onDone }: Props) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Fecha</label>
+          <label className="label">{t('Fecha')}</label>
           <input
             type="date"
             value={date}
@@ -124,11 +126,11 @@ export function PaymentForm({ debtId, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="label">Comentario</label>
+          <label className="label">{t('Comentario')}</label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Ej. abono extra"
+            placeholder={t('Ej. abono extra')}
             className="input"
           />
         </div>
@@ -137,13 +139,13 @@ export function PaymentForm({ debtId, onDone }: Props) {
       {debt && amount > 0 && (
         <div className={cn('rounded-xl p-3 text-sm', amount >= debt.balance ? 'bg-income/10 text-income' : 'bg-surface-2 text-muted')}>
           {amount >= debt.balance
-            ? `🎉 ¡Con este pago liquidas "${debt.name}" por completo!`
-            : `Saldo después del pago: ${money(debt.balance - amount)}`}
+            ? t('🎉 ¡Con este pago liquidas "{name}" por completo!').replace('{name}', debt.name)
+            : t('Saldo después del pago: {m}').replace('{m}', money(debt.balance - amount))}
         </div>
       )}
 
       <button type="submit" disabled={saving} className="btn-primary w-full">
-        {saving ? <Loader2 size={16} className="animate-spin" /> : 'Registrar pago'}
+        {saving ? <Loader2 size={16} className="animate-spin" /> : t('Registrar pago')}
       </button>
     </form>
   )

@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 import { toast } from '@/store/toast'
 import { todayISO, fmt } from '@/lib/dates'
@@ -15,6 +16,7 @@ export function FixedTab() {
   const { fixedExpenses, dailyTargets } = useDebt()
   const { costLabel } = useActivity()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
   const addExpense = useStore((s) => s.addExpense)
   const editFixedExpense = useStore((s) => s.editFixedExpense)
@@ -41,7 +43,7 @@ export function FixedTab() {
         payment_method: 'transfer',
         notes: 'Gasto fijo mensual',
       })
-      toast.success(`Pago de ${f.name} registrado`)
+      toast.success(t('Pago de {name} registrado').replace('{name}', f.name))
     } catch (e) {
       toast.error((e as Error).message)
     }
@@ -51,13 +53,13 @@ export function FixedTab() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">Total de gastos fijos al mes</p>
+          <p className="text-sm text-muted">{t('Total de gastos fijos al mes')}</p>
           <p className="tnum font-display text-2xl font-bold text-content">
             {money(dailyTargets.fixedTotal)}
           </p>
         </div>
         <button onClick={() => open({ type: 'fixed' })} className="btn-primary">
-          <Plus size={16} /> Gasto fijo
+          <Plus size={16} /> {t('Gasto fijo')}
         </button>
       </div>
 
@@ -65,11 +67,18 @@ export function FixedTab() {
         <div className="flex items-start gap-2.5 rounded-2xl border border-income/25 bg-income/[0.07] p-4">
           <Repeat size={18} className="mt-0.5 shrink-0 text-income" />
           <p className="text-sm text-content">
-            Para cubrir solo tus gastos fijos necesitas producir{' '}
-            <b className="text-income">
-              {money(dailyTargets.fixedNetPerDay * dailyTargets.costFactor)}/día
-            </b>{' '}
-            (incluye {costLabel.toLowerCase()} ×{dailyTargets.costFactor}).
+            {t('Para cubrir solo tus gastos fijos necesitas producir {m}/día (incluye {c} ×{f}).')
+              .split('{m}')
+              .map((seg, i) =>
+                i === 0 ? (
+                  seg
+                ) : (
+                  <span key={i}>
+                    <b className="text-income">{money(dailyTargets.fixedNetPerDay * dailyTargets.costFactor)}{t('/día')}</b>
+                    {seg.replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dailyTargets.costFactor))}
+                  </span>
+                ),
+              )}
           </p>
         </div>
       )}
@@ -78,11 +87,11 @@ export function FixedTab() {
         <Card>
           <EmptyState
             icon={<Repeat size={22} />}
-            title="Agrega tus gastos fijos"
-            description="Arriendo, servicios, internet, celular, suscripciones… para saber cuánto necesitas cada mes."
+            title={t('Agrega tus gastos fijos')}
+            description={t('Arriendo, servicios, internet, celular, suscripciones… para saber cuánto necesitas cada mes.')}
             action={
               <button onClick={() => open({ type: 'fixed' })} className="btn-primary mt-1">
-                <Plus size={16} /> Agregar gasto fijo
+                <Plus size={16} /> {t('Agregar gasto fijo')}
               </button>
             }
           />
@@ -104,11 +113,13 @@ export function FixedTab() {
                   <p className="flex items-center gap-1.5 text-xs text-muted">
                     {f.due_day ? (
                       <>
-                        <CalendarClock size={12} /> vence el {f.due_day} ·{' '}
-                        próx. {fmt(nextMonthlyDate(f.due_day, new Date()).toISOString().slice(0, 10), "d 'de' MMM")}
+                        <CalendarClock size={12} />{' '}
+                        {t('vence el {d} · próx. {date}')
+                          .replace('{d}', String(f.due_day))
+                          .replace('{date}', fmt(nextMonthlyDate(f.due_day, new Date()).toISOString().slice(0, 10), "d 'de' MMM"))}
                       </>
                     ) : (
-                      'Sin día de pago'
+                      t('Sin día de pago')
                     )}
                   </p>
                 </div>
@@ -118,14 +129,14 @@ export function FixedTab() {
                   </p>
                   {paid ? (
                     <span className="chip bg-income/12 text-[10px] font-semibold text-income">
-                      <CheckCircle2 size={11} /> pagado
+                      <CheckCircle2 size={11} /> {t('pagado')}
                     </span>
                   ) : f.active ? (
                     <button
                       onClick={() => registerPayment(f)}
                       className="text-[11px] font-medium text-primary hover:underline"
                     >
-                      Registrar pago
+                      {t('Registrar pago')}
                     </button>
                   ) : null}
                 </div>
@@ -133,7 +144,7 @@ export function FixedTab() {
                   <button
                     onClick={() => open({ type: 'fixed', editing: f })}
                     className="grid h-8 w-8 place-items-center rounded-lg text-subtle transition hover:text-content"
-                    title="Editar"
+                    title={t('Editar')}
                   >
                     <Pencil size={14} />
                   </button>
@@ -143,7 +154,7 @@ export function FixedTab() {
                       'grid h-8 w-8 place-items-center rounded-lg transition',
                       f.active ? 'text-subtle hover:text-expense' : 'text-income',
                     )}
-                    title={f.active ? 'Desactivar' : 'Activar'}
+                    title={f.active ? t('Desactivar') : t('Activar')}
                   >
                     <Power size={14} />
                   </button>

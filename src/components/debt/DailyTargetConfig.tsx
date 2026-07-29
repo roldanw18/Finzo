@@ -6,6 +6,7 @@ import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { applyAvailableToTarget } from '@/lib/debt'
 import { debtTypeMeta } from '@/types'
 import { cn } from '@/lib/utils'
@@ -19,6 +20,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
   const { kpis } = useAnalytics()
   const { costLabel } = useActivity()
   const { money } = useMoney()
+  const { t } = useI18n()
   const saveProfile = useStore((s) => s.saveProfile)
   const editDebt = useStore((s) => s.editDebt)
   const editFixedExpense = useStore((s) => s.editFixedExpense)
@@ -36,7 +38,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
   const fullyCovered = applied.fullyCovered
 
   return (
-    <Modal open={open} onClose={onClose} title="Configurar meta diaria" maxWidth="max-w-xl">
+    <Modal open={open} onClose={onClose} title={t('Configurar meta diaria')} maxWidth="max-w-xl">
       <div className="space-y-5">
         {/* Live result */}
         <div className="rounded-2xl border border-income/25 bg-income/[0.07] p-4">
@@ -44,7 +46,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
             <div className="flex items-center gap-2.5">
               <Gauge size={20} className="text-income" />
               <span className="text-sm text-muted">
-                {fullyCovered ? 'Ya lo cubres' : 'Debes producir'}
+                {fullyCovered ? t('Ya lo cubres') : t('Debes producir')}
               </span>
             </div>
             {fullyCovered ? (
@@ -53,7 +55,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
               <span className="tnum font-display text-2xl font-bold text-income">
                 {money(shownPerDay)}
                 <span className="ml-1 text-sm font-medium text-muted">
-                  /día{workDays < 7 ? ' trab.' : ''}
+                  {workDays < 7 ? t('/día trab.') : t('/día')}
                 </span>
               </span>
             )}
@@ -62,14 +64,14 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
             <p className="mt-2 border-t border-income/20 pt-2 text-xs text-content">
               {fullyCovered ? (
                 <span className="text-income">
-                  Tu dinero disponible ({money(available)}) cubre todas tus obligaciones de este
-                  ciclo. 🎉
+                  {t('Tu dinero disponible ({m}) cubre todas tus obligaciones de este ciclo. 🎉').replace('{m}', money(available))}
                 </span>
               ) : (
-                <>
-                  Usando tu disponible ({money(available)}), aún te falta producir{' '}
-                  <b className="text-content">{money(remainingObligation)}</b> en total.
-                </>
+                t('Usando tu disponible ({m}), aún te falta producir {r} en total.')
+                  .split('{r}')
+                  .map((seg, i) =>
+                    i === 0 ? seg.replace('{m}', money(available)) : <span key={i}><b className="text-content">{money(remainingObligation)}</b>{seg}</span>,
+                  )
               )}
             </p>
           )}
@@ -81,11 +83,10 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
             <Wallet size={18} className="mt-0.5 shrink-0 text-info" />
             <span>
               <span className="block text-sm font-medium text-content">
-                Contar con mi dinero disponible
+                {t('Contar con mi dinero disponible')}
               </span>
               <span className="mt-0.5 block text-xs text-muted">
-                Resta tus {money(available, { compact: true })} disponibles de las obligaciones y
-                recalcula cuánto te falta producir.
+                {t('Resta tus {m} disponibles de las obligaciones y recalcula cuánto te falta producir.').replace('{m}', money(available, { compact: true }))}
               </span>
             </span>
           </span>
@@ -101,20 +102,20 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
         <div className="flex items-start gap-2.5 rounded-xl bg-surface-2/60 p-3.5">
           <Info size={16} className="mt-0.5 shrink-0 text-info" />
           <p className="text-xs leading-relaxed text-muted">
-            <b className="text-content">Cómo se calcula:</b> de cada obligación tomo lo que
-            falta pagar, lo reparto entre los <b className="text-content">días que trabajas</b>{' '}
-            hasta su fecha de pago, sumo todo y lo multiplico por tu factor de{' '}
-            {costLabel.toLowerCase()} (×{dt.costFactor}). Así, tras cubrir tus costos, te queda
-            libre justo lo de tus obligaciones.
+            <b className="text-content">{t('Cómo se calcula:')}</b>{' '}
+            {t('de cada obligación tomo lo que falta pagar, lo reparto entre los {days} hasta su fecha de pago, sumo todo y lo multiplico por tu factor de {c} (×{f}). Así, tras cubrir tus costos, te queda libre justo lo de tus obligaciones.')
+              .split('{days}')
+              .map((seg, i) =>
+                i === 0 ? seg : <span key={i}><b className="text-content">{t('días que trabajas')}</b>{seg.replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}</span>,
+              )}
           </p>
         </div>
 
         {/* Work days */}
         <div>
-          <label className="label">¿Cuántos días trabajas por semana?</label>
+          <label className="label">{t('¿Cuántos días trabajas por semana?')}</label>
           <p className="mb-2 text-xs text-muted">
-            Si descansas, reparto tus obligaciones solo entre los días que produces (la meta
-            por día sube).
+            {t('Si descansas, reparto tus obligaciones solo entre los días que produces (la meta por día sube).')}
           </p>
           <div className="flex flex-wrap gap-2">
             {[4, 5, 6, 7].map((d) => (
@@ -128,7 +129,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
                     : 'border-border bg-surface-2 text-content hover:bg-surface-3',
                 )}
               >
-                {d === 7 ? 'Todos (7)' : `${d} días`}
+                {d === 7 ? t('Todos (7)') : t('{d} días').replace('{d}', String(d))}
               </button>
             ))}
           </div>
@@ -137,7 +138,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
         {/* Include debts */}
         {active.length > 0 && (
           <div>
-            <label className="label">Deudas que cuentan</label>
+            <label className="label">{t('Deudas que cuentan')}</label>
             <div className="space-y-1.5">
               {active.map((d) => (
                 <label
@@ -156,8 +157,8 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-content">{d.name}</p>
                     <p className="text-xs text-muted">
-                      mín {money(d.min_payment, { compact: true })}
-                      {d.due_day ? ` · vence el ${d.due_day}` : ''}
+                      {t('mín {m}').replace('{m}', money(d.min_payment, { compact: true }))}
+                      {d.due_day ? t(' · vence el {d}').replace('{d}', String(d.due_day)) : ''}
                     </p>
                   </div>
                   <input
@@ -175,7 +176,7 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
         {/* Include fixed expenses */}
         {activeFixed.length > 0 && (
           <div>
-            <label className="label">Gastos fijos que cuentan</label>
+            <label className="label">{t('Gastos fijos que cuentan')}</label>
             <div className="space-y-1.5">
               {activeFixed.map((f) => (
                 <label
@@ -188,8 +189,8 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-content">{f.name}</p>
                     <p className="text-xs text-muted">
-                      {money(f.amount, { compact: true })}/mes
-                      {f.due_day ? ` · vence el ${f.due_day}` : ''}
+                      {t('{m}/mes').replace('{m}', money(f.amount, { compact: true }))}
+                      {f.due_day ? t(' · vence el {d}').replace('{d}', String(f.due_day)) : ''}
                     </p>
                   </div>
                   <input
@@ -208,12 +209,12 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
 
         {active.length === 0 && activeFixed.length === 0 && (
           <p className="py-4 text-center text-sm text-muted">
-            Agrega deudas o gastos fijos para calcular tu meta diaria.
+            {t('Agrega deudas o gastos fijos para calcular tu meta diaria.')}
           </p>
         )}
 
         <button onClick={onClose} className="btn-primary w-full">
-          Listo
+          {t('Listo')}
         </button>
       </div>
     </Modal>

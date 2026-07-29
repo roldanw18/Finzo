@@ -27,6 +27,7 @@ import { CategoryPie } from '@/components/charts/CategoryPie'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 import { hoursToPay } from '@/lib/debt'
 import { fmtShort, daysInCurrentMonth } from '@/lib/dates'
@@ -51,6 +52,7 @@ export function PlanOverview() {
   const { summary, avalanche, recommendation, alerts, calendar, basePlan, uber, phrases, allocation, projection } = useDebt()
   const { kpis } = useAnalytics()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
 
   const colorMap = useMemo(
@@ -88,11 +90,11 @@ export function PlanOverview() {
       <Card>
         <EmptyState
           icon={<Target size={24} />}
-          title="Empieza tu plan de libertad financiera"
-          description="Agrega tus deudas y te diré cuál atacar primero, cuánto ahorrarás en intereses y cuándo quedarás libre."
+          title={t('Empieza tu plan de libertad financiera')}
+          description={t('Agrega tus deudas y te diré cuál atacar primero, cuánto ahorrarás en intereses y cuándo quedarás libre.')}
           action={
             <button onClick={() => open({ type: 'debt' })} className="btn-primary mt-1">
-              <Plus size={16} /> Agregar mi primera deuda
+              <Plus size={16} /> {t('Agregar mi primera deuda')}
             </button>
           }
         />
@@ -106,9 +108,9 @@ export function PlanOverview() {
         <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-2xl bg-income/15 text-income">
           <Rocket size={30} />
         </div>
-        <h2 className="font-display text-2xl font-bold">¡Eres libre de deudas! 🎉</h2>
+        <h2 className="font-display text-2xl font-bold">{t('¡Eres libre de deudas! 🎉')}</h2>
         <p className="mt-2 text-muted">
-          Pagaste todas tus deudas. Ahora ese dinero puede ir a ahorro e inversión.
+          {t('Pagaste todas tus deudas. Ahora ese dinero puede ir a ahorro e inversión.')}
         </p>
       </Card>
     )
@@ -125,7 +127,7 @@ export function PlanOverview() {
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted">
             <Target size={16} />
-            <span className="text-sm font-medium">Progreso hacia la libertad</span>
+            <span className="text-sm font-medium">{t('Progreso hacia la libertad')}</span>
           </div>
           <span className="tnum font-display text-2xl font-bold text-primary">
             {summary.pctPaid.toFixed(0)}%
@@ -146,10 +148,10 @@ export function PlanOverview() {
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
           <span className="text-muted">
-            Pagado: <b className="text-income">{money(summary.paidTotal)}</b>
+            {t('Pagado:')} <b className="text-income">{money(summary.paidTotal)}</b>
           </span>
           <span className="font-semibold text-content">
-            Faltan {money(summary.totalDebt)}
+            {t('Faltan')} {money(summary.totalDebt)}
           </span>
         </div>
       </motion.div>
@@ -178,21 +180,23 @@ export function PlanOverview() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-muted">
-                Si abonas tu dinero disponible ({money(available, { compact: true })}) a tus deudas
+                {t('Si abonas tu dinero disponible ({m}) a tus deudas').replace('{m}', money(available, { compact: true }))}
               </p>
               {available <= 0 ? (
                 <p className="text-sm font-medium text-content">
-                  Ahora no tienes dinero disponible para abonar.
+                  {t('Ahora no tienes dinero disponible para abonar.')}
                 </p>
               ) : wouldClear ? (
                 <p className="text-sm font-semibold text-income">
-                  ¡Quedarías libre de deudas! Te sobrarían{' '}
-                  {money(available - summary.totalDebt)}.
+                  {t('¡Quedarías libre de deudas! Te sobrarían {m}.').replace('{m}', money(available - summary.totalDebt))}
                 </p>
               ) : (
                 <p className="text-sm text-content">
-                  Te quedarían{' '}
-                  <b className="tnum text-expense">{money(remaining)}</b> de deuda
+                  {t('Te quedarían {m} de deuda')
+                    .split('{m}')
+                    .map((part, i) =>
+                      i === 0 ? part : <span key={i}><b className="tnum text-expense">{money(remaining)}</b>{part}</span>,
+                    )}
                 </p>
               )}
             </div>
@@ -202,22 +206,22 @@ export function PlanOverview() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KpiCard label="Deuda total" value={summary.totalDebt} icon={Landmark} tone="expense" />
-        <KpiCard label="Con interés" value={summary.withInterest} icon={Flame} tone="expense" />
-        <KpiCard label="Sin interés" value={summary.withoutInterest} icon={Wallet} tone="info" />
+        <KpiCard label={t('Deuda total')} value={summary.totalDebt} icon={Landmark} tone="expense" />
+        <KpiCard label={t('Con interés')} value={summary.withInterest} icon={Flame} tone="expense" />
+        <KpiCard label={t('Sin interés')} value={summary.withoutInterest} icon={Wallet} tone="info" />
         <KpiCard
-          label="Interés mensual estimado"
+          label={t('Interés mensual estimado')}
           value={summary.monthlyInterest}
           icon={Percent}
           tone="expense"
-          sub="lo que crece tu deuda/mes"
+          sub={t('lo que crece tu deuda/mes')}
         />
-        <KpiCard label="Pagado este año" value={summary.paidThisYear} icon={PiggyBank} tone="income" />
-        <KpiCard label="Pagado en total" value={summary.paidTotal} icon={CheckCircle2} tone="income" />
-        <KpiCard label="Dinero pendiente" value={summary.totalDebt} icon={CalendarClock} tone="primary" />
+        <KpiCard label={t('Pagado este año')} value={summary.paidThisYear} icon={PiggyBank} tone="income" />
+        <KpiCard label={t('Pagado en total')} value={summary.paidTotal} icon={CheckCircle2} tone="income" />
+        <KpiCard label={t('Dinero pendiente')} value={summary.totalDebt} icon={CalendarClock} tone="primary" />
         <div className="card card-hover flex flex-col justify-between p-4 sm:p-5">
           <div className="flex items-start justify-between">
-            <p className="text-xs font-medium text-muted">Porcentaje pagado</p>
+            <p className="text-xs font-medium text-muted">{t('Porcentaje pagado')}</p>
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
               <Percent size={18} />
             </span>
@@ -237,7 +241,7 @@ export function PlanOverview() {
         >
           <div className="flex items-center gap-2 text-primary">
             <Target size={18} />
-            <span className="text-sm font-semibold uppercase tracking-wide">Ataca esta deuda este mes</span>
+            <span className="text-sm font-semibold uppercase tracking-wide">{t('Ataca esta deuda este mes')}</span>
           </div>
           <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -250,7 +254,7 @@ export function PlanOverview() {
               </p>
               {uber.netPerHour > 0 && (
                 <p className="text-xs text-muted">
-                  ≈ {Math.ceil(hoursToPay(recommendation.debt.balance, uber.netPerHour))} horas de trabajo
+                  {t('≈ {h} horas de trabajo').replace('{h}', String(Math.ceil(hoursToPay(recommendation.debt.balance, uber.netPerHour))))}
                 </p>
               )}
             </div>
@@ -259,7 +263,7 @@ export function PlanOverview() {
             onClick={() => open({ type: 'payment', debtId: recommendation.debt!.id })}
             className="btn-primary mt-4"
           >
-            Registrar pago <ArrowRight size={16} />
+            {t('Registrar pago')} <ArrowRight size={16} />
           </button>
         </motion.div>
       )}
@@ -270,57 +274,59 @@ export function PlanOverview() {
       {/* Payoff projection + surplus */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Proyección" subtitle="Con tu ritmo de pagos actual" icon={<Rocket size={18} className="text-primary" />} />
+          <CardHeader title={t('Proyección')} subtitle={t('Con tu ritmo de pagos actual')} icon={<Rocket size={18} className="text-primary" />} />
           {basePlan.months !== null ? (
             <div>
-              <p className="text-sm text-muted">Quedarás libre de deudas en</p>
+              <p className="text-sm text-muted">{t('Quedarás libre de deudas en')}</p>
               <p className="font-display text-3xl font-bold text-content">
-                {basePlan.months} {basePlan.months === 1 ? 'mes' : 'meses'}
+                {basePlan.months} {basePlan.months === 1 ? t('mes') : t('meses')}
               </p>
               {basePlan.payoffDate && (
                 <p className="mt-1 text-sm text-primary">
-                  Fecha estimada: {fmtShort(basePlan.payoffDate.toISOString().slice(0, 10))}{' '}
-                  {basePlan.payoffDate.getFullYear()}
+                  {t('Fecha estimada: {d}').replace('{d}', `${fmtShort(basePlan.payoffDate.toISOString().slice(0, 10))} ${basePlan.payoffDate.getFullYear()}`)}
                 </p>
               )}
               <p className="mt-3 text-xs text-muted">
-                Interés total proyectado: {money(basePlan.totalInterest)}. Usa el simulador para acelerarlo.
+                {t('Interés total proyectado: {m}. Usa el simulador para acelerarlo.').replace('{m}', money(basePlan.totalInterest))}
               </p>
             </div>
           ) : (
             <div className="flex items-start gap-2 text-warning">
               <AlertTriangle size={18} className="mt-0.5 shrink-0" />
               <p className="text-sm">
-                Con los pagos mínimos actuales tus deudas casi no bajan. Sube tus pagos objetivo o usa el
-                simulador para ver cuánto necesitas abonar.
+                {t('Con los pagos mínimos actuales tus deudas casi no bajan. Sube tus pagos objetivo o usa el simulador para ver cuánto necesitas abonar.')}
               </p>
             </div>
           )}
         </Card>
 
         <Card>
-          <CardHeader title="Dinero disponible este mes" icon={<PiggyBank size={18} className="text-income" />} />
+          <CardHeader title={t('Dinero disponible este mes')} icon={<PiggyBank size={18} className="text-income" />} />
           {surplus > 0 ? (
             <div>
-              <p className="text-sm text-muted">Te ha sobrado (ingresos − gastos)</p>
+              <p className="text-sm text-muted">{t('Te ha sobrado (ingresos − gastos)')}</p>
               <p className="tnum font-display text-3xl font-bold text-income">{money(surplus)}</p>
               {recommendation.debt && (
                 <>
                   <p className="mt-3 text-sm text-content">
-                    💡 Considera un abono extraordinario a <b>{recommendation.debt.name}</b>.
+                    {t('💡 Considera un abono extraordinario a {name}.')
+                      .split('{name}')
+                      .map((part, i) =>
+                        i === 0 ? part : <span key={i}><b>{recommendation.debt!.name}</b>{part}</span>,
+                      )}
                   </p>
                   <button
                     onClick={() => open({ type: 'payment', debtId: recommendation.debt!.id })}
                     className="btn bg-income/12 mt-3 text-income hover:bg-income/20"
                   >
-                    Abonar {money(surplus, { compact: true })}
+                    {t('Abonar')} {money(surplus, { compact: true })}
                   </button>
                 </>
               )}
             </div>
           ) : (
             <p className="py-4 text-sm text-muted">
-              Este mes tus gastos igualan o superan tus ingresos. Cuida el flujo antes de abonos extra.
+              {t('Este mes tus gastos igualan o superan tus ingresos. Cuida el flujo antes de abonos extra.')}
             </p>
           )}
         </Card>
@@ -329,8 +335,8 @@ export function PlanOverview() {
       {/* Avalanche order */}
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <h2 className="font-display text-lg font-semibold">Orden de ataque (Avalancha)</h2>
-          <span className="chip bg-surface-2 text-[10px] text-muted">mayor interés primero</span>
+          <h2 className="font-display text-lg font-semibold">{t('Orden de ataque (Avalancha)')}</h2>
+          <span className="chip bg-surface-2 text-[10px] text-muted">{t('mayor interés primero')}</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {avalanche.map((d, i) => (
@@ -350,11 +356,10 @@ export function PlanOverview() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader
-              title="Cómo se reparte tu dinero"
-              subtitle={`Presupuesto mensual ${money(allocation.budget)} · ≈ ${money(
-                allocation.budget / daysInCurrentMonth(),
-                { compact: true },
-              )}/día`}
+              title={t('Cómo se reparte tu dinero')}
+              subtitle={t('Presupuesto mensual {m} · ≈ {d}/día')
+                .replace('{m}', money(allocation.budget))
+                .replace('{d}', money(allocation.budget / daysInCurrentMonth(), { compact: true }))}
             />
             <CategoryPie data={allocSlices} />
             <div className="mt-4 space-y-1.5 border-t border-border/60 pt-3">
@@ -378,8 +383,8 @@ export function PlanOverview() {
 
           <Card>
             <CardHeader
-              title="Proyección por deuda"
-              subtitle="Cómo se van pagando (pagos mínimos)"
+              title={t('Proyección por deuda')}
+              subtitle={t('Cómo se van pagando (pagos mínimos)')}
             />
             {projection.series.length > 1 ? (
               <>
@@ -398,12 +403,12 @@ export function PlanOverview() {
                   </div>
                 )}
                 <p className="mt-3 text-center text-xs text-subtle">
-                  Ajusta un pago extra y mira el impacto en la pestaña <b>Simulador</b>.
+                  {t('Ajusta un pago extra y mira el impacto en la pestaña Simulador.')}
                 </p>
               </>
             ) : (
               <p className="py-6 text-center text-sm text-muted">
-                Agrega el pago mínimo a tus deudas para ver la proyección.
+                {t('Agrega el pago mínimo a tus deudas para ver la proyección.')}
               </p>
             )}
           </Card>
@@ -412,10 +417,10 @@ export function PlanOverview() {
 
       {/* Next payments */}
       <Card>
-        <CardHeader title="Próximos pagos y fechas" icon={<CalendarClock size={18} className="text-warning" />} />
+        <CardHeader title={t('Próximos pagos y fechas')} icon={<CalendarClock size={18} className="text-warning" />} />
         {calendar.length === 0 ? (
           <p className="py-3 text-sm text-muted">
-            Agrega días de corte/pago a tus deudas para ver aquí tus próximos vencimientos.
+            {t('Agrega días de corte/pago a tus deudas para ver aquí tus próximos vencimientos.')}
           </p>
         ) : (
           <div className="space-y-4">
@@ -423,7 +428,7 @@ export function PlanOverview() {
               ([label, items]) =>
                 items.length > 0 && (
                   <div key={label}>
-                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-subtle">{label}</p>
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-subtle">{t(label)}</p>
                     <div className="space-y-1.5">
                       {items.map((c) => (
                         <div key={c.id} className="flex items-center gap-3 rounded-xl bg-surface-2/50 p-2.5">
@@ -434,8 +439,8 @@ export function PlanOverview() {
                             <p className="truncate text-sm font-medium text-content">{c.title}</p>
                             <p className="text-xs text-muted">
                               {fmtShort(c.date.toISOString().slice(0, 10))}
-                              {c.daysUntil > 0 && ` · en ${c.daysUntil}d`}
-                              {c.daysUntil <= 0 && ' · hoy'}
+                              {c.daysUntil > 0 && ` · ${c.daysUntil}d`}
+                              {c.daysUntil <= 0 && ` · ${t('hoy')}`}
                             </p>
                           </div>
                           {c.amount && (
@@ -456,7 +461,7 @@ export function PlanOverview() {
       {/* Alerts */}
       {alerts.length > 0 && (
         <div>
-          <h2 className="mb-3 font-display text-lg font-semibold">Alertas inteligentes</h2>
+          <h2 className="mb-3 font-display text-lg font-semibold">{t('Alertas inteligentes')}</h2>
           <div className="grid gap-2.5 sm:grid-cols-2">
             {alerts.map((a) => {
               const Icon = ALERT_ICONS[a.icon as keyof typeof ALERT_ICONS] ?? Info
@@ -479,7 +484,7 @@ export function PlanOverview() {
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-transparent p-5">
           <div className="mb-2 flex items-center gap-2 text-primary">
             <Sparkles size={18} />
-            <span className="text-sm font-semibold">Motivación</span>
+            <span className="text-sm font-semibold">{t('Motivación')}</span>
           </div>
           <div className="space-y-2">
             {phrases.map((p, i) => (

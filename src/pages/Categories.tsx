@@ -6,6 +6,7 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { expensesByCategory } from '@/lib/analytics'
 import { startOfMonth, endOfMonth } from '@/lib/dates'
 
@@ -15,6 +16,7 @@ export function Categories() {
   const budgets = useStore((s) => s.profile?.budgets ?? {})
   const openCategory = useUI((s) => s.openCategory)
   const { money } = useMoney()
+  const { t } = useI18n()
 
   const stats = useMemo(() => {
     const slices = expensesByCategory(expenses, categories)
@@ -32,11 +34,11 @@ export function Categories() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Categorías"
-        subtitle={`${categories.length} categorías · personalízalas a tu gusto`}
+        title={t('Categorías')}
+        subtitle={`${categories.length} ${t('categorías')} · ${t('personalízalas a tu gusto')}`}
         action={
           <button onClick={() => openCategory()} className="btn-primary">
-            <Plus size={16} /> Nueva
+            <Plus size={16} /> {t('Nueva')}
           </button>
         }
       />
@@ -65,13 +67,13 @@ export function Categories() {
                   <div className="flex items-center gap-2">
                     <p className="truncate font-medium text-content">{c.name}</p>
                     {c.is_default && (
-                      <span className="chip bg-surface-2 text-[10px] text-subtle">base</span>
+                      <span className="chip bg-surface-2 text-[10px] text-subtle">{t('base')}</span>
                     )}
                   </div>
                   <p className="text-xs text-muted">
                     {s
-                      ? `${s.count} mov · ${money(s.value, { compact: true })}`
-                      : 'Sin movimientos'}
+                      ? `${s.count} ${t('mov')} · ${money(s.value, { compact: true })}`
+                      : t('Sin movimientos')}
                   </p>
                 </div>
                 <span className="grid h-8 w-8 place-items-center rounded-lg text-subtle opacity-0 transition group-hover:opacity-100">
@@ -90,7 +92,7 @@ export function Categories() {
                         over ? 'font-semibold text-expense' : near ? 'font-semibold text-amber-500' : 'text-subtle'
                       }
                     >
-                      {over ? 'Excedido' : `${pct.toFixed(0)}%`}
+                      {over ? t('Excedido') : `${pct.toFixed(0)}%`}
                     </span>
                   </div>
                   <div className="h-1.5 overflow-hidden rounded-full bg-surface-2">

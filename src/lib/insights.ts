@@ -8,6 +8,13 @@ import {
   type DateRange,
 } from './analytics'
 import { pctChange, safeDiv } from './utils'
+import { usePrefs } from '@/store/prefs'
+import { translate } from '@/i18n'
+
+const T = (s: string) => translate(s, usePrefs.getState().lang)
+/** Fill {placeholders} in a translated template. */
+const tf = (s: string, vars: Record<string, string | number>) =>
+  Object.entries(vars).reduce((acc, [k, v]) => acc.replace(`{${k}}`, String(v)), T(s))
 
 export type Tone = 'positive' | 'negative' | 'warning' | 'info' | 'neutral'
 
@@ -65,8 +72,11 @@ export function generateInsights(
       id: 'top-category',
       tone: 'warning',
       icon: 'Flame',
-      title: 'Mayor gasto del mes',
-      description: `${top.name} concentra el ${top.pct.toFixed(0)}% de tus gastos este mes.`,
+      title: T('Mayor gasto del mes'),
+      description: tf('{cat} concentra el {p}% de tus gastos este mes.', {
+        cat: top.name,
+        p: top.pct.toFixed(0),
+      }),
       value: top.value,
     })
 
@@ -76,8 +86,8 @@ export function generateInsights(
         id: 'bottom-category',
         tone: 'info',
         icon: 'Leaf',
-        title: 'Menor gasto del mes',
-        description: `Donde menos gastas es ${bottom.name}.`,
+        title: T('Menor gasto del mes'),
+        description: tf('Donde menos gastas es {cat}.', { cat: bottom.name }),
         value: bottom.value,
       })
     }
@@ -87,11 +97,13 @@ export function generateInsights(
     id: 'net-profit',
     tone: kpis.monthBalance >= 0 ? 'positive' : 'negative',
     icon: kpis.monthBalance >= 0 ? 'TrendingUp' : 'TrendingDown',
-    title: 'Ganancia neta del mes',
+    title: T('Ganancia neta del mes'),
     description:
       kpis.monthBalance >= 0
-        ? `Llevas un balance positivo este mes. Tasa de ahorro: ${kpis.savingsRate.toFixed(0)}%.`
-        : 'Tus gastos superan tus ingresos este mes. Revisa tus categorías principales.',
+        ? tf('Llevas un balance positivo este mes. Tasa de ahorro: {r}%.', {
+            r: kpis.savingsRate.toFixed(0),
+          })
+        : T('Tus gastos superan tus ingresos este mes. Revisa tus categorías principales.'),
     value: kpis.monthBalance,
   })
 
@@ -99,8 +111,8 @@ export function generateInsights(
     id: 'daily-avg',
     tone: 'neutral',
     icon: 'CalendarDays',
-    title: 'Promedio de gasto diario',
-    description: 'Gasto medio por día en el mes en curso.',
+    title: T('Promedio de gasto diario'),
+    description: T('Gasto medio por día en el mes en curso.'),
     value: kpis.dailyAvgExpense,
   })
 
@@ -108,8 +120,8 @@ export function generateInsights(
     id: 'weekly-avg',
     tone: 'neutral',
     icon: 'CalendarRange',
-    title: 'Promedio semanal',
-    description: 'Estimación de gasto por semana este mes.',
+    title: T('Promedio semanal'),
+    description: T('Estimación de gasto por semana este mes.'),
     value: kpis.dailyAvgExpense * 7,
   })
 
@@ -117,8 +129,8 @@ export function generateInsights(
     id: 'monthly-avg',
     tone: 'neutral',
     icon: 'Calendar',
-    title: 'Promedio mensual (6 meses)',
-    description: 'Gasto promedio de los últimos 6 meses.',
+    title: T('Promedio mensual (6 meses)'),
+    description: T('Gasto promedio de los últimos 6 meses.'),
     value: avgMonthlyExpense(expenses, ref, 6),
   })
 
@@ -132,13 +144,15 @@ export function generateInsights(
       id: 'trend',
       tone: change > 5 ? 'negative' : change < -5 ? 'positive' : 'neutral',
       icon: change > 5 ? 'ArrowUpRight' : change < -5 ? 'ArrowDownRight' : 'Minus',
-      title: 'Tendencia de gastos',
+      title: T('Tendencia de gastos'),
       description:
         change > 5
-          ? `Tus gastos crecieron ${change.toFixed(0)}% en los últimos meses.`
+          ? tf('Tus gastos crecieron {c}% en los últimos meses.', { c: change.toFixed(0) })
           : change < -5
-            ? `Reduces gastos: ${Math.abs(change).toFixed(0)}% menos que hace 3 meses.`
-            : 'Tus gastos se mantienen estables.',
+            ? tf('Reduces gastos: {c}% menos que hace 3 meses.', {
+                c: Math.abs(change).toFixed(0),
+              })
+            : T('Tus gastos se mantienen estables.'),
       pct: change,
     })
   }
@@ -148,11 +162,13 @@ export function generateInsights(
     id: 'mom',
     tone: kpis.expenseChangePct > 0 ? 'warning' : 'positive',
     icon: 'GitCompareArrows',
-    title: 'Comparación con el mes anterior',
+    title: T('Comparación con el mes anterior'),
     description:
       kpis.expenseChangePct > 0
-        ? `Gastas ${kpis.expenseChangePct.toFixed(0)}% más que el mes pasado.`
-        : `Gastas ${Math.abs(kpis.expenseChangePct).toFixed(0)}% menos que el mes pasado.`,
+        ? tf('Gastas {p}% más que el mes pasado.', { p: kpis.expenseChangePct.toFixed(0) })
+        : tf('Gastas {p}% menos que el mes pasado.', {
+            p: Math.abs(kpis.expenseChangePct).toFixed(0),
+          }),
     pct: kpis.expenseChangePct,
   })
 
@@ -166,11 +182,13 @@ export function generateInsights(
       id: 'yoy',
       tone: change > 0 ? 'warning' : 'positive',
       icon: 'CalendarClock',
-      title: `Comparación ${prev.year} vs ${cur.year}`,
+      title: tf('Comparación {a} vs {b}', { a: prev.year, b: cur.year }),
       description:
         change >= 0
-          ? `Este año gastas ${change.toFixed(0)}% más que el anterior.`
-          : `Este año gastas ${Math.abs(change).toFixed(0)}% menos que el anterior.`,
+          ? tf('Este año gastas {c}% más que el anterior.', { c: change.toFixed(0) })
+          : tf('Este año gastas {c}% menos que el anterior.', {
+              c: Math.abs(change).toFixed(0),
+            }),
       pct: change,
     })
   }
@@ -181,8 +199,8 @@ export function generateInsights(
       id: 'lifetime-top',
       tone: 'info',
       icon: 'Trophy',
-      title: 'Categoría histórica top',
-      description: `Históricamente, ${allTimeByCat[0].name} es tu mayor gasto.`,
+      title: T('Categoría histórica top'),
+      description: tf('Históricamente, {cat} es tu mayor gasto.', { cat: allTimeByCat[0].name }),
       value: allTimeByCat[0].value,
     })
   }
@@ -225,7 +243,7 @@ export function generateAlerts(
           previous: 0,
           changePct: 100,
           tone: 'info',
-          message: `Nuevo gasto relevante en ${c.name} este mes.`,
+          message: tf('Nuevo gasto relevante en {cat} este mes.', { cat: c.name }),
         })
       }
       continue
@@ -241,7 +259,10 @@ export function generateAlerts(
         previous,
         changePct: change,
         tone: change >= 60 ? 'negative' : 'warning',
-        message: `${c.name} subió ${change.toFixed(0)}% respecto al mes anterior.`,
+        message: tf('{cat} subió {c}% respecto al mes anterior.', {
+          cat: c.name,
+          c: change.toFixed(0),
+        }),
       })
     } else if (change <= -25) {
       alerts.push({
@@ -253,7 +274,10 @@ export function generateAlerts(
         previous,
         changePct: change,
         tone: 'positive',
-        message: `Bajaste ${Math.abs(change).toFixed(0)}% en ${c.name}. ¡Bien!`,
+        message: tf('Bajaste {c}% en {cat}. ¡Bien!', {
+          c: Math.abs(change).toFixed(0),
+          cat: c.name,
+        }),
       })
     }
   }
@@ -287,8 +311,8 @@ export function generateRecommendations(
     recs.push({
       id: 'trim-top',
       icon: 'Scissors',
-      title: `Optimiza ${top.name}`,
-      detail: `Es tu mayor gasto del mes. Reducirlo un 10% liberaría dinero cada mes.`,
+      title: tf('Optimiza {cat}', { cat: top.name }),
+      detail: T('Es tu mayor gasto del mes. Reducirlo un 10% liberaría dinero cada mes.'),
       potentialSaving: saving,
     })
   }
@@ -299,8 +323,8 @@ export function generateRecommendations(
     recs.push({
       id: 'subs',
       icon: 'Repeat',
-      title: 'Revisa tus suscripciones',
-      detail: `Estás pagando suscripciones este mes. Cancela las que no uses.`,
+      title: T('Revisa tus suscripciones'),
+      detail: T('Estás pagando suscripciones este mes. Cancela las que no uses.'),
       potentialSaving: subs.value * 0.4,
     })
   }
@@ -312,16 +336,16 @@ export function generateRecommendations(
       recs.push({
         id: 'savings-target',
         icon: 'PiggyBank',
-        title: 'Meta de ahorro 20%',
-        detail: `Apunta a ahorrar el 20% de tus ingresos. Te faltan para la meta de este mes.`,
+        title: T('Meta de ahorro 20%'),
+        detail: T('Apunta a ahorrar el 20% de tus ingresos. Te faltan para la meta de este mes.'),
         potentialSaving: target - Math.max(kpis.monthBalance, 0),
       })
     } else {
       recs.push({
         id: 'savings-ok',
         icon: 'Trophy',
-        title: '¡Vas por buen camino!',
-        detail: `Ya superas la meta de ahorro del 20% este mes. Considera invertir el excedente.`,
+        title: T('¡Vas por buen camino!'),
+        detail: T('Ya superas la meta de ahorro del 20% este mes. Considera invertir el excedente.'),
       })
     }
   }
@@ -333,8 +357,10 @@ export function generateRecommendations(
       recs.push({
         id: 'daily-control',
         icon: 'GaugeCircle',
-        title: 'Controla el gasto diario',
-        detail: `Gastas el ${(ratio * 100).toFixed(0)}% de lo que ingresas a diario. Intenta bajar del 70%.`,
+        title: T('Controla el gasto diario'),
+        detail: tf('Gastas el {p}% de lo que ingresas a diario. Intenta bajar del 70%.', {
+          p: (ratio * 100).toFixed(0),
+        }),
         potentialSaving: (kpis.dailyAvgExpense - kpis.dailyAvgIncome * 0.7) * 30,
       })
     }
@@ -349,8 +375,11 @@ export function generateRecommendations(
         recs.push({
           id: 'operating-cost',
           icon: 'Fuel',
-          title: `${cost.name} elevado`,
-          detail: `${cost.name} representa el ${ratio.toFixed(0)}% de tus ingresos. Busca proveedores o formas de reducirlo.`,
+          title: tf('{cat} elevado', { cat: cost.name }),
+          detail: tf(
+            '{cat} representa el {p}% de tus ingresos. Busca proveedores o formas de reducirlo.',
+            { cat: cost.name, p: ratio.toFixed(0) },
+          ),
           potentialSaving: cost.value * 0.12,
         })
       }

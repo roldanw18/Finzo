@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Coins, Delete, Check, Loader2 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { cn, formatMoney } from '@/lib/utils'
@@ -21,6 +22,7 @@ const PRESETS: Record<'COP' | 'USD', number[]> = {
 
 export function TipForm({ onSaved }: Props) {
   const { currency, money } = useMoney()
+  const { t } = useI18n()
   const addIncome = useStore((s) => s.addIncome)
   const incomes = useStore((s) => s.incomes)
 
@@ -57,7 +59,7 @@ export function TipForm({ onSaved }: Props) {
 
   async function save() {
     if (value <= 0) {
-      toast.error('Ingresa un valor de propina')
+      toast.error(t('Ingresa un valor de propina'))
       return
     }
     setSaving(true)
@@ -65,7 +67,7 @@ export function TipForm({ onSaved }: Props) {
       await addIncome({ amount: value, date: todayISO(), note: null, source: 'tip' })
       setMinor(0)
       setJustSaved(true)
-      toast.success(`Propina de ${money(value)} guardada 🎉`)
+      toast.success(t('Propina de {m} guardada 🎉').replace('{m}', money(value)))
       onSaved?.()
       setTimeout(() => setJustSaved(false), 1500)
     } catch (e) {
@@ -85,7 +87,7 @@ export function TipForm({ onSaved }: Props) {
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#14b8a6]/20 text-[#14b8a6]">
             <Coins size={18} />
           </span>
-          <span className="text-sm text-muted">Propinas de hoy</span>
+          <span className="text-sm text-muted">{t('Propinas de hoy')}</span>
         </div>
         <span className="tnum font-display text-base font-bold text-[#14b8a6]">
           {money(todayTips)}
@@ -102,7 +104,7 @@ export function TipForm({ onSaved }: Props) {
               exit={{ opacity: 0 }}
               className="absolute inset-x-0 -top-1 mx-auto w-max rounded-full bg-income/15 px-3 py-1 text-xs font-semibold text-income"
             >
-              ¡Guardada! Agrega otra
+              {t('¡Guardada! Agrega otra')}
             </motion.div>
           )}
         </AnimatePresence>
@@ -118,7 +120,7 @@ export function TipForm({ onSaved }: Props) {
         >
           {formatMoney(value, currency)}
         </motion.div>
-        <p className="mt-1 text-xs text-subtle">Toca guardar cuando termines</p>
+        <p className="mt-1 text-xs text-subtle">{t('Toca guardar cuando termines')}</p>
       </div>
 
       {/* Preset chips */}
@@ -165,7 +167,7 @@ export function TipForm({ onSaved }: Props) {
           <Loader2 size={18} className="animate-spin" />
         ) : (
           <>
-            <Check size={18} /> Guardar propina
+            <Check size={18} /> {t('Guardar propina')}
           </>
         )}
       </button>

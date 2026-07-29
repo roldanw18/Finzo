@@ -1,5 +1,5 @@
 import { addMonths, differenceInCalendarDays, endOfMonth, format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 import type {
   Debt,
   DebtGoal,
@@ -12,6 +12,13 @@ import type {
 import { debtTypeMeta } from '@/types'
 import { CATEGORY_COLORS } from './icons'
 import { safeDiv } from './utils'
+import { usePrefs } from '@/store/prefs'
+import { translate } from '@/i18n'
+
+const T = (s: string) => translate(s, usePrefs.getState().lang)
+const tf = (s: string, vars: Record<string, string | number>) =>
+  Object.entries(vars).reduce((acc, [k, v]) => acc.replace(`{${k}}`, String(v)), T(s))
+const dfLocale = () => (usePrefs.getState().lang === 'en' ? enUS : es)
 
 const monthlyRate = (d: Debt) => (d.interest_rate ?? 0) / 100 / 12
 export const hasInterest = (d: Debt) => (d.interest_rate ?? 0) > 0
@@ -43,12 +50,14 @@ export function nextRecommendedDebt(debts: Debt[]): Recommendation {
   if (hasInterest(top)) {
     return {
       debt: top,
-      reason: `Tiene la tasa de interés más alta (${top.interest_rate}% anual). Atacarla primero es lo que menos te cuesta.`,
+      reason: tf('Tiene la tasa de interés más alta ({r}% anual). Atacarla primero es lo que menos te cuesta.', {
+        r: String(top.interest_rate),
+      }),
     }
   }
   return {
     debt: top,
-    reason: 'No hay deudas con interés pendientes. Ataca la de menor saldo para ganar impulso.',
+    reason: T('No hay deudas con interés pendientes. Ataca la de menor saldo para ganar impulso.'),
   }
 }
 
@@ -167,7 +176,7 @@ export function simulatePayoff(debts: Debt[], extraMonthly = 0, ref = new Date()
 
     schedule.push({
       month: month + 1,
-      label: format(addMonths(ref, month + 1), 'MMM yy', { locale: es }),
+      label: format(addMonths(ref, month + 1), 'MMM yy', { locale: dfLocale() }),
       balance: Math.round(monthBalance),
       interest: Math.round(monthInterest),
       principal: Math.round(budget - monthInterest),
@@ -253,7 +262,7 @@ export function projectDebts(debts: Debt[], extra = 0, ref = new Date()): DebtPr
   const budget = sim.reduce((a, d) => a + d.min, 0) + extra
   const nameOf = new Map(order.map((o) => [o.id, o]))
 
-  const point0: Record<string, number | string> = { label: 'Hoy' }
+  const point0: Record<string, number | string> = { label: T('Hoy') }
   for (const d of sim) point0[d.id] = Math.round(d.balance)
   const series = [point0]
   const payoff: DebtProjection['payoff'] = []
@@ -280,7 +289,7 @@ export function projectDebts(debts: Debt[], extra = 0, ref = new Date()): DebtPr
     }
 
     const pt: Record<string, number | string> = {
-      label: format(addMonths(ref, month + 1), 'MMM yy', { locale: es }),
+      label: format(addMonths(ref, month + 1), 'MMM yy', { locale: dfLocale() }),
     }
     for (const d of sim) {
       if (d.balance <= 0.5 && d.balance !== -1) {
@@ -641,7 +650,7 @@ export function buildCalendar(
       date,
       daysUntil: days,
       title: f.name,
-      subtitle: 'Gasto fijo',
+      subtitle: T('Gasto fijo'),
       amount: f.amount || null,
       category: 'fijo',
       urgency: urgencyFor(days),
@@ -656,8 +665,8 @@ export function buildCalendar(
         id: `due-${d.id}`,
         date,
         daysUntil: days,
-        title: `Pago ${d.name}`,
-        subtitle: debtTypeMeta(d.type).label,
+        title: `${T('Pago')} ${d.name}`,
+        subtitle: T(debtTypeMeta(d.type).label),
         amount: d.min_payment || null,
         category: 'pago',
         urgency: urgencyFor(days),
@@ -670,8 +679,8 @@ export function buildCalendar(
         id: `cut-${d.id}`,
         date,
         daysUntil: days,
-        title: `Corte ${d.name}`,
-        subtitle: 'Fecha de corte',
+        title: `${T('Corte')} ${d.name}`,
+        subtitle: T('Fecha de corte'),
         amount: null,
         category: 'corte',
         urgency: urgencyFor(days),
@@ -722,8 +731,8 @@ export function generateDebtAlerts(debts: Debt[], payments: DebtPayment[]): Debt
         id: `min-${d.id}`,
         tone: 'warning',
         icon: 'AlertTriangle',
-        title: 'Solo pagas el mínimo',
-        message: `En "${d.name}" solo cubres el mínimo. Pagarás más intereses y tardarás más. Sube el pago objetivo.`,
+        title: T('Solo pagas el mínimo'),
+        message: tf('En "{name}" solo cubres el mínimo. Pagarás más intereses y tardarás más. Sube el pago objetivo.', { name: d.name }),
       })
     }
     // Minimum barely covers interest
@@ -733,8 +742,8 @@ export function generateDebtAlerts(debts: Debt[], payments: DebtPayment[]): Debt
         id: `neg-${d.id}`,
         tone: 'negative',
         icon: 'TrendingDown',
-        title: 'El mínimo casi no baja el capital',
-        message: `El mínimo de "${d.name}" apenas cubre los intereses del mes. La deuda casi no baja.`,
+        title: T('El mínimo casi no baja el capital'),
+        message: tf('El mínimo de "{name}" apenas cubre los intereses del mes. La deuda casi no baja.', { name: d.name }),
       })
     }
   }
@@ -749,8 +758,11 @@ export function generateDebtAlerts(debts: Debt[], payments: DebtPayment[]): Debt
         id: 'no-interest-priority',
         tone: 'warning',
         icon: 'Info',
-        title: 'Estás priorizando una deuda sin interés',
-        message: `Abonas más a una deuda sin interés que a "${topInterest.name}" (${topInterest.interest_rate}%). Según Avalancha, primero las de mayor interés.`,
+        title: T('Estás priorizando una deuda sin interés'),
+        message: tf('Abonas más a una deuda sin interés que a "{name}" ({r}%). Según Avalancha, primero las de mayor interés.', {
+          name: topInterest.name,
+          r: String(topInterest.interest_rate),
+        }),
       })
     }
   }
@@ -762,8 +774,8 @@ export function generateDebtAlerts(debts: Debt[], payments: DebtPayment[]): Debt
       id: 'monthly-interest',
       tone: 'info',
       icon: 'Flame',
-      title: 'Costo de tus intereses',
-      message: `Tus deudas generan intereses de forma automática cada mes. Reducir las de mayor tasa primero es lo que más te ahorra.`,
+      title: T('Costo de tus intereses'),
+      message: T('Tus deudas generan intereses de forma automática cada mes. Reducir las de mayor tasa primero es lo que más te ahorra.'),
     })
   }
 
@@ -777,8 +789,8 @@ export function generateDebtAlerts(debts: Debt[], payments: DebtPayment[]): Debt
       id: 'progress',
       tone: 'positive',
       icon: 'CheckCircle2',
-      title: 'Buen ritmo este mes',
-      message: `Ya abonaste a tus deudas este mes. Cada abono reduce el interés que pagas. ¡Sigue así!`,
+      title: T('Buen ritmo este mes'),
+      message: T('Ya abonaste a tus deudas este mes. Cada abono reduce el interés que pagas. ¡Sigue así!'),
     })
   }
 
@@ -800,20 +812,23 @@ export function motivationalPhrases(opts: {
   if (recommended && netPerHour > 0) {
     const hours = Math.ceil(hoursToPay(recommended.balance, netPerHour))
     phrases.push(
-      `Te faltan ~${hours} horas de trabajo para eliminar "${recommended.name}". ¡Tú puedes! 💪`,
+      tf('Te faltan ~{h} horas de trabajo para eliminar "{name}". ¡Tú puedes! 💪', {
+        h: hours,
+        name: recommended.name,
+      }),
     )
   }
   if (summary.pctPaid > 0) {
-    phrases.push(`Ya pagaste el ${summary.pctPaid.toFixed(0)}% de tu deuda total. Cada vez más cerca. 🎯`)
+    phrases.push(tf('Ya pagaste el {p}% de tu deuda total. Cada vez más cerca. 🎯', { p: summary.pctPaid.toFixed(0) }))
   }
   if (reducedPctThisMonth > 0) {
-    phrases.push(`Redujiste tu deuda un ${reducedPctThisMonth.toFixed(0)}% este mes. Vas mejor. 📉`)
+    phrases.push(tf('Redujiste tu deuda un {p}% este mes. Vas mejor. 📉', { p: reducedPctThisMonth.toFixed(0) }))
   }
   if (summary.totalDebt > 0 && summary.activeCount > 0) {
-    phrases.push('Estás cada vez más cerca de quedar libre de deudas. No te rindas. 🚀')
+    phrases.push(T('Estás cada vez más cerca de quedar libre de deudas. No te rindas. 🚀'))
   }
   if (summary.activeCount === 0 && summary.paidCount > 0) {
-    phrases.push('🎉 ¡Felicidades! No tienes deudas activas. Eres libre financieramente.')
+    phrases.push(T('🎉 ¡Felicidades! No tienes deudas activas. Eres libre financieramente.'))
   }
   return phrases
 }

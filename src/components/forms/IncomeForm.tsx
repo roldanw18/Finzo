@@ -5,6 +5,7 @@ import { getIcon } from '@/lib/icons'
 import { useStore } from '@/store/useStore'
 import { useActivity } from '@/hooks/useActivity'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { nextRecommendedDebt } from '@/lib/debt'
@@ -17,6 +18,7 @@ interface Props {
 
 export function IncomeForm({ editing, onDone }: Props) {
   const { currency, money } = useMoney()
+  const { t } = useI18n()
   const { incomeLabel, icon } = useActivity()
   const ActivityIcon = getIcon(icon)
   const addIncome = useStore((s) => s.addIncome)
@@ -41,21 +43,21 @@ export function IncomeForm({ editing, onDone }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (amount <= 0) {
-      toast.error('Ingresa un monto válido')
+      toast.error(t('Ingresa un monto válido'))
       return
     }
     setSaving(true)
     try {
       if (editing) {
         await editIncome(editing.id, { amount, date, note })
-        toast.success('Ingreso actualizado')
+        toast.success(t('Ingreso actualizado'))
       } else {
         await addIncome({ amount, date, note })
         if (allocate && allocAmount > 0 && allocDebtId) {
-          await addPayment({ debt_id: allocDebtId, amount: allocAmount, date, note: 'Abono desde ingreso' })
-          toast.success(`Ingreso + abono de ${money(allocAmount)} ✓`)
+          await addPayment({ debt_id: allocDebtId, amount: allocAmount, date, note: t('Abono desde ingreso') })
+          toast.success(t('Ingreso + abono de {m} ✓').replace('{m}', money(allocAmount)))
         } else {
-          toast.success('Ingreso registrado ✓')
+          toast.success(t('Ingreso registrado ✓'))
         }
       }
       onDone()
@@ -71,7 +73,7 @@ export function IncomeForm({ editing, onDone }: Props) {
     setSaving(true)
     try {
       await removeIncome(editing.id)
-      toast.success('Ingreso eliminado')
+      toast.success(t('Ingreso eliminado'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -87,19 +89,19 @@ export function IncomeForm({ editing, onDone }: Props) {
           <ActivityIcon size={22} />
         </span>
         <div>
-          <p className="font-medium text-content">Registrar {incomeLabel.toLowerCase()}</p>
-          <p className="text-xs text-muted">Registro rápido en menos de 10 segundos</p>
+          <p className="font-medium text-content">{t('Registrar {l}').replace('{l}', incomeLabel.toLowerCase())}</p>
+          <p className="text-xs text-muted">{t('Registro rápido en menos de 10 segundos')}</p>
         </div>
       </div>
 
       <div>
-        <label className="label">Monto</label>
+        <label className="label">{t('Monto')}</label>
         <AmountInput value={amount} onChange={setAmount} currency={currency} autoFocus />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Fecha</label>
+          <label className="label">{t('Fecha')}</label>
           <input
             type="date"
             value={date}
@@ -109,12 +111,12 @@ export function IncomeForm({ editing, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="label">Nota (opcional)</label>
+          <label className="label">{t('Nota (opcional)')}</label>
           <input
             type="text"
             value={note ?? ''}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Ej. jornada de la tarde"
+            placeholder={t('Ej. jornada de la tarde')}
             className="input"
           />
         </div>
@@ -125,7 +127,7 @@ export function IncomeForm({ editing, onDone }: Props) {
           <label className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-sm font-medium text-content">
               <Target size={16} className="text-primary" />
-              Destinar parte a mis deudas
+              {t('Destinar parte a mis deudas')}
             </span>
             <input
               type="checkbox"
@@ -142,7 +144,7 @@ export function IncomeForm({ editing, onDone }: Props) {
           {allocate && (
             <div className="mt-3 space-y-3">
               <div>
-                <label className="label">¿Cuánto abonar?</label>
+                <label className="label">{t('¿Cuánto abonar?')}</label>
                 <AmountInput
                   value={allocAmount}
                   onChange={setAllocAmount}
@@ -151,7 +153,7 @@ export function IncomeForm({ editing, onDone }: Props) {
                 />
               </div>
               <div>
-                <label className="label">A la deuda</label>
+                <label className="label">{t('A la deuda')}</label>
                 <select
                   value={allocDebtId}
                   onChange={(e) => setAllocDebtId(e.target.value)}
@@ -160,7 +162,7 @@ export function IncomeForm({ editing, onDone }: Props) {
                   {activeDebts.map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.name}
-                      {recommended?.id === d.id ? ' (recomendada)' : ''}
+                      {recommended?.id === d.id ? t(' (recomendada)') : ''}
                     </option>
                   ))}
                 </select>
@@ -184,9 +186,9 @@ export function IncomeForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Registrar ingreso'
+            t('Registrar ingreso')
           )}
         </button>
       </div>

@@ -4,6 +4,7 @@ import { Scale, Wallet, PiggyBank, Landmark } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 
 /**
  * Patrimonio neto = (disponible + ahorros) − deudas.
@@ -14,6 +15,7 @@ export function NetWorthCard() {
   const { kpis, debts } = useAnalytics()
   const savingsGoals = useStore((s) => s.savingsGoals)
   const { money } = useMoney()
+  const { t } = useI18n()
 
   const { available, savings, liabilities, netWorth, assets } = useMemo(() => {
     const available = Math.max(0, kpis.available)
@@ -43,7 +45,7 @@ export function NetWorthCard() {
         <div>
           <div className="flex items-center gap-2 text-muted">
             <Scale size={16} />
-            <span className="text-sm">Patrimonio neto</span>
+            <span className="text-sm">{t('Patrimonio neto')}</span>
           </div>
           <p
             className={`tnum mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl ${
@@ -52,7 +54,7 @@ export function NetWorthCard() {
           >
             {money(netWorth, { sign: true })}
           </p>
-          <p className="mt-0.5 text-xs text-subtle">Lo que tienes menos lo que debes</p>
+          <p className="mt-0.5 text-xs text-subtle">{t('Lo que tienes menos lo que debes')}</p>
         </div>
         <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/12 text-primary">
           <Scale size={22} />
@@ -64,7 +66,7 @@ export function NetWorthCard() {
         <div>
           <div className="mb-1 flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-muted">
-              <span className="h-2 w-2 rounded-full bg-income" /> Activos
+              <span className="h-2 w-2 rounded-full bg-income" /> {t('Activos')}
             </span>
             <span className="tnum font-semibold text-income">{money(assets, { compact: true })}</span>
           </div>
@@ -75,7 +77,7 @@ export function NetWorthCard() {
         <div>
           <div className="mb-1 flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-muted">
-              <span className="h-2 w-2 rounded-full bg-expense" /> Deudas
+              <span className="h-2 w-2 rounded-full bg-expense" /> {t('Deudas')}
             </span>
             <span className="tnum font-semibold text-expense">{money(liabilities, { compact: true })}</span>
           </div>
@@ -89,7 +91,7 @@ export function NetWorthCard() {
       <div className="mt-4 grid grid-cols-3 gap-2">
         <div className="rounded-xl bg-surface-2 p-2.5">
           <p className="flex items-center gap-1 text-[11px] text-muted">
-            <Wallet size={12} /> Disponible
+            <Wallet size={12} /> {t('Disponible')}
           </p>
           <p className="tnum mt-0.5 text-sm font-bold text-content">
             {money(available, { compact: true })}
@@ -97,7 +99,7 @@ export function NetWorthCard() {
         </div>
         <div className="rounded-xl bg-surface-2 p-2.5">
           <p className="flex items-center gap-1 text-[11px] text-muted">
-            <PiggyBank size={12} /> Ahorros
+            <PiggyBank size={12} /> {t('Ahorros')}
           </p>
           <p className="tnum mt-0.5 text-sm font-bold text-content">
             {money(savings, { compact: true })}
@@ -105,7 +107,7 @@ export function NetWorthCard() {
         </div>
         <div className="rounded-xl bg-surface-2 p-2.5">
           <p className="flex items-center gap-1 text-[11px] text-muted">
-            <Landmark size={12} /> Deudas
+            <Landmark size={12} /> {t('Deudas')}
           </p>
           <p className="tnum mt-0.5 text-sm font-bold text-expense">
             {money(liabilities, { compact: true })}

@@ -24,6 +24,7 @@ import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import type { Currency, ThemeMode } from '@/types'
 
@@ -43,6 +44,7 @@ export function Settings() {
   const loadDemoData = useStore((s) => s.loadDemoData)
   const importData = useStore((s) => s.importData)
   const { currency } = useMoney()
+  const { t } = useI18n()
 
   const [name, setName] = useState(profile?.display_name ?? '')
   const [opening, setOpening] = useState(profile?.opening_balance ?? 0)
@@ -53,7 +55,7 @@ export function Settings() {
     setSavingProfile(true)
     try {
       await saveProfile({ display_name: name.trim() || null, opening_balance: opening })
-      toast.success('Perfil actualizado')
+      toast.success(t('Perfil actualizado'))
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -70,7 +72,7 @@ export function Settings() {
     a.download = `finzo_backup_${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
-    toast.success('Respaldo descargado')
+    toast.success(t('Respaldo descargado'))
   }
 
   async function onImportFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -85,44 +87,44 @@ export function Settings() {
         incomes: data.incomes,
         expenses: data.expenses,
       })
-      toast.success('Datos importados')
+      toast.success(t('Datos importados'))
     } catch {
-      toast.error('Archivo inválido')
+      toast.error(t('Archivo inválido'))
     } finally {
       if (fileRef.current) fileRef.current.value = ''
     }
   }
 
   async function onReset() {
-    if (!confirm('¿Borrar todos los datos locales? Esta acción no se puede deshacer.')) return
+    if (!confirm(t('¿Borrar todos los datos locales? Esta acción no se puede deshacer.'))) return
     await resetLocal()
-    toast.success('Datos reiniciados')
+    toast.success(t('Datos reiniciados'))
   }
 
   const dark = profile?.theme !== 'light'
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Ajustes" subtitle="Personaliza tu experiencia" />
+      <PageHeader title={t('Ajustes')} subtitle={t('Personaliza tu experiencia')} />
 
       {/* Profile */}
       <Card>
-        <CardHeader title="Perfil" icon={<User size={18} className="text-primary" />} />
+        <CardHeader title={t('Perfil')} icon={<User size={18} className="text-primary" />} />
         <div className="space-y-4">
           <div>
-            <label className="label">Nombre</label>
+            <label className="label">{t('Nombre')}</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Tu nombre"
+              placeholder={t('Tu nombre')}
               className="input"
             />
           </div>
           {mode === 'remote' && (
-            <p className="text-xs text-muted">Sesión iniciada como cuenta en la nube.</p>
+            <p className="text-xs text-muted">{t('Sesión iniciada como cuenta en la nube.')}</p>
           )}
           <button onClick={onSaveProfile} disabled={savingProfile} className="btn-primary">
-            <Check size={16} /> Guardar perfil
+            <Check size={16} /> {t('Guardar perfil')}
           </button>
         </div>
       </Card>
@@ -133,54 +135,54 @@ export function Settings() {
       {/* Currency */}
       <Card>
         <CardHeader
-          title="Moneda"
-          subtitle="Cómo se muestran los montos"
+          title={t('Moneda')}
+          subtitle={t('Cómo se muestran los montos')}
           icon={<Coins size={18} className="text-primary" />}
         />
         <Segmented
           value={currency}
           onChange={(v: Currency) => {
             setCurrency(v)
-            toast.success(`Moneda: ${v}`)
+            toast.success(`${t('Moneda')}: ${v}`)
           }}
           options={[
-            { value: 'COP', label: 'Peso (COP) $' },
-            { value: 'USD', label: 'Dólar (USD) $' },
+            { value: 'COP', label: t('Peso (COP) $') },
+            { value: 'USD', label: t('Dólar (USD) $') },
           ]}
         />
         <p className="mt-3 text-xs text-muted">
           {currency === 'COP'
-            ? 'Formato sin decimales: $ 1.250.000'
-            : 'Formato con decimales: $1,250.00'}
+            ? t('Formato sin decimales: $ 1.250.000')
+            : t('Formato con decimales: $1,250.00')}
         </p>
       </Card>
 
       {/* Theme */}
       <Card>
         <CardHeader
-          title="Apariencia"
-          subtitle="Tema de la interfaz"
+          title={t('Apariencia')}
+          subtitle={t('Tema de la interfaz')}
           icon={<Palette size={18} className="text-primary" />}
         />
         <Segmented
           value={dark ? 'dark' : 'light'}
           onChange={(v: ThemeMode) => setTheme(v)}
           options={[
-            { value: 'dark', label: '🌙 Oscuro' },
-            { value: 'light', label: '☀️ Claro' },
+            { value: 'dark', label: t('🌙 Oscuro') },
+            { value: 'light', label: t('☀️ Claro') },
           ]}
         />
         <div className="mt-3 flex items-center gap-2 text-xs text-muted">
           {dark ? <Moon size={14} /> : <Sun size={14} />}
-          Tema {dark ? 'oscuro' : 'claro'} activo
+          {dark ? t('Tema oscuro activo') : t('Tema claro activo')}
         </div>
       </Card>
 
       {/* Language */}
       <Card>
         <CardHeader
-          title="Idioma / Language"
-          subtitle="Landing e inicio de sesión (la app se traduce pronto)"
+          title={t('Idioma / Language')}
+          subtitle={t('Elige el idioma de la aplicación')}
           icon={<Languages size={18} className="text-primary" />}
         />
         <LangSwitch />
@@ -189,29 +191,29 @@ export function Settings() {
       {/* Opening balance */}
       <Card>
         <CardHeader
-          title="Saldo inicial"
-          subtitle="Dinero que tenías antes de empezar a registrar"
+          title={t('Saldo inicial')}
+          subtitle={t('Dinero que tenías antes de empezar a registrar')}
           icon={<Wallet size={18} className="text-primary" />}
         />
         <AmountInput value={opening} onChange={setOpening} currency={currency} size="md" />
         <button onClick={onSaveProfile} disabled={savingProfile} className="btn-ghost mt-3">
-          <Check size={16} /> Guardar saldo
+          <Check size={16} /> {t('Guardar saldo')}
         </button>
       </Card>
 
       {/* Data management */}
       <Card>
         <CardHeader
-          title="Datos y respaldos"
-          subtitle="Exporta o restaura tu información"
+          title={t('Datos y respaldos')}
+          subtitle={t('Exporta o restaura tu información')}
           icon={<Database size={18} className="text-primary" />}
         />
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <button onClick={exportBackup} className="btn-outline justify-start">
-            <Download size={16} /> Exportar respaldo (JSON)
+            <Download size={16} /> {t('Exportar respaldo (JSON)')}
           </button>
           <button onClick={() => fileRef.current?.click()} className="btn-outline justify-start">
-            <Upload size={16} /> Importar respaldo
+            <Upload size={16} /> {t('Importar respaldo')}
           </button>
           <input
             ref={fileRef}
@@ -223,10 +225,10 @@ export function Settings() {
           {mode === 'local' && (
             <>
               <button onClick={() => loadDemoData()} className="btn-outline justify-start">
-                <RotateCcw size={16} /> Recargar datos demo
+                <RotateCcw size={16} /> {t('Recargar datos demo')}
               </button>
               <button onClick={onReset} className="btn-danger justify-start">
-                <Trash2 size={16} /> Borrar todos los datos
+                <Trash2 size={16} /> {t('Borrar todos los datos')}
               </button>
             </>
           )}
@@ -237,16 +239,17 @@ export function Settings() {
       {!demo && (
         <Card>
           <CardHeader
-            title="Explorar modo demo"
-            subtitle="Mira la app llena de datos de ejemplo"
+            title={t('Explorar modo demo')}
+            subtitle={t('Mira la app llena de datos de ejemplo')}
             icon={<PlayCircle size={18} className="text-primary" />}
           />
           <p className="mb-3 text-sm text-muted">
-            Carga varios meses de actividad ficticia para explorar todas las funciones. No afecta
-            tus datos reales; puedes salir cuando quieras.
+            {t(
+              'Carga varios meses de actividad ficticia para explorar todas las funciones. No afecta tus datos reales; puedes salir cuando quieras.',
+            )}
           </p>
           <button onClick={() => enterDemo()} className="btn-outline">
-            <PlayCircle size={16} /> Entrar al modo demo
+            <PlayCircle size={16} /> {t('Entrar al modo demo')}
           </button>
         </Card>
       )}
@@ -254,15 +257,15 @@ export function Settings() {
       {/* Account */}
       {mode === 'remote' && !demo && (
         <Card>
-          <CardHeader title="Cuenta" icon={<LogOut size={18} className="text-expense" />} />
+          <CardHeader title={t('Cuenta')} icon={<LogOut size={18} className="text-expense" />} />
           <button onClick={() => signOut()} className="btn-danger">
-            <LogOut size={16} /> Cerrar sesión
+            <LogOut size={16} /> {t('Cerrar sesión')}
           </button>
         </Card>
       )}
 
       <p className="pb-2 text-center text-xs text-subtle">
-        Finzo · Gestión financiera personal · v1.0
+        {t('Finzo · Gestión financiera personal · v1.0')}
       </p>
     </div>
   )

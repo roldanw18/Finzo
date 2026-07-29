@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 import { goalProgress } from '@/lib/debt'
 import { toast } from '@/store/toast'
@@ -12,6 +13,7 @@ import { toast } from '@/store/toast'
 export function GoalsTab() {
   const { goals, debts, active } = useDebt()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
   const addGoal = useStore((s) => s.addGoal)
 
@@ -20,29 +22,32 @@ export function GoalsTab() {
   async function quickGoal(fn: () => Parameters<typeof addGoal>[0]) {
     try {
       await addGoal(fn())
-      toast.success('Meta creada ✓')
+      toast.success(t('Meta creada ✓'))
     } catch (e) {
       toast.error((e as Error).message)
     }
   }
 
   const suggestions = [
-    ...active.slice(0, 3).map((d) => ({
-      label: `Salir de ${d.name}`,
-      make: () => ({ name: `Salir de ${d.name}`, kind: 'debt' as const, debt_id: d.id, debt_type: null, target_date: null }),
-    })),
+    ...active.slice(0, 3).map((d) => {
+      const label = t('Salir de {name}').replace('{name}', d.name)
+      return {
+        label,
+        make: () => ({ name: label, kind: 'debt' as const, debt_id: d.id, debt_type: null, target_date: null }),
+      }
+    }),
     ...(hasCards
-      ? [{ label: 'Salir de todas las tarjetas', make: () => ({ name: 'Salir de todas las tarjetas', kind: 'type' as const, debt_type: 'credit_card' as const, debt_id: null, target_date: null }) }]
+      ? [{ label: t('Salir de todas las tarjetas'), make: () => ({ name: t('Salir de todas las tarjetas'), kind: 'type' as const, debt_type: 'credit_card' as const, debt_id: null, target_date: null }) }]
       : []),
-    { label: 'Quedar libre de deudas', make: () => ({ name: 'Libre de deudas', kind: 'all' as const, debt_type: null, debt_id: null, target_date: null }) },
+    { label: t('Quedar libre de deudas'), make: () => ({ name: t('Libre de deudas'), kind: 'all' as const, debt_type: null, debt_id: null, target_date: null }) },
   ]
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-bold">Mis metas</h2>
+        <h2 className="font-display text-lg font-bold">{t('Mis metas')}</h2>
         <button onClick={() => open({ type: 'goal' })} className="btn-primary">
-          <Plus size={16} /> Nueva meta
+          <Plus size={16} /> {t('Nueva meta')}
         </button>
       </div>
 
@@ -63,8 +68,8 @@ export function GoalsTab() {
         <Card>
           <EmptyState
             icon={<Target size={22} />}
-            title="Crea tu primera meta"
-            description="Ponte objetivos como 'Salir de NU' o 'Libre de deudas' y sigue tu avance."
+            title={t('Crea tu primera meta')}
+            description={t("Ponte objetivos como 'Salir de NU' o 'Libre de deudas' y sigue tu avance.")}
           />
         </Card>
       ) : (
@@ -99,7 +104,7 @@ export function GoalsTab() {
                   <div className="mb-1 flex items-center justify-between text-sm">
                     <span className="tnum font-bold text-primary">{p.pct.toFixed(0)}%</span>
                     <span className="text-xs text-muted">
-                      {p.done ? '¡Completada!' : `Faltan ${money(p.moneyLeft, { compact: true })}`}
+                      {p.done ? t('¡Completada!') : `${t('Faltan')} ${money(p.moneyLeft, { compact: true })}`}
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-surface-2">
@@ -113,10 +118,12 @@ export function GoalsTab() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-xs text-muted">
-                  <span>{p.debtsCount} deuda(s)</span>
+                  <span>{t('{n} deuda(s)').replace('{n}', String(p.debtsCount))}</span>
                   {p.daysLeft !== null && (
                     <span className={p.daysLeft < 0 ? 'text-expense' : ''}>
-                      {p.daysLeft < 0 ? `${Math.abs(p.daysLeft)}d de retraso` : `${p.daysLeft} días restantes`}
+                      {p.daysLeft < 0
+                        ? t('{d}d de retraso').replace('{d}', String(Math.abs(p.daysLeft)))
+                        : t('{d} días restantes').replace('{d}', String(p.daysLeft))}
                     </span>
                   )}
                 </div>

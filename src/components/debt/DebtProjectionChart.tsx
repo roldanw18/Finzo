@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import type { DebtProjection } from '@/lib/debt'
 
 interface TP {
@@ -24,6 +25,7 @@ export function DebtProjectionChart({
   height?: number
 }) {
   const { money } = useMoney()
+  const { t } = useI18n()
   const { series, order } = projection
 
   const Tip = ({ active, label, payload }: TP) => {
@@ -44,7 +46,7 @@ export function DebtProjectionChart({
             </div>
           ))}
         <div className="mt-1 border-t border-border/60 pt-1 text-xs">
-          <span className="text-muted">Total: </span>
+          <span className="text-muted">{t('Total')}: </span>
           <span className="tnum font-bold text-content">{money(total)}</span>
         </div>
       </div>

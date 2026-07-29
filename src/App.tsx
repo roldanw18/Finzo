@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useStore } from '@/store/useStore'
+import { useI18n } from '@/i18n'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Splash } from '@/components/Splash'
 import { Toaster } from '@/components/ui/Toaster'
@@ -60,6 +61,7 @@ function AppContent({
   retry: () => void
   onboarded: boolean
 }) {
+  const { t } = useI18n()
   if (status === 'idle' || status === 'loading') return <Splash />
 
   if (status === 'error') {
@@ -69,10 +71,10 @@ function AppContent({
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-expense/10 text-expense">
             <AlertTriangle size={26} />
           </div>
-          <h1 className="font-display text-xl font-bold">Algo salió mal</h1>
+          <h1 className="font-display text-xl font-bold">{t('Algo salió mal')}</h1>
           <p className="mt-2 text-sm text-muted">{error}</p>
           <button onClick={retry} className="btn-primary mt-5">
-            Reintentar
+            {t('Reintentar')}
           </button>
         </div>
       </div>

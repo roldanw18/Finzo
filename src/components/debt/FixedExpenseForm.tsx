@@ -3,6 +3,7 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import type { FixedExpense } from '@/types'
 
@@ -13,6 +14,7 @@ interface Props {
 
 export function FixedExpenseForm({ editing, onDone }: Props) {
   const { currency } = useMoney()
+  const { t } = useI18n()
   const categories = useStore((s) => s.categories)
   const addFixedExpense = useStore((s) => s.addFixedExpense)
   const editFixedExpense = useStore((s) => s.editFixedExpense)
@@ -27,8 +29,8 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Ponle un nombre')
-    if (amount <= 0) return toast.error('Ingresa el monto mensual')
+    if (!name.trim()) return toast.error(t('Ponle un nombre'))
+    if (amount <= 0) return toast.error(t('Ingresa el monto mensual'))
     setSaving(true)
     try {
       const payload = {
@@ -41,10 +43,10 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
       }
       if (editing) {
         await editFixedExpense(editing.id, payload)
-        toast.success('Gasto fijo actualizado')
+        toast.success(t('Gasto fijo actualizado'))
       } else {
         await addFixedExpense(payload)
-        toast.success('Gasto fijo agregado ✓')
+        toast.success(t('Gasto fijo agregado ✓'))
       }
       onDone()
     } catch (err) {
@@ -57,24 +59,24 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="label">Nombre</label>
+        <label className="label">{t('Nombre')}</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Arriendo, Internet, Plan celular…"
+          placeholder={t('Ej. Arriendo, Internet, Plan celular…')}
           className="input"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="label">Monto mensual</label>
+        <label className="label">{t('Monto mensual')}</label>
         <AmountInput value={amount} onChange={setAmount} currency={currency} size="md" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Día de pago (opcional)</label>
+          <label className="label">{t('Día de pago (opcional)')}</label>
           <input
             type="number"
             min={1}
@@ -86,13 +88,13 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="label">Categoría (opcional)</label>
+          <label className="label">{t('Categoría (opcional)')}</label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             className="input"
           >
-            <option value="">Sin categoría</option>
+            <option value="">{t('Sin categoría')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -105,11 +107,10 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
       <label className="flex items-start justify-between gap-3 rounded-xl border border-income/25 bg-income/[0.06] p-3">
         <span>
           <span className="block text-sm font-medium text-content">
-            Contar en la meta diaria de ingresos
+            {t('Contar en la meta diaria de ingresos')}
           </span>
           <span className="mt-0.5 block text-xs text-muted">
-            Si la desmarcas, sigue siendo un gasto fijo pero no suma a lo que debes producir
-            cada día.
+            {t('Si la desmarcas, sigue siendo un gasto fijo pero no suma a lo que debes producir cada día.')}
           </span>
         </span>
         <input
@@ -126,7 +127,7 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
             type="button"
             onClick={async () => {
               await removeFixedExpense(editing.id)
-              toast.success('Eliminado')
+              toast.success(t('Eliminado'))
               onDone()
             }}
             className="btn-danger"
@@ -139,9 +140,9 @@ export function FixedExpenseForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Agregar gasto fijo'
+            t('Agregar gasto fijo')
           )}
         </button>
       </div>

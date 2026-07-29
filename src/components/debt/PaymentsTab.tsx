@@ -6,20 +6,24 @@ import { FlowChart } from '@/components/charts/FlowChart'
 import { useStore } from '@/store/useStore'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
+import { usePrefs } from '@/store/prefs'
 import { useDebtModal } from './modalContext'
 import { fmtShort } from '@/lib/dates'
 import { format, parseISO } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
 
 export function PaymentsTab() {
   const { payments, debts } = useDebt()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
   const removePayment = useStore((s) => s.removePayment)
 
-  const debtName = (id: string) => debts.find((d) => d.id === id)?.name ?? 'Deuda'
+  const debtName = (id: string) => debts.find((d) => d.id === id)?.name ?? t('Deuda')
 
   const monthly = useMemo(() => {
+    const loc = usePrefs.getState().lang === 'en' ? enUS : es
     const map = new Map<string, number>()
     for (const p of payments) {
       const k = p.date.slice(0, 7)
@@ -28,7 +32,7 @@ export function PaymentsTab() {
     return [...map.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .slice(-8)
-      .map(([k, v]) => ({ label: format(parseISO(k + '-01'), 'MMM', { locale: es }), amount: v }))
+      .map(([k, v]) => ({ label: format(parseISO(k + '-01'), 'MMM', { locale: loc }), amount: v }))
   }, [payments])
 
   const total = payments.reduce((a, p) => a + p.amount, 0)
@@ -37,17 +41,17 @@ export function PaymentsTab() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">Total abonado</p>
+          <p className="text-sm text-muted">{t('Total abonado')}</p>
           <p className="tnum font-display text-2xl font-bold text-income">{money(total)}</p>
         </div>
         <button onClick={() => open({ type: 'payment' })} className="btn-primary">
-          <Plus size={16} /> Registrar pago
+          <Plus size={16} /> {t('Registrar pago')}
         </button>
       </div>
 
       {monthly.length > 1 && (
         <Card>
-          <CardHeader title="Progreso mensual" subtitle="Abonos por mes" />
+          <CardHeader title={t('Progreso mensual')} subtitle={t('Abonos por mes')} />
           <FlowChart data={monthly} xKey="label" valueKey="amount" height={220} />
         </Card>
       )}
@@ -56,8 +60,8 @@ export function PaymentsTab() {
         {payments.length === 0 ? (
           <EmptyState
             icon={<Receipt size={22} />}
-            title="Sin pagos registrados"
-            description="Cada abono que registres quedará en este historial."
+            title={t('Sin pagos registrados')}
+            description={t('Cada abono que registres quedará en este historial.')}
           />
         ) : (
           <div className="divide-y divide-border/60">
@@ -76,7 +80,7 @@ export function PaymentsTab() {
                 <span className="tnum text-sm font-semibold text-income">+{money(p.amount)}</span>
                 <button
                   onClick={() => {
-                    if (confirm('¿Eliminar este pago? El saldo de la deuda se restaurará.')) {
+                    if (confirm(t('¿Eliminar este pago? El saldo de la deuda se restaurará.'))) {
                       removePayment(p)
                     }
                   }}

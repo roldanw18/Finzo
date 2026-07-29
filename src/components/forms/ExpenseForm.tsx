@@ -5,6 +5,7 @@ import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { todayISO } from '@/lib/dates'
 import { cn } from '@/lib/utils'
@@ -17,6 +18,7 @@ interface Props {
 
 export function ExpenseForm({ editing, onDone }: Props) {
   const { currency, money } = useMoney()
+  const { t } = useI18n()
   const categories = useStore((s) => s.categories.filter((c) => c.type === 'expense'))
   const debts = useStore((s) => s.debts)
   const addExpense = useStore((s) => s.addExpense)
@@ -46,8 +48,8 @@ export function ExpenseForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (amount <= 0) return toast.error('Ingresa un monto válido')
-    if (!categoryId) return toast.error('Selecciona una categoría')
+    if (amount <= 0) return toast.error(t('Ingresa un monto válido'))
+    if (!categoryId) return toast.error(t('Selecciona una categoría'))
     setSaving(true)
     try {
       const payload = {
@@ -62,10 +64,10 @@ export function ExpenseForm({ editing, onDone }: Props) {
       }
       if (editing) {
         await editExpense(editing.id, payload)
-        toast.success('Gasto actualizado')
+        toast.success(t('Gasto actualizado'))
       } else {
         await addExpense(payload)
-        toast.success('Gasto registrado ✓')
+        toast.success(t('Gasto registrado ✓'))
       }
       onDone()
     } catch (err) {
@@ -80,7 +82,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
     setSaving(true)
     try {
       await removeExpense(editing.id)
-      toast.success('Gasto eliminado')
+      toast.success(t('Gasto eliminado'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -92,19 +94,19 @@ export function ExpenseForm({ editing, onDone }: Props) {
   return (
     <form onSubmit={submit} className="space-y-5">
       <div>
-        <label className="label">Monto</label>
+        <label className="label">{t('Monto')}</label>
         <AmountInput value={amount} onChange={setAmount} currency={currency} autoFocus />
       </div>
 
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label className="label mb-0">Categoría</label>
+          <label className="label mb-0">{t('Categoría')}</label>
           <button
             type="button"
             onClick={() => openCategory()}
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
-            <Plus size={13} /> Nueva
+            <Plus size={13} /> {t('Nueva')}
           </button>
         </div>
         <div className="grid max-h-44 grid-cols-3 gap-2 overflow-y-auto rounded-xl border border-border bg-surface-2/50 p-2 sm:grid-cols-4">
@@ -134,7 +136,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Fecha</label>
+          <label className="label">{t('Fecha')}</label>
           <input
             type="date"
             value={date}
@@ -144,7 +146,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="label">Método de pago</label>
+          <label className="label">{t('Método de pago')}</label>
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value as PaymentMethod)}
@@ -152,7 +154,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
           >
             {PAYMENT_METHODS.map((m) => (
               <option key={m.value} value={m.value}>
-                {m.label}
+                {t(m.label)}
               </option>
             ))}
           </select>
@@ -163,7 +165,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
       {method === 'credit' &&
         (creditCards.length > 0 ? (
           <div>
-            <label className="label">¿A cuál tarjeta de crédito?</label>
+            <label className="label">{t('¿A cuál tarjeta de crédito?')}</label>
             <div className="space-y-1.5">
               {creditCards.map((card) => {
                 const cupo =
@@ -187,8 +189,8 @@ export function ExpenseForm({ editing, onDone }: Props) {
                       <p className="truncate text-sm font-medium text-content">{card.name}</p>
                       <p className={cn('text-xs', over ? 'text-expense' : 'text-muted')}>
                         {cupo != null
-                          ? `Cupo disponible: ${money(cupo)}${over ? ' · excede el cupo' : ''}`
-                          : `Deuda actual: ${money(card.balance)}`}
+                          ? `${t('Cupo disponible: {m}').replace('{m}', money(cupo))}${over ? t(' · excede el cupo') : ''}`
+                          : t('Deuda actual: {m}').replace('{m}', money(card.balance))}
                       </p>
                     </div>
                     {active && <Check size={16} className="shrink-0 text-primary" />}
@@ -197,35 +199,37 @@ export function ExpenseForm({ editing, onDone }: Props) {
               })}
             </div>
             <p className="mt-2 rounded-lg bg-info/10 p-2.5 text-xs text-info">
-              No reduce tu saldo (es deuda): suma {money(amount || 0)} a la tarjeta, y el gasto
-              igual aparece en tu historial y categorías.
+              {t(
+                'No reduce tu saldo (es deuda): suma {m} a la tarjeta, y el gasto igual aparece en tu historial y categorías.',
+              ).replace('{m}', money(amount || 0))}
             </p>
           </div>
         ) : (
           <p className="rounded-lg bg-warning/10 p-2.5 text-xs text-warning">
-            No tienes tarjetas de crédito registradas. Agrégalas en <b>Plan → Deudas</b> para que el
-            gasto sume a la deuda sin descontar tu saldo.
+            {t(
+              'No tienes tarjetas de crédito registradas. Agrégalas en Plan → Deudas para que el gasto sume a la deuda sin descontar tu saldo.',
+            )}
           </p>
         ))}
 
       <div>
-        <label className="label">Descripción</label>
+        <label className="label">{t('Descripción')}</label>
         <input
           type="text"
           value={description ?? ''}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ej. Tanqueo estación Terpel"
+          placeholder={t('Ej. Tanqueo estación Terpel')}
           className="input"
         />
       </div>
 
       <div>
-        <label className="label">Observaciones (opcional)</label>
+        <label className="label">{t('Observaciones (opcional)')}</label>
         <textarea
           value={notes ?? ''}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          placeholder="Notas adicionales"
+          placeholder={t('Notas adicionales')}
           className="input resize-none"
         />
       </div>
@@ -244,9 +248,9 @@ export function ExpenseForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Registrar gasto'
+            t('Registrar gasto')
           )}
         </button>
       </div>

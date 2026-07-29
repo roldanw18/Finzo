@@ -14,9 +14,14 @@ import {
   eachMonthOfInterval,
   eachWeekOfInterval,
 } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { es, enUS } from 'date-fns/locale'
+import { usePrefs } from '@/store/prefs'
 
 export const ISO = 'yyyy-MM-dd'
+
+function locale() {
+  return usePrefs.getState().lang === 'en' ? enUS : es
+}
 
 export function todayISO(): string {
   return format(new Date(), ISO)
@@ -28,30 +33,31 @@ export function toDate(iso: string): Date {
 
 export function fmt(iso: string | Date, pattern: string): string {
   const d = typeof iso === 'string' ? parseISO(iso) : iso
-  return format(d, pattern, { locale: es })
+  return format(d, pattern, { locale: locale() })
 }
 
-/** "30 jun" */
+/** "30 jun" / "Jun 30" */
 export function fmtShort(iso: string): string {
-  return fmt(iso, "d 'de' MMM")
+  return usePrefs.getState().lang === 'en' ? fmt(iso, 'MMM d') : fmt(iso, "d 'de' MMM")
 }
 
-/** "lunes, 30 de junio" */
+/** "lunes, 30 de junio" / "Monday, June 30" */
 export function fmtLong(iso: string | Date): string {
-  return fmt(iso, "EEEE, d 'de' MMMM")
+  return usePrefs.getState().lang === 'en' ? fmt(iso, 'EEEE, MMMM d') : fmt(iso, "EEEE, d 'de' MMMM")
 }
 
-/** "junio 2026" */
+/** "junio 2026" / "June 2026" */
 export function fmtMonthYear(d: Date): string {
-  return format(d, 'MMMM yyyy', { locale: es })
+  return format(d, 'MMMM yyyy', { locale: locale() })
 }
 
 export function relativeDay(iso: string): string {
+  const en = usePrefs.getState().lang === 'en'
   const diff = differenceInCalendarDays(new Date(), parseISO(iso))
-  if (diff === 0) return 'Hoy'
-  if (diff === 1) return 'Ayer'
-  if (diff === -1) return 'Mañana'
-  if (diff > 1 && diff < 7) return `Hace ${diff} días`
+  if (diff === 0) return en ? 'Today' : 'Hoy'
+  if (diff === 1) return en ? 'Yesterday' : 'Ayer'
+  if (diff === -1) return en ? 'Tomorrow' : 'Mañana'
+  if (diff > 1 && diff < 7) return en ? `${diff} days ago` : `Hace ${diff} días`
   return fmtShort(iso)
 }
 

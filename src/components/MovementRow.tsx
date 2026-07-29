@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { CategoryIcon } from './ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { relativeDay } from '@/lib/dates'
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils'
 
 export function MovementRow({ m, showDate = true }: { m: Movement; showDate?: boolean }) {
   const { money } = useMoney()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
@@ -40,7 +42,7 @@ export function MovementRow({ m, showDate = true }: { m: Movement; showDate?: bo
         <p className="truncate text-sm font-medium text-content">{m.title}</p>
         <p className="truncate text-xs text-muted">
           {m.categoryName}
-          {m.paymentMethod && ` · ${paymentMethodLabel(m.paymentMethod)}`}
+          {m.paymentMethod && ` · ${t(paymentMethodLabel(m.paymentMethod))}`}
           {showDate && ` · ${relativeDay(m.date)}`}
         </p>
       </div>

@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion'
 import { Wallet } from 'lucide-react'
+import { useI18n } from '@/i18n'
 
 export function Splash() {
+  const { t } = useI18n()
   return (
     <div className="grid min-h-screen place-items-center bg-bg">
       <div className="flex flex-col items-center gap-4">
@@ -14,7 +16,7 @@ export function Splash() {
         </motion.div>
         <div className="text-center">
           <p className="font-display text-xl font-bold">Finzo</p>
-          <p className="text-sm text-muted">Cargando tus finanzas…</p>
+          <p className="text-sm text-muted">{t('Cargando tus finanzas…')}</p>
         </div>
       </div>
     </div>

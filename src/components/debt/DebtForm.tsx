@@ -3,6 +3,7 @@ import { Loader2, Trash2 } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { cn } from '@/lib/utils'
 import { DEBT_TYPES, type Debt, type DebtType } from '@/types'
@@ -14,6 +15,7 @@ interface Props {
 
 export function DebtForm({ editing, onDone }: Props) {
   const { currency } = useMoney()
+  const { t } = useI18n()
   const addDebt = useStore((s) => s.addDebt)
   const editDebt = useStore((s) => s.editDebt)
   const removeDebt = useStore((s) => s.removeDebt)
@@ -37,8 +39,8 @@ export function DebtForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Ponle un nombre a la deuda')
-    if (balance <= 0 && !paid) return toast.error('Ingresa el saldo actual')
+    if (!name.trim()) return toast.error(t('Ponle un nombre a la deuda'))
+    if (balance <= 0 && !paid) return toast.error(t('Ingresa el saldo actual'))
     setSaving(true)
     try {
       const payload = {
@@ -57,10 +59,10 @@ export function DebtForm({ editing, onDone }: Props) {
       }
       if (editing) {
         await editDebt(editing.id, payload)
-        toast.success('Deuda actualizada')
+        toast.success(t('Deuda actualizada'))
       } else {
         await addDebt({ ...payload, initial_balance: balance })
-        toast.success('Deuda agregada ✓')
+        toast.success(t('Deuda agregada ✓'))
       }
       onDone()
     } catch (err) {
@@ -72,11 +74,11 @@ export function DebtForm({ editing, onDone }: Props) {
 
   async function onDelete() {
     if (!editing) return
-    if (!confirm('¿Eliminar esta deuda y sus pagos registrados?')) return
+    if (!confirm(t('¿Eliminar esta deuda y sus pagos registrados?'))) return
     setSaving(true)
     try {
       await removeDebt(editing.id)
-      toast.success('Deuda eliminada')
+      toast.success(t('Deuda eliminada'))
       onDone()
     } catch (err) {
       toast.error((err as Error).message)
@@ -89,47 +91,47 @@ export function DebtForm({ editing, onDone }: Props) {
     <form onSubmit={submit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="label">Nombre</label>
+          <label className="label">{t('Nombre')}</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ej. NU, Bancolombia…"
+            placeholder={t('Ej. NU, Bancolombia…')}
             className="input"
             autoFocus
           />
         </div>
         <div>
-          <label className="label">Acreedor</label>
+          <label className="label">{t('Acreedor')}</label>
           <input
             value={creditor}
             onChange={(e) => setCreditor(e.target.value)}
-            placeholder="Ej. Nu Bank"
+            placeholder={t('Ej. Nu Bank')}
             className="input"
           />
         </div>
       </div>
 
       <div>
-        <label className="label">Saldo actual</label>
+        <label className="label">{t('Saldo actual')}</label>
         <AmountInput value={balance} onChange={setBalance} currency={currency} size="md" />
       </div>
 
       <div>
-        <label className="label">Tipo de deuda</label>
+        <label className="label">{t('Tipo de deuda')}</label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {DEBT_TYPES.map((t) => (
+          {DEBT_TYPES.map((dt) => (
             <button
-              key={t.value}
+              key={dt.value}
               type="button"
-              onClick={() => setType(t.value)}
+              onClick={() => setType(dt.value)}
               className={cn(
                 'rounded-xl border px-3 py-2 text-sm font-medium transition',
-                type === t.value
+                type === dt.value
                   ? 'border-primary/60 bg-primary/10 text-content'
                   : 'border-border text-muted hover:bg-surface-2',
               )}
             >
-              {t.label}
+              {t(dt.label)}
             </button>
           ))}
         </div>
@@ -138,7 +140,7 @@ export function DebtForm({ editing, onDone }: Props) {
       {/* Interest */}
       <div className="rounded-xl border border-border bg-surface-2/50 p-3">
         <label className="flex items-center justify-between">
-          <span className="text-sm font-medium text-content">Sin intereses</span>
+          <span className="text-sm font-medium text-content">{t('Sin intereses')}</span>
           <input
             type="checkbox"
             checked={noInterest}
@@ -148,41 +150,41 @@ export function DebtForm({ editing, onDone }: Props) {
         </label>
         {!noInterest && (
           <div className="mt-3">
-            <label className="label">Tasa de interés anual (%)</label>
+            <label className="label">{t('Tasa de interés anual (%)')}</label>
             <input
               type="number"
               step="0.1"
               value={rate || ''}
               onChange={(e) => setRate(Number(e.target.value))}
-              placeholder="Ej. 32"
+              placeholder={t('Ej. 32')}
               className="input"
             />
           </div>
         )}
         {noInterest && (
           <p className="mt-2 text-xs text-info">
-            Esta deuda no genera intereses — no es prioridad según Avalancha.
+            {t('Esta deuda no genera intereses — no es prioridad según Avalancha.')}
           </p>
         )}
       </div>
 
       {type === 'credit_card' && (
         <div>
-          <label className="label">Cupo total de la tarjeta (opcional)</label>
+          <label className="label">{t('Cupo total de la tarjeta (opcional)')}</label>
           <AmountInput value={creditLimit} onChange={setCreditLimit} currency={currency} size="md" />
           <p className="mt-1 text-xs text-muted">
-            Para ver tu cupo disponible al pagar con esta tarjeta.
+            {t('Para ver tu cupo disponible al pagar con esta tarjeta.')}
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label">Pago mínimo</label>
+          <label className="label">{t('Pago mínimo')}</label>
           <AmountInput value={minPayment} onChange={setMinPayment} currency={currency} size="md" />
         </div>
         <div>
-          <label className="label">Pago objetivo</label>
+          <label className="label">{t('Pago objetivo')}</label>
           <AmountInput
             value={targetPayment}
             onChange={setTargetPayment}
@@ -194,7 +196,7 @@ export function DebtForm({ editing, onDone }: Props) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="label">Día de corte</label>
+          <label className="label">{t('Día de corte')}</label>
           <input
             type="number"
             min={1}
@@ -206,7 +208,7 @@ export function DebtForm({ editing, onDone }: Props) {
           />
         </div>
         <div>
-          <label className="label">Día de pago</label>
+          <label className="label">{t('Día de pago')}</label>
           <input
             type="number"
             min={1}
@@ -223,11 +225,10 @@ export function DebtForm({ editing, onDone }: Props) {
       <label className="flex items-start justify-between gap-3 rounded-xl border border-income/25 bg-income/[0.06] p-3">
         <span>
           <span className="block text-sm font-medium text-content">
-            Contar en la meta diaria de ingresos
+            {t('Contar en la meta diaria de ingresos')}
           </span>
           <span className="mt-0.5 block text-xs text-muted">
-            Si la desmarcas, esta deuda sigue en tu plan pero no se suma a lo que debes
-            producir cada día.
+            {t('Si la desmarcas, esta deuda sigue en tu plan pero no se suma a lo que debes producir cada día.')}
           </span>
         </span>
         <input
@@ -240,7 +241,7 @@ export function DebtForm({ editing, onDone }: Props) {
 
       {editing && (
         <label className="flex items-center justify-between rounded-xl border border-border bg-surface-2/50 p-3">
-          <span className="text-sm font-medium text-content">Marcar como pagada</span>
+          <span className="text-sm font-medium text-content">{t('Marcar como pagada')}</span>
           <input
             type="checkbox"
             checked={paid}
@@ -260,9 +261,9 @@ export function DebtForm({ editing, onDone }: Props) {
           {saving ? (
             <Loader2 size={16} className="animate-spin" />
           ) : editing ? (
-            'Guardar cambios'
+            t('Guardar cambios')
           ) : (
-            'Agregar deuda'
+            t('Agregar deuda')
           )}
         </button>
       </div>

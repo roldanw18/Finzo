@@ -29,6 +29,7 @@ import { DueSoonCard } from '@/components/DueSoonCard'
 import { NetWorthCard } from '@/components/NetWorthCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useUI } from '@/store/ui'
 import {
   monthlySeries,
@@ -50,6 +51,7 @@ export function Dashboard() {
   const { incomes, expenses, categories, debtPayments, debts, profile, kpis, movements } =
     useAnalytics()
   const { money } = useMoney()
+  const { t } = useI18n()
   const openExpense = useUI((s) => s.openExpense)
   const openIncome = useUI((s) => s.openIncome)
   const openTip = useUI((s) => s.openTip)
@@ -91,18 +93,18 @@ export function Dashboard() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-sm text-muted">{greeting()},</p>
+          <p className="text-sm text-muted">{t(greeting())},</p>
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            {profile?.display_name || 'de nuevo'} 👋
+            {profile?.display_name || t('de nuevo')} 👋
           </h1>
           <p className="mt-1 text-xs capitalize text-subtle">{fmtLong(new Date())}</p>
         </div>
         <div className="hidden gap-2 sm:flex">
           <button onClick={() => openIncome()} className="btn bg-income/12 text-income hover:bg-income/20">
-            <TrendingUp size={16} /> Ingreso
+            <TrendingUp size={16} /> {t('Ingreso')}
           </button>
           <button onClick={() => openExpense()} className="btn bg-expense/12 text-expense hover:bg-expense/20">
-            <TrendingDown size={16} /> Gasto
+            <TrendingDown size={16} /> {t('Gasto')}
           </button>
         </div>
       </div>
@@ -122,7 +124,7 @@ export function Dashboard() {
           <div>
             <div className="flex items-center gap-2 text-muted">
               <Wallet size={16} />
-              <span className="text-sm">Dinero disponible</span>
+              <span className="text-sm">{t('Dinero disponible')}</span>
             </div>
             <AnimatedNumber
               value={kpis.available}
@@ -133,11 +135,12 @@ export function Dashboard() {
               <p className="mt-1.5 text-xs text-muted">
                 {pendingDebt > 0 ? (
                   <>
-                    Te falta pagar{' '}
-                    <b className="tnum text-expense">{money(pendingDebt)}</b> de deudas este mes
+                    {t('Te falta pagar')}{' '}
+                    <b className="tnum text-expense">{money(pendingDebt)}</b>{' '}
+                    {t('de deudas este mes')}
                   </>
                 ) : (
-                  <span className="text-income">✓ Deudas del mes al día</span>
+                  <span className="text-income">✓ {t('Deudas del mes al día')}</span>
                 )}
               </p>
             )}
@@ -145,11 +148,11 @@ export function Dashboard() {
               <p className="mt-0.5 text-[11px] text-subtle">
                 {kpis.available >= totalDebt ? (
                   <span className="text-income">
-                    Con tu disponible quedarías libre de deudas ✓
+                    {t('Con tu disponible quedarías libre de deudas ✓')}
                   </span>
                 ) : (
                   <>
-                    Si lo abonas a deudas, quedarían{' '}
+                    {t('Si lo abonas a deudas, quedarían')}{' '}
                     <b className="tnum text-content">
                       {money(debtAfterAvailable, { compact: true })}
                     </b>
@@ -165,16 +168,16 @@ export function Dashboard() {
                 )}
               >
                 <Scale size={13} />
-                Balance mes: {money(kpis.monthBalance, { sign: true, compact: true })}
+                {t('Balance mes')}: {money(kpis.monthBalance, { sign: true, compact: true })}
               </span>
               <span className="chip bg-surface-2 text-xs text-muted">
-                <PiggyBank size={13} /> Ahorro: {money(kpis.totalSavings, { compact: true })}
+                <PiggyBank size={13} /> {t('Ahorro')}: {money(kpis.totalSavings, { compact: true })}
               </span>
               <button
                 onClick={() => openTip()}
                 className="chip bg-[#14b8a6]/12 text-xs font-semibold text-[#14b8a6] transition hover:bg-[#14b8a6]/20"
               >
-                <Coins size={13} /> Propinas mes: {money(kpis.monthTips, { compact: true })}
+                <Coins size={13} /> {t('Propinas mes')}: {money(kpis.monthTips, { compact: true })}
               </button>
             </div>
           </div>
@@ -188,10 +191,10 @@ export function Dashboard() {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KpiCard label="Ingresos de hoy" value={kpis.todayIncome} icon={TrendingUp} tone="income" delay={0.02} />
-        <KpiCard label="Gastos de hoy" value={kpis.todayExpense} icon={TrendingDown} tone="expense" delay={0.04} />
+        <KpiCard label={t('Ingresos de hoy')} value={kpis.todayIncome} icon={TrendingUp} tone="income" delay={0.02} />
+        <KpiCard label={t('Gastos de hoy')} value={kpis.todayExpense} icon={TrendingDown} tone="expense" delay={0.04} />
         <KpiCard
-          label="Ingresos del mes"
+          label={t('Ingresos del mes')}
           value={kpis.monthIncome}
           icon={TrendingUp}
           tone="income"
@@ -199,7 +202,7 @@ export function Dashboard() {
           delay={0.06}
         />
         <KpiCard
-          label="Gastos del mes"
+          label={t('Gastos del mes')}
           value={kpis.monthExpense}
           icon={TrendingDown}
           tone="expense"
@@ -209,7 +212,7 @@ export function Dashboard() {
           delay={0.08}
         />
         <KpiCard
-          label="Balance del mes"
+          label={t('Balance del mes')}
           value={kpis.monthBalance}
           icon={Scale}
           tone={kpis.monthBalance >= 0 ? 'income' : 'expense'}
@@ -219,7 +222,7 @@ export function Dashboard() {
           delay={0.1}
         />
         <KpiCard
-          label="Ahorro acumulado"
+          label={t('Ahorro acumulado')}
           value={kpis.totalSavings}
           icon={PiggyBank}
           tone="primary"
@@ -227,11 +230,11 @@ export function Dashboard() {
           delay={0.12}
         />
         <KpiCard
-          label="Promedio diario"
+          label={t('Promedio diario')}
           value={kpis.dailyAvgExpense}
           icon={CalendarDays}
           tone="info"
-          sub="gasto/día este mes"
+          sub={t('gasto/día este mes')}
           delay={0.14}
         />
         <motion.div
@@ -241,7 +244,7 @@ export function Dashboard() {
           className="card card-hover flex flex-col justify-between p-4 sm:p-5"
         >
           <div className="flex items-start justify-between">
-            <p className="text-xs font-medium text-muted">Tendencia financiera</p>
+            <p className="text-xs font-medium text-muted">{t('Tendencia financiera')}</p>
             <span
               className={cn(
                 'grid h-10 w-10 place-items-center rounded-xl ring-1',
@@ -262,12 +265,12 @@ export function Dashboard() {
                 kpis.trend === 'flat' && 'text-content',
               )}
             >
-              {kpis.trend === 'up' ? 'Mejorando' : kpis.trend === 'down' ? 'A la baja' : 'Estable'}
+              {kpis.trend === 'up' ? t('Mejorando') : kpis.trend === 'down' ? t('A la baja') : t('Estable')}
             </p>
             <p className="text-[11px] text-subtle">
               {kpis.savingsRate >= 0
-                ? `Tasa de ahorro ${kpis.savingsRate.toFixed(0)}%`
-                : 'Gastos sobre ingresos'}
+                ? `${t('Tasa de ahorro')} ${kpis.savingsRate.toFixed(0)}%`
+                : t('Gastos sobre ingresos')}
             </p>
           </div>
         </motion.div>
@@ -283,11 +286,11 @@ export function Dashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2" delay={0.05}>
           <CardHeader
-            title="Ingresos vs Gastos"
-            subtitle="Últimos 6 meses"
+            title={t('Ingresos vs Gastos')}
+            subtitle={t('Últimos 6 meses')}
             action={
               <Link to="/analisis" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-                Ver más <ChevronRight size={14} />
+                {t('Ver más')} <ChevronRight size={14} />
               </Link>
             }
           />
@@ -295,7 +298,7 @@ export function Dashboard() {
         </Card>
 
         <Card delay={0.08}>
-          <CardHeader title="Gastos por categoría" subtitle="Este mes" />
+          <CardHeader title={t('Gastos por categoría')} subtitle={t('Este mes')} />
           <CategoryPie data={byCat} />
         </Card>
       </div>
@@ -303,12 +306,12 @@ export function Dashboard() {
       {/* Charts row 2 */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2" delay={0.05}>
-          <CardHeader title="Flujo de caja diario" subtitle="Movimiento neto del mes en curso" />
+          <CardHeader title={t('Flujo de caja diario')} subtitle={t('Movimiento neto del mes en curso')} />
           <FlowChart data={daily} xKey="label" valueKey="net" />
         </Card>
 
         <Card delay={0.08}>
-          <CardHeader title="Ranking de gastos" subtitle="Categorías del mes" />
+          <CardHeader title={t('Ranking de gastos')} subtitle={t('Categorías del mes')} />
           <CategoryRanking data={byCat} limit={6} />
         </Card>
       </div>
@@ -316,21 +319,21 @@ export function Dashboard() {
       {/* Recent movements */}
       <Card delay={0.05}>
         <CardHeader
-          title="Movimientos recientes"
+          title={t('Movimientos recientes')}
           action={
             <Link to="/historial" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-              Ver todo <ChevronRight size={14} />
+              {t('Ver todo')} <ChevronRight size={14} />
             </Link>
           }
         />
         {recent.length === 0 ? (
           <EmptyState
             icon={<Sparkles size={22} />}
-            title="Sin movimientos aún"
-            description="Registra tu primer ingreso o gasto para empezar."
+            title={t('Sin movimientos aún')}
+            description={t('Registra tu primer ingreso o gasto para empezar.')}
             action={
               <button onClick={() => openIncome()} className="btn-primary mt-1">
-                <Plus size={16} /> Agregar movimiento
+                <Plus size={16} /> {t('Agregar movimiento')}
               </button>
             }
           />

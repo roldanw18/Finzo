@@ -4,11 +4,13 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { DebtCard } from './DebtCard'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 
 export function DebtsTab() {
   const { debts } = useDebt()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
 
   const active = debts.filter((d) => d.status === 'active')
@@ -19,11 +21,11 @@ export function DebtsTab() {
     return (
       <Card>
         <EmptyState
-          title="Aún no registras deudas"
-          description="Agrega tus tarjetas, préstamos y créditos para empezar el plan."
+          title={t('Aún no registras deudas')}
+          description={t('Agrega tus tarjetas, préstamos y créditos para empezar el plan.')}
           action={
             <button onClick={() => open({ type: 'debt' })} className="btn-primary mt-1">
-              <Plus size={16} /> Agregar deuda
+              <Plus size={16} /> {t('Agregar deuda')}
             </button>
           }
         />
@@ -46,7 +48,7 @@ export function DebtsTab() {
 
       {active.length > 1 && (
         <Card>
-          <CardHeader title="Comparación entre deudas" subtitle="Saldo actual" />
+          <CardHeader title={t('Comparación entre deudas')} subtitle={t('Saldo actual')} />
           <div className="space-y-3">
             {active.map((d) => (
               <div key={d.id}>
@@ -68,7 +70,7 @@ export function DebtsTab() {
 
       {paid.length > 0 && (
         <div>
-          <h3 className="mb-3 font-display text-base font-semibold text-muted">Pagadas ✓</h3>
+          <h3 className="mb-3 font-display text-base font-semibold text-muted">{t('Pagadas ✓')}</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             {paid.map((d) => (
               <DebtCard key={d.id} debt={d} onEdit={() => open({ type: 'debt', editing: d })} />

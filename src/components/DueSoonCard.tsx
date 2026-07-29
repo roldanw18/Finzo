@@ -5,6 +5,7 @@ import { Card, CardHeader } from '@/components/ui/Card'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { reminderCategoryMeta } from '@/types'
 import { todayISO, fmtShort } from '@/lib/dates'
@@ -20,6 +21,7 @@ const URGENCY = {
 export function DueSoonCard() {
   const { calendar } = useDebt()
   const { money } = useMoney()
+  const { t } = useI18n()
 
   const soon = calendar.filter((c) => c.daysUntil <= 7).slice(0, 6)
 
@@ -31,7 +33,7 @@ export function DueSoonCard() {
     const key = `finzo:notified:${todayISO()}`
     if (localStorage.getItem(key)) return
     try {
-      new Notification('Finzo · Vencimientos de hoy', {
+      new Notification(t('Finzo · Vencimientos de hoy'), {
         body: dueToday.map((c) => c.title).join(' · '),
         icon: '/pwa-192x192.png',
       })
@@ -47,12 +49,12 @@ export function DueSoonCard() {
 
   async function enable() {
     if (typeof Notification === 'undefined') {
-      toast.error('Tu navegador no soporta avisos')
+      toast.error(t('Tu navegador no soporta avisos'))
       return
     }
     const p = await Notification.requestPermission()
     setPerm(p)
-    if (p === 'granted') toast.success('Avisos activados 🔔')
+    if (p === 'granted') toast.success(t('Avisos activados 🔔'))
   }
 
   if (soon.length === 0) return null
@@ -60,15 +62,15 @@ export function DueSoonCard() {
   return (
     <Card>
       <CardHeader
-        title="Próximos vencimientos"
-        subtitle="En los próximos 7 días"
+        title={t('Próximos vencimientos')}
+        subtitle={t('En los próximos 7 días')}
         icon={<BellRing size={18} className="text-warning" />}
         action={
           <Link
             to="/plan"
             className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
-            Calendario <ChevronRight size={14} />
+            {t('Calendario')} <ChevronRight size={14} />
           </Link>
         }
       />
@@ -87,7 +89,7 @@ export function DueSoonCard() {
                 <p className="truncate text-sm font-medium text-content">{c.title}</p>
                 <p className="text-xs text-muted">
                   {fmtShort(c.date.toISOString().slice(0, 10))}
-                  {c.daysUntil <= 0 ? ' · hoy' : ` · en ${c.daysUntil}d`}
+                  {c.daysUntil <= 0 ? ` · ${t('hoy')}` : ` · ${c.daysUntil}d`}
                 </p>
               </div>
               {c.amount && (
@@ -102,7 +104,7 @@ export function DueSoonCard() {
 
       {perm !== 'granted' && (
         <button onClick={enable} className="btn-ghost mt-3 w-full text-sm">
-          <Bell size={15} /> Activar avisos en el navegador
+          <Bell size={15} /> {t('Activar avisos en el navegador')}
         </button>
       )}
     </Card>

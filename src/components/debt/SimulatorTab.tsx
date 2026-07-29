@@ -8,6 +8,7 @@ import { DebtProjectionChart } from './DebtProjectionChart'
 import { useDebt } from '@/hooks/useDebt'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { compareExtra, simulatePayoff, monthlyAllocation, projectDebts } from '@/lib/debt'
 import { fmtShort, daysInCurrentMonth } from '@/lib/dates'
 import { debtTypeMeta } from '@/types'
@@ -17,6 +18,7 @@ export function SimulatorTab() {
   const { active } = useDebt()
   const { kpis } = useAnalytics()
   const { currency, money } = useMoney()
+  const { t } = useI18n()
 
   // Pre-load the extra with this month's surplus (income − expenses, incl. debt).
   const suggestedExtra = Math.max(0, Math.round(kpis.monthBalance))
@@ -55,17 +57,17 @@ export function SimulatorTab() {
   const budgetPerDay = allocation.budget / daysInCurrentMonth()
 
   const scenarios = [
-    { label: '💰 Mi excedente', value: suggestedExtra },
+    { label: t('💰 Mi excedente'), value: suggestedExtra },
     { label: '+$1.000.000', value: 1_000_000 },
-    { label: '+20% ingresos', value: Math.round(kpis.monthIncome * 0.2) },
-    { label: '-10% gastos', value: Math.round(kpis.monthExpense * 0.1) },
-    { label: 'Sin extra', value: 0 },
+    { label: t('+20% ingresos'), value: Math.round(kpis.monthIncome * 0.2) },
+    { label: t('-10% gastos'), value: Math.round(kpis.monthExpense * 0.1) },
+    { label: t('Sin extra'), value: 0 },
   ]
 
   if (active.length === 0) {
     return (
       <Card>
-        <EmptyState icon={<Zap size={22} />} title="Agrega deudas para simular" description="El simulador proyecta cuándo saldrás de deudas según cuánto abones." />
+        <EmptyState icon={<Zap size={22} />} title={t('Agrega deudas para simular')} description={t('El simulador proyecta cuándo saldrás de deudas según cuánto abones.')} />
       </Card>
     )
   }
@@ -73,11 +75,15 @@ export function SimulatorTab() {
   return (
     <div className="space-y-5">
       <Card>
-        <CardHeader title="Simulador de pago extra" subtitle="¿Cuánto adicional puedes abonar este mes?" icon={<Zap size={18} className="text-primary" />} />
+        <CardHeader title={t('Simulador de pago extra')} subtitle={t('¿Cuánto adicional puedes abonar este mes?')} icon={<Zap size={18} className="text-primary" />} />
         <AmountInput value={extra} onChange={setExtra} currency={currency} />
         {suggestedExtra > 0 && (
           <p className="mt-2 text-xs text-muted">
-            Precargado con tu <b className="text-content">excedente del mes</b> ({money(suggestedExtra)}). Ajústalo si quieres.
+            {t('Precargado con tu {b} ({m}). Ajústalo si quieres.')
+              .split('{b}')
+              .map((seg, i) =>
+                i === 0 ? seg : <span key={i}><b className="text-content">{t('excedente del mes')}</b>{seg.replace('{m}', money(suggestedExtra))}</span>,
+              )}
           </p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
@@ -101,10 +107,10 @@ export function SimulatorTab() {
         <div className="card p-4">
           <div className="flex items-center gap-2 text-muted">
             <CalendarClock size={15} />
-            <span className="text-xs">Salida de deudas</span>
+            <span className="text-xs">{t('Salida de deudas')}</span>
           </div>
           <p className="mt-1 font-display text-2xl font-bold text-content">
-            {result.newMonths !== null ? `${result.newMonths} meses` : 'No alcanza'}
+            {result.newMonths !== null ? t('{n} meses').replace('{n}', String(result.newMonths)) : t('No alcanza')}
           </p>
           {plan.payoffDate && (
             <p className="text-xs text-primary">
@@ -115,22 +121,22 @@ export function SimulatorTab() {
         <div className="card p-4">
           <div className="flex items-center gap-2 text-muted">
             <PiggyBank size={15} />
-            <span className="text-xs">Intereses ahorrados</span>
+            <span className="text-xs">{t('Intereses ahorrados')}</span>
           </div>
           <p className="mt-1 font-display text-2xl font-bold text-income">
             {money(result.interestSaved, { compact: true })}
           </p>
-          <p className="text-xs text-muted">vs. pagar solo mínimos</p>
+          <p className="text-xs text-muted">{t('vs. pagar solo mínimos')}</p>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-2 text-muted">
             <TrendingDown size={15} />
-            <span className="text-xs">Meses que te ahorras</span>
+            <span className="text-xs">{t('Meses que te ahorras')}</span>
           </div>
           <p className="mt-1 font-display text-2xl font-bold text-primary">
             {result.monthsSaved !== null ? `${result.monthsSaved}` : '—'}
           </p>
-          <p className="text-xs text-muted">más rápido</p>
+          <p className="text-xs text-muted">{t('más rápido')}</p>
         </div>
       </div>
 
@@ -138,9 +144,14 @@ export function SimulatorTab() {
         <div className="flex items-start gap-2 rounded-2xl border border-income/25 bg-income/[0.07] p-4 text-sm text-income">
           <Sparkles size={18} className="mt-0.5 shrink-0" />
           <p className="text-content">
-            Si abonas <b>{money(extra)}</b> extra al mes, ahorrarás aproximadamente{' '}
-            <b className="text-income">{money(result.interestSaved)}</b> en intereses
-            {result.monthsSaved ? ` y saldrás ${result.monthsSaved} meses antes` : ''}. 🚀
+            {t('Si abonas {e} extra al mes, ahorrarás aproximadamente {s} en intereses')
+              .split(/(\{e\}|\{s\})/)
+              .map((seg, i) =>
+                seg === '{e}' ? <b key={i}>{money(extra)}</b>
+                  : seg === '{s}' ? <b key={i} className="text-income">{money(result.interestSaved)}</b>
+                  : <span key={i}>{seg}</span>,
+              )}
+            {result.monthsSaved ? ` ${t('y saldrás {n} meses antes').replace('{n}', String(result.monthsSaved))}` : ''}. 🚀
           </p>
         </div>
       )}
@@ -148,8 +159,10 @@ export function SimulatorTab() {
       {/* Allocation: how the money splits across debts */}
       <Card>
         <CardHeader
-          title="Cómo se reparte tu dinero"
-          subtitle={`Presupuesto mensual ${money(allocation.budget)} · ≈ ${money(budgetPerDay, { compact: true })}/día`}
+          title={t('Cómo se reparte tu dinero')}
+          subtitle={t('Presupuesto mensual {m} · ≈ {d}/día')
+            .replace('{m}', money(allocation.budget))
+            .replace('{d}', money(budgetPerDay, { compact: true }))}
           icon={<PieChart size={18} className="text-primary" />}
         />
         <CategoryPie data={allocSlices} />
@@ -162,7 +175,9 @@ export function SimulatorTab() {
                 <span className="tnum font-semibold text-content">{money(it.total, { compact: true })}</span>
                 {it.extra > 0 && (
                   <span className="ml-1.5 hidden text-income sm:inline">
-                    (mín {money(it.base, { compact: true })} + extra {money(it.extra, { compact: true })})
+                    {t('(mín {b} + extra {e})')
+                      .replace('{b}', money(it.base, { compact: true }))
+                      .replace('{e}', money(it.extra, { compact: true }))}
                   </span>
                 )}
               </div>
@@ -171,7 +186,7 @@ export function SimulatorTab() {
         </div>
         {allocation.extra > 0 && (
           <p className="mt-3 rounded-xl bg-primary/10 p-2.5 text-xs text-primary">
-            💡 El extra de {money(allocation.extra)} se dirige a la deuda de mayor interés (Avalancha).
+            {t('💡 El extra de {m} se dirige a la deuda de mayor interés (Avalancha).').replace('{m}', money(allocation.extra))}
           </p>
         )}
       </Card>
@@ -180,8 +195,8 @@ export function SimulatorTab() {
       {projection.series.length > 1 && (
         <Card>
           <CardHeader
-            title="Proyección por deuda"
-            subtitle="Cómo se reducen tus deudas mes a mes"
+            title={t('Proyección por deuda')}
+            subtitle={t('Cómo se reducen tus deudas mes a mes')}
             icon={<TrendingDown size={18} className="text-expense" />}
           />
           <DebtProjectionChart projection={projection} />
@@ -189,7 +204,7 @@ export function SimulatorTab() {
           {projection.payoff.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-border/60 pt-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-subtle">
-                Cuándo pagas cada deuda
+                {t('Cuándo pagas cada deuda')}
               </p>
               {projection.payoff.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 text-sm">
@@ -198,7 +213,7 @@ export function SimulatorTab() {
                   <span className="shrink-0 text-muted">
                     {fmtShort(p.date.toISOString().slice(0, 10))} {p.date.getFullYear()}
                   </span>
-                  <span className="chip bg-surface-2 text-[11px] text-muted">{p.month} meses</span>
+                  <span className="chip bg-surface-2 text-[11px] text-muted">{t('{n} meses').replace('{n}', String(p.month))}</span>
                 </div>
               ))}
             </div>
@@ -209,13 +224,13 @@ export function SimulatorTab() {
       {/* Scenario: exclude debts */}
       {active.length > 1 && (
         <Card>
-          <CardHeader title="Escenario: ¿y si dejo de atacar una deuda?" subtitle="Desmarca para excluirla del plan" />
+          <CardHeader title={t('Escenario: ¿y si dejo de atacar una deuda?')} subtitle={t('Desmarca para excluirla del plan')} />
           <div className="space-y-2">
             {active.map((d) => (
               <label key={d.id} className="flex items-center justify-between rounded-xl bg-surface-2/50 p-3">
                 <div>
                   <p className="text-sm font-medium text-content">{d.name}</p>
-                  <p className="text-xs text-muted">{money(d.balance, { compact: true })}{d.interest_rate ? ` · ${d.interest_rate}%` : ' · sin interés'}</p>
+                  <p className="text-xs text-muted">{money(d.balance, { compact: true })}{d.interest_rate ? ` · ${d.interest_rate}%` : ` · ${t('sin interés')}`}</p>
                 </div>
                 <input
                   type="checkbox"

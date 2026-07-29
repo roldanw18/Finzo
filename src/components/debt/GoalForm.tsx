@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Loader2, Trash2 } from 'lucide-react'
 import { useStore } from '@/store/useStore'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { Segmented } from '@/components/ui/Segmented'
 import { DEBT_TYPES, type DebtGoal, type DebtType, type GoalKind } from '@/types'
@@ -15,6 +16,7 @@ export function GoalForm({ editing, onDone }: Props) {
   const addGoal = useStore((s) => s.addGoal)
   const editGoal = useStore((s) => s.editGoal)
   const removeGoal = useStore((s) => s.removeGoal)
+  const { t } = useI18n()
 
   const [name, setName] = useState(editing?.name ?? '')
   const [kind, setKind] = useState<GoalKind>(editing?.kind ?? 'debt')
@@ -25,7 +27,7 @@ export function GoalForm({ editing, onDone }: Props) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return toast.error('Ponle nombre a la meta')
+    if (!name.trim()) return toast.error(t('Ponle nombre a la meta'))
     setSaving(true)
     try {
       const payload = {
@@ -37,10 +39,10 @@ export function GoalForm({ editing, onDone }: Props) {
       }
       if (editing) {
         await editGoal(editing.id, payload)
-        toast.success('Meta actualizada')
+        toast.success(t('Meta actualizada'))
       } else {
         await addGoal(payload)
-        toast.success('Meta creada ✓')
+        toast.success(t('Meta creada ✓'))
       }
       onDone()
     } catch (err) {
@@ -53,33 +55,33 @@ export function GoalForm({ editing, onDone }: Props) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <label className="label">Nombre de la meta</label>
+        <label className="label">{t('Nombre de la meta')}</label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Salir de NU"
+          placeholder={t('Ej. Salir de NU')}
           className="input"
           autoFocus
         />
       </div>
 
       <div>
-        <label className="label">Tipo de meta</label>
+        <label className="label">{t('Tipo de meta')}</label>
         <Segmented
           value={kind}
           onChange={setKind}
           size="sm"
           options={[
-            { value: 'debt', label: 'Una deuda' },
-            { value: 'type', label: 'Por tipo' },
-            { value: 'all', label: 'Todas' },
+            { value: 'debt', label: t('Una deuda') },
+            { value: 'type', label: t('Por tipo') },
+            { value: 'all', label: t('Todas') },
           ]}
         />
       </div>
 
       {kind === 'debt' && (
         <div>
-          <label className="label">Deuda</label>
+          <label className="label">{t('Deuda')}</label>
           <select value={debtId} onChange={(e) => setDebtId(e.target.value)} className="input">
             {debts.map((d) => (
               <option key={d.id} value={d.id}>
@@ -92,15 +94,15 @@ export function GoalForm({ editing, onDone }: Props) {
 
       {kind === 'type' && (
         <div>
-          <label className="label">Tipo de deuda</label>
+          <label className="label">{t('Tipo de deuda')}</label>
           <select
             value={debtType}
             onChange={(e) => setDebtType(e.target.value as DebtType)}
             className="input"
           >
-            {DEBT_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {DEBT_TYPES.map((dt) => (
+              <option key={dt.value} value={dt.value}>
+                {t(dt.label)}
               </option>
             ))}
           </select>
@@ -108,7 +110,7 @@ export function GoalForm({ editing, onDone }: Props) {
       )}
 
       <div>
-        <label className="label">Fecha meta (opcional)</label>
+        <label className="label">{t('Fecha meta (opcional)')}</label>
         <input
           type="date"
           value={targetDate}
@@ -123,7 +125,7 @@ export function GoalForm({ editing, onDone }: Props) {
             type="button"
             onClick={async () => {
               await removeGoal(editing.id)
-              toast.success('Meta eliminada')
+              toast.success(t('Meta eliminada'))
               onDone()
             }}
             className="btn-danger"
@@ -132,7 +134,7 @@ export function GoalForm({ editing, onDone }: Props) {
           </button>
         )}
         <button type="submit" disabled={saving} className="btn-primary flex-1">
-          {saving ? <Loader2 size={16} className="animate-spin" /> : editing ? 'Guardar' : 'Crear meta'}
+          {saving ? <Loader2 size={16} className="animate-spin" /> : editing ? t('Guardar') : t('Crear meta')}
         </button>
       </div>
     </form>

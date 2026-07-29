@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, ArrowRight, ArrowLeft, Loader2, Check } from 'lucide-react'
 import { useStore } from '@/store/useStore'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { getIcon } from '@/lib/icons'
 import { ACTIVITY_PRESETS, type ActivityPreset } from '@/config/activities'
@@ -14,6 +15,7 @@ export function Onboarding() {
   const categories = useStore((s) => s.categories)
   const saveProfile = useStore((s) => s.saveProfile)
   const addCategory = useStore((s) => s.addCategory)
+  const { t } = useI18n()
 
   const [step, setStep] = useState(0)
   const [name, setName] = useState(profile?.display_name ?? '')
@@ -47,7 +49,7 @@ export function Onboarding() {
         if (existing.has(c.name.toLowerCase())) continue
         await addCategory({ name: c.name, color: c.color, icon: c.icon })
       }
-      toast.success('¡Todo listo! 🎉')
+      toast.success(t('¡Todo listo! 🎉'))
     } catch (e) {
       toast.error((e as Error).message)
     } finally {
@@ -86,17 +88,17 @@ export function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
             >
-              <h1 className="font-display text-3xl font-bold">Bienvenido 👋</h1>
+              <h1 className="font-display text-3xl font-bold">{t('Bienvenido 👋')}</h1>
               <p className="mt-2 text-muted">
-                Finzo se adapta a lo que haces. En un minuto lo dejamos a tu medida.
+                {t('Finzo se adapta a lo que haces. En un minuto lo dejamos a tu medida.')}
               </p>
 
               <div className="mt-8">
-                <label className="label">¿Cómo te llamas?</label>
+                <label className="label">{t('¿Cómo te llamas?')}</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Tu nombre"
+                  placeholder={t('Tu nombre')}
                   className="input text-lg"
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && setStep(1)}
@@ -104,7 +106,7 @@ export function Onboarding() {
               </div>
 
               <button onClick={() => setStep(1)} className="btn-primary mt-6 w-full sm:w-auto">
-                Continuar <ArrowRight size={16} />
+                {t('Continuar')} <ArrowRight size={16} />
               </button>
             </motion.div>
           )}
@@ -118,11 +120,14 @@ export function Onboarding() {
               exit={{ opacity: 0, y: -12 }}
             >
               <h1 className="font-display text-3xl font-bold">
-                ¿A qué te dedicas{name ? `, ${name}` : ''}?
+                {name
+                  ? t('¿A qué te dedicas, {n}?').replace('{n}', name)
+                  : t('¿A qué te dedicas?')}
               </h1>
               <p className="mt-2 text-muted">
-                Con esto ajusto tus categorías, el nombre de tus ingresos y cómo calculo
-                tus costos. Podrás cambiarlo cuando quieras.
+                {t(
+                  'Con esto ajusto tus categorías, el nombre de tus ingresos y cómo calculo tus costos. Podrás cambiarlo cuando quieras.',
+                )}
               </p>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -139,9 +144,9 @@ export function Onboarding() {
                       </span>
                       <div className="min-w-0">
                         <p className="font-semibold text-content">
-                          {a.emoji} {a.label}
+                          {a.emoji} {t(a.label)}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted">{a.description}</p>
+                        <p className="mt-0.5 text-xs text-muted">{t(a.description)}</p>
                       </div>
                     </button>
                   )
@@ -149,7 +154,7 @@ export function Onboarding() {
               </div>
 
               <button onClick={() => setStep(0)} className="btn-ghost mt-6">
-                <ArrowLeft size={16} /> Atrás
+                <ArrowLeft size={16} /> {t('Atrás')}
               </button>
             </motion.div>
           )}
@@ -162,31 +167,44 @@ export function Onboarding() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
             >
-              <h1 className="font-display text-3xl font-bold">Últimos detalles</h1>
+              <h1 className="font-display text-3xl font-bold">{t('Últimos detalles')}</h1>
               <p className="mt-2 text-muted">
-                Configuré tu perfil de <b className="text-content">{activity.label}</b>.
+                {t('Configuré tu perfil de {a}.')
+                  .split('{a}')
+                  .map((part, i) =>
+                    i === 0 ? (
+                      part
+                    ) : (
+                      <span key={i}>
+                        <b className="text-content">{t(activity.label)}</b>
+                        {part}
+                      </span>
+                    ),
+                  )}
               </p>
 
               <div className="mt-6 space-y-5">
                 <div className="card p-4">
-                  <p className="label">Moneda</p>
+                  <p className="label">{t('Moneda')}</p>
                   <Segmented
                     value={currency}
                     onChange={setCurrency}
                     options={[
-                      { value: 'COP', label: 'Peso (COP)' },
-                      { value: 'USD', label: 'Dólar (USD)' },
+                      { value: 'COP', label: t('Peso (COP)') },
+                      { value: 'USD', label: t('Dólar (USD)') },
                     ]}
                   />
                 </div>
 
                 <div className="card p-4">
                   <p className="label">
-                    ¿Cuánto de lo que ganas se va en {activity.costLabel.toLowerCase()}?
+                    {t('¿Cuánto de lo que ganas se va en {c}?').replace(
+                      '{c}',
+                      activity.costLabel.toLowerCase(),
+                    )}
                   </p>
                   <p className="mb-3 text-xs text-muted">
-                    Lo uso para decirte cuánto producir al día y que el dinero te quede
-                    libre de verdad.
+                    {t('Lo uso para decirte cuánto producir al día y que el dinero te quede libre de verdad.')}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -205,18 +223,20 @@ export function Onboarding() {
                             : 'border-border bg-surface-2 text-content hover:bg-surface-3',
                         )}
                       >
-                        {o.l}
+                        {t(o.l)}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-income/25 bg-income/[0.07] p-4 text-sm">
-                  <p className="font-semibold text-content">Voy a crear para ti:</p>
+                  <p className="font-semibold text-content">{t('Voy a crear para ti:')}</p>
                   <ul className="mt-2 space-y-1 text-muted">
-                    <li>• {activity.categories.length} categorías de gasto listas para usar</li>
-                    <li>• Tus ingresos se llamarán "{activity.incomeLabel}"</li>
-                    <li>• Tus costos variables: "{activity.costLabel}"</li>
+                    <li>
+                      • {t('{n} categorías de gasto listas para usar').replace('{n}', String(activity.categories.length))}
+                    </li>
+                    <li>• {t('Tus ingresos se llamarán "{l}"').replace('{l}', activity.incomeLabel)}</li>
+                    <li>• {t('Tus costos variables: "{l}"').replace('{l}', activity.costLabel)}</li>
                   </ul>
                 </div>
               </div>
@@ -230,7 +250,7 @@ export function Onboarding() {
                     <Loader2 size={16} className="animate-spin" />
                   ) : (
                     <>
-                      <Check size={16} /> Empezar a usar Finzo
+                      <Check size={16} /> {t('Empezar a usar Finzo')}
                     </>
                   )}
                 </button>

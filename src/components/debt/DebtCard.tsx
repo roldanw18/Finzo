@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Pencil, CheckCircle2, EyeOff } from 'lucide-react'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { debtTypeMeta, type Debt } from '@/types'
 import { hasInterest } from '@/lib/debt'
 import { cn, safeDiv } from '@/lib/utils'
@@ -15,6 +16,7 @@ interface Props {
 
 export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
   const { money } = useMoney()
+  const { t } = useI18n()
   const meta = debtTypeMeta(debt.type)
   const paid = Math.max(0, debt.initial_balance - debt.balance)
   const pct = safeDiv(paid, debt.initial_balance) * 100
@@ -39,11 +41,11 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
             {done && <CheckCircle2 size={15} className="shrink-0 text-income" />}
           </div>
           <p className="truncate text-xs text-muted">
-            {debt.creditor || meta.label}
+            {debt.creditor || t(meta.label)}
           </p>
           {debt.count_in_target === false && (
             <span className="chip mt-1 bg-surface-2 text-[10px] text-subtle">
-              <EyeOff size={10} /> fuera de la meta diaria
+              <EyeOff size={10} /> {t('fuera de la meta diaria')}
             </span>
           )}
         </div>
@@ -53,11 +55,11 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
           </p>
           {hasInterest(debt) ? (
             <span className="chip bg-expense/12 text-[10px] font-semibold text-expense">
-              {debt.interest_rate}% anual
+              {t('{r}% anual').replace('{r}', String(debt.interest_rate))}
             </span>
           ) : (
             <span className="chip bg-income/12 text-[10px] font-semibold text-income">
-              Sin interés
+              {t('Sin interés')}
             </span>
           )}
         </div>
@@ -66,19 +68,19 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
       {/* Available credit (cupo) */}
       {debt.type === 'credit_card' && debt.credit_limit != null && debt.credit_limit > 0 && (
         <p className="mt-2 text-[11px] text-muted">
-          Cupo disponible:{' '}
+          {t('Cupo disponible:')}{' '}
           <b className="text-content">
             {money(Math.max(0, debt.credit_limit - debt.balance), { compact: true })}
           </b>{' '}
-          de {money(debt.credit_limit, { compact: true })}
+          {t('de')} {money(debt.credit_limit, { compact: true })}
         </p>
       )}
 
       {/* Progress */}
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between text-[11px] text-muted">
-          <span>Pagado {pct.toFixed(0)}%</span>
-          <span>Inicial {money(debt.initial_balance, { compact: true })}</span>
+          <span>{t('Pagado {p}%').replace('{p}', pct.toFixed(0))}</span>
+          <span>{t('Inicial {m}').replace('{m}', money(debt.initial_balance, { compact: true }))}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-surface-2">
           <motion.div
@@ -95,12 +97,12 @@ export function DebtCard({ debt, rank, onEdit, onPay }: Props) {
         <div className="mt-3 flex gap-2">
           {onPay && !done && (
             <button onClick={onPay} className="btn-ghost flex-1 py-2 text-xs">
-              Registrar pago
+              {t('Registrar pago')}
             </button>
           )}
           {onEdit && (
             <button onClick={onEdit} className="btn-outline py-2 text-xs">
-              <Pencil size={13} /> Editar
+              <Pencil size={13} /> {t('Editar')}
             </button>
           )}
         </div>

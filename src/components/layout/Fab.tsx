@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Plus, TrendingUp, TrendingDown, Coins, X } from 'lucide-react'
 import { useUI } from '@/store/ui'
+import { useI18n } from '@/i18n'
 
 export function Fab() {
   const fabOpen = useUI((s) => s.fabOpen)
@@ -8,6 +9,7 @@ export function Fab() {
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
   const openTip = useUI((s) => s.openTip)
+  const { t } = useI18n()
 
   return (
     <>
@@ -36,7 +38,7 @@ export function Fab() {
                 onClick={() => openIncome()}
                 className="flex items-center gap-2.5 rounded-full bg-income py-2.5 pl-4 pr-5 font-semibold text-white shadow-card-lg"
               >
-                <TrendingUp size={18} /> Ingreso
+                <TrendingUp size={18} /> {t('Ingreso')}
               </motion.button>
               <motion.button
                 key="tip"
@@ -47,7 +49,7 @@ export function Fab() {
                 onClick={() => openTip()}
                 className="flex items-center gap-2.5 rounded-full bg-[#14b8a6] py-2.5 pl-4 pr-5 font-semibold text-white shadow-card-lg"
               >
-                <Coins size={18} /> Propina
+                <Coins size={18} /> {t('Propina')}
               </motion.button>
               <motion.button
                 key="expense"
@@ -57,7 +59,7 @@ export function Fab() {
                 onClick={() => openExpense()}
                 className="flex items-center gap-2.5 rounded-full bg-expense py-2.5 pl-4 pr-5 font-semibold text-white shadow-card-lg"
               >
-                <TrendingDown size={18} /> Gasto
+                <TrendingDown size={18} /> {t('Gasto')}
               </motion.button>
             </>
           )}
@@ -69,7 +71,7 @@ export function Fab() {
           animate={{ rotate: fabOpen ? 135 : 0 }}
           transition={{ type: 'spring', damping: 18, stiffness: 320 }}
           className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-contrast shadow-[0_8px_30px_-6px_rgb(var(--c-primary)/0.6)]"
-          aria-label="Agregar movimiento"
+          aria-label={t('Registrar movimiento')}
         >
           {fabOpen ? <X size={24} /> : <Plus size={26} />}
         </motion.button>

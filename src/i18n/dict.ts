@@ -1,3 +1,5 @@
+export { EN } from './en'
+
 export type Lang = 'es' | 'en'
 
 /**

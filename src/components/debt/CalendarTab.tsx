@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useDebt } from '@/hooks/useDebt'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { useDebtModal } from './modalContext'
 import { reminderCategoryMeta } from '@/types'
 import { fmt } from '@/lib/dates'
@@ -18,27 +19,28 @@ const URGENCY = {
 export function CalendarTab() {
   const { calendar, reminders } = useDebt()
   const { money } = useMoney()
+  const { t } = useI18n()
   const open = useDebtModal()
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-lg font-bold">Calendario financiero</h2>
-          <p className="text-xs text-muted">Cortes, pagos y vencimientos del vehículo</p>
+          <h2 className="font-display text-lg font-bold">{t('Calendario financiero')}</h2>
+          <p className="text-xs text-muted">{t('Cortes, pagos y vencimientos del vehículo')}</p>
         </div>
         <button onClick={() => open({ type: 'reminder' })} className="btn-primary">
-          <Plus size={16} /> Recordatorio
+          <Plus size={16} /> {t('Recordatorio')}
         </button>
       </div>
 
       {/* Agenda */}
       <Card>
-        <CardHeader title="Próximas fechas" icon={<CalendarClock size={18} className="text-primary" />} />
+        <CardHeader title={t('Próximas fechas')} icon={<CalendarClock size={18} className="text-primary" />} />
         {calendar.length === 0 ? (
           <EmptyState
-            title="Nada programado"
-            description="Agrega días de corte/pago a tus deudas o crea recordatorios (SOAT, servicios, técnico-mecánica…)."
+            title={t('Nada programado')}
+            description={t('Agrega días de corte/pago a tus deudas o crea recordatorios (SOAT, servicios, técnico-mecánica…).')}
           />
         ) : (
           <div className="space-y-2">
@@ -58,8 +60,8 @@ export function CalendarTab() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-content">{c.title}</p>
                     <p className="truncate text-xs text-muted">
-                      {c.subtitle || meta.label}
-                      {c.daysUntil > 0 ? ` · en ${c.daysUntil} días` : ' · hoy'}
+                      {c.subtitle || t(meta.label)}
+                      {c.daysUntil > 0 ? ` · ${t('en {d} días').replace('{d}', String(c.daysUntil))}` : ` · ${t('hoy')}`}
                     </p>
                   </div>
                   {c.amount && (
@@ -77,7 +79,7 @@ export function CalendarTab() {
       {/* Reminders management */}
       {reminders.length > 0 && (
         <Card>
-          <CardHeader title="Mis recordatorios" subtitle="Servicios, impuestos, mantenimiento" />
+          <CardHeader title={t('Mis recordatorios')} subtitle={t('Servicios, impuestos, mantenimiento')} />
           <div className="space-y-1.5">
             {reminders.map((r) => {
               const meta = reminderCategoryMeta(r.category)
@@ -92,7 +94,7 @@ export function CalendarTab() {
                     <p className="truncate text-sm font-medium text-content">{r.title}</p>
                     <p className="text-xs text-muted">
                       {fmt(r.date, "d 'de' MMM")}
-                      {r.recurring !== 'none' && (r.recurring === 'monthly' ? ' · mensual' : ' · anual')}
+                      {r.recurring !== 'none' && (r.recurring === 'monthly' ? ` · ${t('mensual')}` : ` · ${t('anual')}`)}
                     </p>
                   </div>
                   {r.amount && (

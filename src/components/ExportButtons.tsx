@@ -1,6 +1,7 @@
 import { FileText, FileSpreadsheet } from 'lucide-react'
 import { exportPdf, exportExcel } from '@/lib/exporters'
 import { useMoney } from '@/hooks/useMoney'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import type { Movement } from '@/types'
 import type { Kpis } from '@/lib/analytics'
@@ -21,34 +22,35 @@ export function ExportButtons({
   compact,
 }: Props) {
   const { currency } = useMoney()
+  const { t } = useI18n()
   const meta = { title, periodLabel, currency, kpis }
 
   async function pdf() {
-    if (movements.length === 0) return toast.error('No hay movimientos para exportar')
+    if (movements.length === 0) return toast.error(t('No hay movimientos para exportar'))
     try {
       await exportPdf(movements, meta)
-      toast.success('PDF generado')
+      toast.success(t('PDF generado'))
     } catch {
-      toast.error('No se pudo generar el PDF')
+      toast.error(t('No se pudo generar el PDF'))
     }
   }
   async function excel() {
-    if (movements.length === 0) return toast.error('No hay movimientos para exportar')
+    if (movements.length === 0) return toast.error(t('No hay movimientos para exportar'))
     try {
       await exportExcel(movements, meta)
-      toast.success('Excel generado')
+      toast.success(t('Excel generado'))
     } catch {
-      toast.error('No se pudo generar el Excel')
+      toast.error(t('No se pudo generar el Excel'))
     }
   }
 
   return (
     <div className="flex gap-2">
-      <button onClick={pdf} className="btn-outline" title="Exportar PDF">
+      <button onClick={pdf} className="btn-outline" title={t('Exportar PDF')}>
         <FileText size={16} className="text-expense" />
         {!compact && <span>PDF</span>}
       </button>
-      <button onClick={excel} className="btn-outline" title="Exportar Excel">
+      <button onClick={excel} className="btn-outline" title={t('Exportar Excel')}>
         <FileSpreadsheet size={16} className="text-income" />
         {!compact && <span>Excel</span>}
       </button>

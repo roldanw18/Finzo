@@ -26,6 +26,7 @@ import { FlowChart } from '@/components/charts/FlowChart'
 import { CategoryRanking } from '@/components/charts/CategoryRanking'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { DueSoonCard } from '@/components/DueSoonCard'
+import { NetWorthCard } from '@/components/NetWorthCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
 import { useUI } from '@/store/ui'
@@ -271,6 +272,9 @@ export function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* Net worth: assets vs liabilities */}
+      <NetWorthCard />
 
       {/* Upcoming due dates + browser reminders */}
       <DueSoonCard />

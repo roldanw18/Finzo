@@ -10,6 +10,7 @@ import type {
   Income,
   Profile,
   Reminder,
+  SavingsGoal,
   ThemeMode,
   WorkSession,
 } from '@/types'
@@ -23,6 +24,7 @@ import type {
   IncomeInput,
   PaymentInput,
   ReminderInput,
+  SavingsGoalInput,
   Snapshot,
   WorkSessionInput,
 } from '@/data/db'
@@ -58,6 +60,7 @@ interface AppState {
   workSessions: WorkSession[]
   reminders: Reminder[]
   fixedExpenses: FixedExpense[]
+  savingsGoals: SavingsGoal[]
 
   init: () => Promise<void>
   refresh: () => Promise<void>
@@ -69,7 +72,7 @@ interface AppState {
   signOut: () => Promise<void>
 
   // CRUD
-  addCategory: (input: CategoryInput) => Promise<void>
+  addCategory: (input: CategoryInput) => Promise<Category>
   editCategory: (id: string, patch: Partial<CategoryInput>) => Promise<void>
   removeCategory: (id: string) => Promise<void>
   reorderCategories: (ids: string[]) => Promise<void>
@@ -86,6 +89,7 @@ interface AppState {
   setTheme: (theme: ThemeMode) => Promise<void>
   setCurrency: (currency: Currency) => Promise<void>
   saveProfile: (patch: Partial<Profile>) => Promise<void>
+  setBudget: (categoryId: string, amount: number) => Promise<void>
 
   // Debt freedom plan
   addDebt: (input: DebtInput) => Promise<void>
@@ -104,6 +108,12 @@ interface AppState {
   addFixedExpense: (input: FixedExpenseInput) => Promise<void>
   editFixedExpense: (id: string, patch: Partial<FixedExpenseInput>) => Promise<void>
   removeFixedExpense: (id: string) => Promise<void>
+
+  // Savings goals
+  addSavingsGoal: (input: SavingsGoalInput) => Promise<void>
+  editSavingsGoal: (id: string, patch: Partial<SavingsGoalInput>) => Promise<void>
+  removeSavingsGoal: (id: string) => Promise<void>
+  contributeSavings: (id: string, delta: number) => Promise<void>
 
   // Demo mode (explore with fake data; never touches real data)
   enterDemo: () => Promise<void>
@@ -142,6 +152,7 @@ export const useStore = create<AppState>((set, get) => {
       workSessions: s.workSessions,
       reminders: s.reminders,
       fixedExpenses: s.fixedExpenses,
+      savingsGoals: s.savingsGoals,
     })
   }
 
@@ -178,6 +189,7 @@ export const useStore = create<AppState>((set, get) => {
     workSessions: [],
     reminders: [],
     fixedExpenses: [],
+    savingsGoals: [],
 
     async init() {
       set({ status: 'loading', error: null })
@@ -265,12 +277,14 @@ export const useStore = create<AppState>((set, get) => {
         workSessions: [],
         reminders: [],
         fixedExpenses: [],
+        savingsGoals: [],
       })
     },
 
     async addCategory(input) {
       const cat = await get().db!.createCategory(input)
       set((s) => ({ categories: [...s.categories, cat] }))
+      return cat
     },
     async editCategory(id, patch) {
       const cat = await get().db!.updateCategory(id, patch)
@@ -344,6 +358,13 @@ export const useStore = create<AppState>((set, get) => {
     async saveProfile(patch) {
       const profile = await get().db!.updateProfile(patch)
       if (patch.theme) applyTheme(patch.theme)
+      set({ profile })
+    },
+    async setBudget(categoryId, amount) {
+      const budgets = { ...(get().profile?.budgets ?? {}) }
+      if (amount > 0) budgets[categoryId] = amount
+      else delete budgets[categoryId]
+      const profile = await get().db!.updateProfile({ budgets })
       set({ profile })
     },
 
@@ -446,6 +467,28 @@ export const useStore = create<AppState>((set, get) => {
     async removeFixedExpense(id) {
       await get().db!.deleteFixedExpense(id)
       set((s) => ({ fixedExpenses: s.fixedExpenses.filter((f) => f.id !== id) }))
+    },
+
+    // ---------------- Savings goals ----------------
+
+    async addSavingsGoal(input) {
+      const goal = await get().db!.createSavingsGoal(input)
+      set((s) => ({ savingsGoals: [...s.savingsGoals, goal] }))
+    },
+    async editSavingsGoal(id, patch) {
+      const goal = await get().db!.updateSavingsGoal(id, patch)
+      set((s) => ({ savingsGoals: s.savingsGoals.map((g) => (g.id === id ? goal : g)) }))
+    },
+    async removeSavingsGoal(id) {
+      await get().db!.deleteSavingsGoal(id)
+      set((s) => ({ savingsGoals: s.savingsGoals.filter((g) => g.id !== id) }))
+    },
+    async contributeSavings(id, delta) {
+      const current = get().savingsGoals.find((g) => g.id === id)
+      if (!current) return
+      const saved_amount = Math.max(0, current.saved_amount + delta)
+      const goal = await get().db!.updateSavingsGoal(id, { saved_amount })
+      set((s) => ({ savingsGoals: s.savingsGoals.map((g) => (g.id === id ? goal : g)) }))
     },
 
     async enterDemo() {

@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Loader2, Trash2 } from 'lucide-react'
 import { getIcon, ICON_NAMES, CATEGORY_COLORS } from '@/lib/icons'
+import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
+import { useMoney } from '@/hooks/useMoney'
 import { toast } from '@/store/toast'
 import { cn } from '@/lib/utils'
 import type { Category } from '@/types'
@@ -12,14 +14,18 @@ interface Props {
 }
 
 export function CategoryForm({ editing, onDone }: Props) {
+  const { currency } = useMoney()
   const addCategory = useStore((s) => s.addCategory)
   const editCategory = useStore((s) => s.editCategory)
   const removeCategory = useStore((s) => s.removeCategory)
+  const setBudget = useStore((s) => s.setBudget)
   const expenses = useStore((s) => s.expenses)
+  const budgets = useStore((s) => s.profile?.budgets ?? {})
 
   const [name, setName] = useState(editing?.name ?? '')
   const [color, setColor] = useState(editing?.color ?? CATEGORY_COLORS[0])
   const [icon, setIcon] = useState(editing?.icon ?? 'Tag')
+  const [budget, setBudgetAmount] = useState(editing ? (budgets[editing.id] ?? 0) : 0)
   const [saving, setSaving] = useState(false)
 
   const usageCount = editing
@@ -33,9 +39,11 @@ export function CategoryForm({ editing, onDone }: Props) {
     try {
       if (editing) {
         await editCategory(editing.id, { name: name.trim(), color, icon })
+        await setBudget(editing.id, budget)
         toast.success('Categoría actualizada')
       } else {
-        await addCategory({ name: name.trim(), color, icon })
+        const cat = await addCategory({ name: name.trim(), color, icon })
+        if (budget > 0) await setBudget(cat.id, budget)
         toast.success('Categoría creada ✓')
       }
       onDone()
@@ -137,6 +145,14 @@ export function CategoryForm({ editing, onDone }: Props) {
             )
           })}
         </div>
+      </div>
+
+      <div>
+        <label className="label">Presupuesto mensual (opcional)</label>
+        <AmountInput value={budget} onChange={setBudgetAmount} currency={currency} size="md" />
+        <p className="mt-1 text-xs text-muted">
+          Te avisaré cuando te acerques o superes este límite.
+        </p>
       </div>
 
       <div className="flex gap-3 pt-1">

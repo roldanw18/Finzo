@@ -28,6 +28,7 @@ export function Segmented<T extends string>({
         return (
           <button
             key={opt.value}
+            type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
               'relative rounded-lg font-medium transition-colors',

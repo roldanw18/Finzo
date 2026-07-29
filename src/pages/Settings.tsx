@@ -14,8 +14,10 @@ import {
   Moon,
   Sun,
   PlayCircle,
+  Languages,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { LangSwitch } from '@/components/LangSwitch'
 import { ActivitySettings } from '@/components/ActivitySettings'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Segmented } from '@/components/ui/Segmented'
@@ -172,6 +174,16 @@ export function Settings() {
           {dark ? <Moon size={14} /> : <Sun size={14} />}
           Tema {dark ? 'oscuro' : 'claro'} activo
         </div>
+      </Card>
+
+      {/* Language */}
+      <Card>
+        <CardHeader
+          title="Idioma / Language"
+          subtitle="Landing e inicio de sesión (la app se traduce pronto)"
+          icon={<Languages size={18} className="text-primary" />}
+        />
+        <LangSwitch />
       </Card>
 
       {/* Opening balance */}

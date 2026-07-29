@@ -13,6 +13,7 @@ const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default:
 const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default: m.Analytics })))
 const History = lazy(() => import('@/pages/History').then((m) => ({ default: m.History })))
 const Categories = lazy(() => import('@/pages/Categories').then((m) => ({ default: m.Categories })))
+const Savings = lazy(() => import('@/pages/Savings').then((m) => ({ default: m.Savings })))
 const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })))
 const DebtPlan = lazy(() => import('@/pages/DebtPlan').then((m) => ({ default: m.DebtPlan })))
 const MonthlyReport = lazy(() =>
@@ -103,6 +104,7 @@ function AppContent({
           <Route path="/reporte" element={<MonthlyReport />} />
           <Route path="/historial" element={<History />} />
           <Route path="/categorias" element={<Categories />} />
+          <Route path="/ahorro" element={<Savings />} />
           <Route path="/ajustes" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

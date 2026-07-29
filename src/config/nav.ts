@@ -5,6 +5,7 @@ import {
   Tags,
   Settings,
   Target,
+  PiggyBank,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -21,6 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/plan', label: 'Plan', icon: Target, primary: true },
   { to: '/analisis', label: 'Análisis', icon: ChartColumnBig, primary: true },
   { to: '/historial', label: 'Historial', icon: History, primary: true },
+  { to: '/ahorro', label: 'Ahorro', icon: PiggyBank },
   { to: '/categorias', label: 'Categorías', icon: Tags },
   { to: '/ajustes', label: 'Ajustes', icon: Settings, primary: true },
 ]

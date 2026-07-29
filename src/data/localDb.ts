@@ -8,6 +8,7 @@ import type {
   Income,
   Profile,
   Reminder,
+  SavingsGoal,
   ThemeMode,
   WorkSession,
 } from '@/types'
@@ -24,6 +25,7 @@ import type {
   IncomeInput,
   PaymentInput,
   ReminderInput,
+  SavingsGoalInput,
   Snapshot,
   WorkSessionInput,
 } from './db'
@@ -43,6 +45,7 @@ interface Store {
   workSessions: WorkSession[]
   reminders: Reminder[]
   fixedExpenses: FixedExpense[]
+  savingsGoals: SavingsGoal[]
 }
 
 function defaultProfile(): Profile {
@@ -92,6 +95,7 @@ function read(key = KEY): Store {
       parsed.workSessions ??= []
       parsed.reminders ??= []
       parsed.fixedExpenses ??= []
+      parsed.savingsGoals ??= []
       return parsed
     }
   } catch {
@@ -108,6 +112,7 @@ function read(key = KEY): Store {
     workSessions: [],
     reminders: [],
     fixedExpenses: [],
+    savingsGoals: [],
   }
   write(fresh, key)
   return fresh
@@ -434,6 +439,39 @@ export class LocalDatabase implements Database {
     write(s, this.key)
   }
 
+  async createSavingsGoal(input: SavingsGoalInput): Promise<SavingsGoal> {
+    const s = read(this.key)
+    const goal: SavingsGoal = {
+      id: uid(),
+      user_id: LOCAL_USER,
+      name: input.name,
+      target_amount: input.target_amount,
+      saved_amount: input.saved_amount ?? 0,
+      target_date: input.target_date ?? null,
+      color: input.color ?? '#0ecb81',
+      icon: input.icon ?? 'PiggyBank',
+      created_at: new Date().toISOString(),
+    }
+    s.savingsGoals.push(goal)
+    write(s, this.key)
+    return goal
+  }
+
+  async updateSavingsGoal(id: string, patch: Partial<SavingsGoalInput>): Promise<SavingsGoal> {
+    const s = read(this.key)
+    const goal = s.savingsGoals.find((g) => g.id === id)
+    if (!goal) throw new Error('Meta de ahorro no encontrada')
+    Object.assign(goal, patch)
+    write(s, this.key)
+    return goal
+  }
+
+  async deleteSavingsGoal(id: string): Promise<void> {
+    const s = read(this.key)
+    s.savingsGoals = s.savingsGoals.filter((g) => g.id !== id)
+    write(s, this.key)
+  }
+
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {
     const s = read(this.key)
     const next: Store = {
@@ -447,6 +485,7 @@ export class LocalDatabase implements Database {
       workSessions: data.workSessions ?? s.workSessions,
       reminders: data.reminders ?? s.reminders,
       fixedExpenses: data.fixedExpenses ?? s.fixedExpenses,
+      savingsGoals: data.savingsGoals ?? s.savingsGoals,
     }
     write(next, this.key)
     return structuredClone(next)
@@ -734,6 +773,12 @@ export function buildDemoStore(theme: ThemeMode = 'dark'): Store {
     { id: uid(), user_id: LOCAL_USER, title: 'Cambio de aceite', category: 'aceite', date: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 5).toISOString().slice(0, 10), amount: 120000, recurring: 'none', note: null, created_at: now },
   ]
 
+  const savingsGoals: SavingsGoal[] = [
+    { id: uid(), user_id: LOCAL_USER, name: 'Fondo de emergencia', target_amount: 3000000, saved_amount: 1150000, target_date: null, color: '#0ecb81', icon: 'ShieldCheck', created_at: now },
+    { id: uid(), user_id: LOCAL_USER, name: 'Vacaciones', target_amount: 2000000, saved_amount: 600000, target_date: new Date(today.getFullYear(), today.getMonth() + 5, 1).toISOString().slice(0, 10), color: '#50a0ff', icon: 'Plane', created_at: now },
+    { id: uid(), user_id: LOCAL_USER, name: 'Cambio de celular', target_amount: 1800000, saved_amount: 1800000, target_date: null, color: '#a855f7', icon: 'Smartphone', created_at: now },
+  ]
+
   const profile: Profile = {
     id: LOCAL_USER, display_name: 'Demo', currency: 'COP', theme,
     opening_balance: 500000, budgets: {}, activity_type: 'driver',
@@ -741,7 +786,7 @@ export function buildDemoStore(theme: ThemeMode = 'dark'): Store {
     cost_factor: 1.3, onboarded: true, created_at: now,
   }
 
-  return { profile, categories, incomes, expenses, debts, debtPayments, goals, workSessions, reminders, fixedExpenses }
+  return { profile, categories, incomes, expenses, debts, debtPayments, goals, workSessions, reminders, fixedExpenses, savingsGoals }
 }
 
 export function seedDemo(theme: ThemeMode = 'dark'): void {

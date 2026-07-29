@@ -14,6 +14,7 @@ import type {
   Profile,
   Reminder,
   ReminderCategory,
+  SavingsGoal,
   WorkSession,
 } from '@/types'
 
@@ -101,6 +102,15 @@ export interface FixedExpenseInput {
   count_in_target?: boolean
 }
 
+export interface SavingsGoalInput {
+  name: string
+  target_amount: number
+  saved_amount?: number
+  target_date?: string | null
+  color?: string
+  icon?: string
+}
+
 export interface Snapshot {
   profile: Profile
   categories: Category[]
@@ -112,6 +122,7 @@ export interface Snapshot {
   workSessions: WorkSession[]
   reminders: Reminder[]
   fixedExpenses: FixedExpense[]
+  savingsGoals: SavingsGoal[]
 }
 
 /** Storage-agnostic data access contract. */
@@ -156,6 +167,10 @@ export interface Database {
   createFixedExpense(input: FixedExpenseInput): Promise<FixedExpense>
   updateFixedExpense(id: string, patch: Partial<FixedExpenseInput>): Promise<FixedExpense>
   deleteFixedExpense(id: string): Promise<void>
+
+  createSavingsGoal(input: SavingsGoalInput): Promise<SavingsGoal>
+  updateSavingsGoal(id: string, patch: Partial<SavingsGoalInput>): Promise<SavingsGoal>
+  deleteSavingsGoal(id: string): Promise<void>
 
   /** Replace all data (used by import). */
   importAll(data: Partial<Snapshot>): Promise<Snapshot>

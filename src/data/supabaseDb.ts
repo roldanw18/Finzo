@@ -9,6 +9,7 @@ import type {
   Income,
   Profile,
   Reminder,
+  SavingsGoal,
   WorkSession,
 } from '@/types'
 import { DEFAULT_CATEGORIES } from '@/lib/defaultCategories'
@@ -22,6 +23,7 @@ import type {
   IncomeInput,
   PaymentInput,
   ReminderInput,
+  SavingsGoalInput,
   Snapshot,
   WorkSessionInput,
 } from './db'
@@ -40,17 +42,27 @@ export class SupabaseDatabase implements Database {
     if (categories.length === 0) {
       categories = await this.seedCategories()
     }
-    const [incomes, expenses, debts, debtPayments, goals, workSessions, reminders, fixedExpenses] =
-      await Promise.all([
-        this.fetchIncomes(),
-        this.fetchExpenses(),
-        this.safeList<Debt>('debts', 'priority', true),
-        this.safeList<DebtPayment>('debt_payments', 'date', false),
-        this.safeList<DebtGoal>('debt_goals', 'created_at', true),
-        this.safeList<WorkSession>('work_sessions', 'date', false),
-        this.safeList<Reminder>('reminders', 'date', true),
-        this.safeList<FixedExpense>('fixed_expenses', 'created_at', true),
-      ])
+    const [
+      incomes,
+      expenses,
+      debts,
+      debtPayments,
+      goals,
+      workSessions,
+      reminders,
+      fixedExpenses,
+      savingsGoals,
+    ] = await Promise.all([
+      this.fetchIncomes(),
+      this.fetchExpenses(),
+      this.safeList<Debt>('debts', 'priority', true),
+      this.safeList<DebtPayment>('debt_payments', 'date', false),
+      this.safeList<DebtGoal>('debt_goals', 'created_at', true),
+      this.safeList<WorkSession>('work_sessions', 'date', false),
+      this.safeList<Reminder>('reminders', 'date', true),
+      this.safeList<FixedExpense>('fixed_expenses', 'created_at', true),
+      this.safeList<SavingsGoal>('savings_goals', 'created_at', true),
+    ])
     return {
       profile,
       categories,
@@ -62,6 +74,7 @@ export class SupabaseDatabase implements Database {
       workSessions,
       reminders,
       fixedExpenses,
+      savingsGoals,
     }
   }
 
@@ -401,6 +414,23 @@ export class SupabaseDatabase implements Database {
   }
   deleteFixedExpense(id: string) {
     return this.remove('fixed_expenses', id)
+  }
+
+  createSavingsGoal(input: SavingsGoalInput) {
+    return this.insert<SavingsGoal>('savings_goals', {
+      name: input.name,
+      target_amount: input.target_amount,
+      saved_amount: input.saved_amount ?? 0,
+      target_date: input.target_date ?? null,
+      color: input.color ?? '#0ecb81',
+      icon: input.icon ?? 'PiggyBank',
+    })
+  }
+  updateSavingsGoal(id: string, patch: Partial<SavingsGoalInput>) {
+    return this.patch<SavingsGoal>('savings_goals', id, patch)
+  }
+  deleteSavingsGoal(id: string) {
+    return this.remove('savings_goals', id)
   }
 
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {

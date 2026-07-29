@@ -141,6 +141,20 @@ export interface WorkSession {
   created_at: string
 }
 
+/** A savings goal: money the user is setting aside toward a target. */
+export interface SavingsGoal {
+  id: string
+  user_id: string
+  name: string
+  target_amount: number
+  saved_amount: number
+  /** Optional deadline (yyyy-MM-dd) to pace contributions. */
+  target_date: string | null
+  color: string
+  icon: string
+  created_at: string
+}
+
 export interface FixedExpense {
   id: string
   user_id: string

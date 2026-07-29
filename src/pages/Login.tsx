@@ -4,11 +4,14 @@ import { motion } from 'framer-motion'
 import { Wallet, Loader2, Mail, Lock, TrendingUp, PieChart, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { GoogleButton } from '@/components/GoogleButton'
+import { LangSwitch } from '@/components/LangSwitch'
+import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 
 export function Login() {
   const signIn = useStore((s) => s.signIn)
   const signUp = useStore((s) => s.signUp)
+  const { t } = useI18n()
   const [params] = useSearchParams()
   const [mode, setMode] = useState<'signin' | 'signup'>(
     params.get('signup') ? 'signup' : 'signin',
@@ -20,7 +23,7 @@ export function Login() {
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!email || password.length < 6) {
-      toast.error('Correo válido y contraseña de 6+ caracteres')
+      toast.error(t('login.validation'))
       return
     }
     setLoading(true)
@@ -30,7 +33,7 @@ export function Login() {
       } else {
         const { needsConfirm } = await signUp(email, password)
         if (needsConfirm) {
-          toast.info('Revisa tu correo para confirmar la cuenta')
+          toast.info(t('login.confirmEmail'))
           setMode('signin')
         }
       }
@@ -61,24 +64,19 @@ export function Login() {
         </div>
 
         <div className="relative max-w-md">
-          <h1 className="font-display text-4xl font-bold leading-tight">
-            Toma el control de tu dinero.
-          </h1>
-          <p className="mt-4 text-muted">
-            Registra tus ingresos en segundos, controla tus gastos y entiende tus
-            hábitos con análisis claros e inteligentes. Se adapta a tu oficio.
-          </p>
+          <h1 className="font-display text-4xl font-bold leading-tight">{t('login.brand.title')}</h1>
+          <p className="mt-4 text-muted">{t('login.brand.subtitle')}</p>
           <div className="mt-8 space-y-3">
-            {[
-              { icon: TrendingUp, text: 'Registro de movimientos en menos de 10s' },
-              { icon: PieChart, text: 'Dashboard con KPIs y gráficos interactivos' },
-              { icon: ShieldCheck, text: 'Tus datos seguros y sincronizados en la nube' },
-            ].map((f, i) => (
+            {([
+              { icon: TrendingUp, text: 'login.brand.feat1' },
+              { icon: PieChart, text: 'login.brand.feat2' },
+              { icon: ShieldCheck, text: 'login.brand.feat3' },
+            ] as const).map((f, i) => (
               <div key={i} className="flex items-center gap-3 text-sm text-content">
                 <span className="grid h-8 w-8 place-items-center rounded-lg bg-surface text-primary">
                   <f.icon size={16} />
                 </span>
-                {f.text}
+                {t(f.text)}
               </div>
             ))}
           </div>
@@ -93,12 +91,15 @@ export function Login() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-sm"
         >
-          <Link
-            to="/"
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-content"
-          >
-            <ArrowLeft size={15} /> Volver al inicio
-          </Link>
+          <div className="mb-6 flex items-center justify-between">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-sm text-muted transition hover:text-content"
+            >
+              <ArrowLeft size={15} /> {t('login.back')}
+            </Link>
+            <LangSwitch />
+          </div>
 
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-contrast">
@@ -108,12 +109,10 @@ export function Login() {
           </div>
 
           <h2 className="font-display text-2xl font-bold">
-            {mode === 'signin' ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
+            {mode === 'signin' ? t('login.welcome') : t('login.createTitle')}
           </h2>
           <p className="mt-1 text-sm text-muted">
-            {mode === 'signin'
-              ? 'Ingresa para continuar con tus finanzas'
-              : 'Empieza a controlar tus ingresos y gastos'}
+            {mode === 'signin' ? t('login.welcomeSub') : t('login.createSub')}
           </p>
 
           <div className="mt-6">
@@ -121,13 +120,13 @@ export function Login() {
           </div>
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-xs text-subtle">o con tu correo</span>
+            <span className="text-xs text-subtle">{t('login.orEmail')}</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <label className="label">Correo electrónico</label>
+              <label className="label">{t('login.email')}</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-subtle" />
                 <input
@@ -141,7 +140,7 @@ export function Login() {
               </div>
             </div>
             <div>
-              <label className="label">Contraseña</label>
+              <label className="label">{t('login.password')}</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-subtle" />
                 <input
@@ -158,20 +157,20 @@ export function Login() {
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : mode === 'signin' ? (
-                'Iniciar sesión'
+                t('login.signin')
               ) : (
-                'Crear cuenta'
+                t('login.signup')
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted">
-            {mode === 'signin' ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
+            {mode === 'signin' ? t('login.noAccount') : t('login.hasAccount')}{' '}
             <button
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="font-semibold text-primary hover:underline"
             >
-              {mode === 'signin' ? 'Regístrate' : 'Inicia sesión'}
+              {mode === 'signin' ? t('login.doSignup') : t('login.doSignin')}
             </button>
           </p>
         </motion.div>

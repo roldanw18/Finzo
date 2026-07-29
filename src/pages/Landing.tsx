@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useStore } from '@/store/useStore'
+import { useI18n } from '@/i18n'
+import { LangSwitch } from '@/components/LangSwitch'
+import type { TKey } from '@/i18n/dict'
 import {
   Wallet,
   ArrowRight,
@@ -16,43 +19,27 @@ import {
   Check,
 } from 'lucide-react'
 
-const FEATURES = [
-  {
-    icon: TrendingUp,
-    title: 'Registro en 10 segundos',
-    text: 'Anota ingresos y gastos al instante. Categorías, método de pago y notas, sin fricción.',
-  },
-  {
-    icon: PieChart,
-    title: 'Dashboard y análisis',
-    text: 'KPIs, gráficos interactivos, tendencias y alertas que te dicen dónde se va tu dinero.',
-  },
-  {
-    icon: Target,
-    title: 'Plan de deudas (Avalancha)',
-    text: 'Sabe cuál atacar primero, simula abonos y proyecta cuándo quedas libre de deudas.',
-  },
-  {
-    icon: Gauge,
-    title: 'Meta diaria de ingresos',
-    text: 'Cuánto producir al día para cubrir tus obligaciones, contando tus días de descanso.',
-  },
-  {
-    icon: CreditCard,
-    title: 'Tarjetas y gastos fijos',
-    text: 'Compras a crédito que suman a la deuda sin tocar tu saldo, y control de gastos fijos.',
-  },
-  {
-    icon: Smartphone,
-    title: 'Instálala en tu celular',
-    text: 'Funciona como app (PWA), con modo oscuro, y sincroniza entre todos tus dispositivos.',
-  },
+const FEATURES: { icon: typeof TrendingUp; title: TKey; text: TKey }[] = [
+  { icon: TrendingUp, title: 'feat.record.title', text: 'feat.record.text' },
+  { icon: PieChart, title: 'feat.dashboard.title', text: 'feat.dashboard.text' },
+  { icon: Target, title: 'feat.debt.title', text: 'feat.debt.text' },
+  { icon: Gauge, title: 'feat.goal.title', text: 'feat.goal.text' },
+  { icon: CreditCard, title: 'feat.cards.title', text: 'feat.cards.text' },
+  { icon: Smartphone, title: 'feat.pwa.title', text: 'feat.pwa.text' },
 ]
 
-const OCCUPATIONS = ['🚗 Conductor', '💈 Barbería', '🛵 Domicilios', '🏪 Negocio', '💻 Freelance', '💼 Empleado']
+const OCCUPATIONS: { emoji: string; key: TKey }[] = [
+  { emoji: '🚗', key: 'occ.driver' },
+  { emoji: '💈', key: 'occ.barber' },
+  { emoji: '🛵', key: 'occ.delivery' },
+  { emoji: '🏪', key: 'occ.shop' },
+  { emoji: '💻', key: 'occ.freelance' },
+  { emoji: '💼', key: 'occ.employee' },
+]
 
 export function Landing() {
   const enterDemo = useStore((s) => s.enterDemo)
+  const { t } = useI18n()
   return (
     <div className="min-h-screen bg-bg text-content">
       {/* Nav */}
@@ -65,14 +52,15 @@ export function Landing() {
             <span className="font-display text-xl font-bold">Finzo</span>
           </div>
           <div className="flex items-center gap-2">
+            <LangSwitch className="mr-1" />
             <button onClick={() => enterDemo()} className="btn-ghost hidden sm:inline-flex">
-              <PlayCircle size={16} /> Probar
+              <PlayCircle size={16} /> {t('nav.try')}
             </button>
             <Link to="/login" className="btn-ghost hidden sm:inline-flex">
-              Iniciar sesión
+              {t('nav.login')}
             </Link>
             <Link to="/login?signup=1" className="btn-primary">
-              Empezar gratis
+              {t('nav.signup')}
             </Link>
           </div>
         </div>
@@ -95,39 +83,34 @@ export function Landing() {
             transition={{ duration: 0.5 }}
           >
             <span className="chip mb-4 bg-primary/10 text-xs font-semibold text-primary">
-              <Sparkles size={13} /> Se adapta a tu oficio
+              <Sparkles size={13} /> {t('hero.badge')}
             </span>
             <h1 className="font-display text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Tus finanzas,{' '}
+              {t('hero.title.pre')}
               <span className="bg-gradient-to-r from-primary to-income bg-clip-text text-transparent">
-                bajo control
+                {t('hero.title.highlight')}
               </span>
               .
             </h1>
-            <p className="mt-5 max-w-lg text-lg text-muted">
-              Controla ingresos y gastos, sal de deudas con un plan claro y sabe cuánto producir al
-              día. Pensada para quien vive de su trabajo diario.
-            </p>
+            <p className="mt-5 max-w-lg text-lg text-muted">{t('hero.subtitle')}</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/login?signup=1" className="btn-primary px-6 py-3 text-base">
-                Crear cuenta gratis <ArrowRight size={18} />
+                {t('hero.cta.create')} <ArrowRight size={18} />
               </Link>
               <button onClick={() => enterDemo()} className="btn-outline px-6 py-3 text-base">
-                <PlayCircle size={18} /> Probar la app
+                <PlayCircle size={18} /> {t('hero.cta.try')}
               </button>
             </div>
-            <p className="mt-2 text-xs text-subtle">
-              El modo demo carga datos de ejemplo. No necesitas cuenta ni afecta nada.
-            </p>
+            <p className="mt-2 text-xs text-subtle">{t('hero.demoNote')}</p>
             <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
               <span className="flex items-center gap-1.5">
-                <Check size={15} className="text-income" /> Gratis
+                <Check size={15} className="text-income" /> {t('hero.badge.free')}
               </span>
               <span className="flex items-center gap-1.5">
-                <Check size={15} className="text-income" /> Sin tarjeta
+                <Check size={15} className="text-income" /> {t('hero.badge.noCard')}
               </span>
               <span className="flex items-center gap-1.5">
-                <ShieldCheck size={15} className="text-income" /> Tus datos, privados
+                <ShieldCheck size={15} className="text-income" /> {t('hero.badge.private')}
               </span>
             </div>
           </motion.div>
@@ -142,7 +125,7 @@ export function Landing() {
             <div className="rounded-3xl border border-border bg-gradient-to-br from-surface to-bg-soft p-5 shadow-card-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted">Dinero disponible</p>
+                  <p className="text-xs text-muted">{t('mockup.available')}</p>
                   <p className="tnum font-display text-3xl font-bold">$2.450.000</p>
                 </div>
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/12 text-primary">
@@ -151,11 +134,11 @@ export function Landing() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2.5">
                 <div className="rounded-xl bg-income/10 p-3">
-                  <p className="text-[11px] text-muted">Ingresos mes</p>
+                  <p className="text-[11px] text-muted">{t('mockup.incomeMonth')}</p>
                   <p className="tnum text-lg font-bold text-income">$4.8M</p>
                 </div>
                 <div className="rounded-xl bg-expense/10 p-3">
-                  <p className="text-[11px] text-muted">Gastos mes</p>
+                  <p className="text-[11px] text-muted">{t('mockup.expenseMonth')}</p>
                   <p className="tnum text-lg font-bold text-expense">$2.3M</p>
                 </div>
               </div>
@@ -174,7 +157,7 @@ export function Landing() {
               <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-income/25 bg-income/[0.07] p-3">
                 <Gauge size={18} className="text-income" />
                 <div>
-                  <p className="text-[11px] text-muted">Meta diaria</p>
+                  <p className="text-[11px] text-muted">{t('mockup.dailyGoal')}</p>
                   <p className="tnum text-sm font-bold text-income">$92.000/día</p>
                 </div>
               </div>
@@ -185,12 +168,12 @@ export function Landing() {
         {/* Occupations strip */}
         <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
           <p className="mb-3 text-center text-xs uppercase tracking-widest text-subtle">
-            Hecha para tu día a día
+            {t('occ.title')}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {OCCUPATIONS.map((o) => (
-              <span key={o} className="chip border border-border bg-surface text-sm text-muted">
-                {o}
+              <span key={o.key} className="chip border border-border bg-surface text-sm text-muted">
+                {o.emoji} {t(o.key)}
               </span>
             ))}
           </div>
@@ -200,10 +183,8 @@ export function Landing() {
       {/* Features */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-bold sm:text-4xl">Todo lo que necesitas</h2>
-          <p className="mt-3 text-muted">
-            De registrar un gasto en segundos a un plan completo para salir de deudas.
-          </p>
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('features.title')}</h2>
+          <p className="mt-3 text-muted">{t('features.subtitle')}</p>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
@@ -218,8 +199,8 @@ export function Landing() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/12 text-primary">
                 <f.icon size={22} />
               </span>
-              <h3 className="mt-4 font-display text-lg font-semibold">{f.title}</h3>
-              <p className="mt-1.5 text-sm text-muted">{f.text}</p>
+              <h3 className="mt-4 font-display text-lg font-semibold">{t(f.title)}</h3>
+              <p className="mt-1.5 text-sm text-muted">{t(f.text)}</p>
             </motion.div>
           ))}
         </div>
@@ -229,20 +210,20 @@ export function Landing() {
       <section className="border-y border-border/60 bg-bg-soft">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <h2 className="text-center font-display text-3xl font-bold sm:text-4xl">
-            Empieza en 3 pasos
+            {t('how.title')}
           </h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
-            {[
-              { n: 1, t: 'Crea tu cuenta', d: 'Regístrate gratis y dinos a qué te dedicas. Configuramos todo por ti.' },
-              { n: 2, t: 'Registra tu día', d: 'Ingresos, gastos y tus deudas. En segundos y desde el celular.' },
-              { n: 3, t: 'Toma el control', d: 'Mira tu meta diaria, tu plan de deudas y hacia dónde va tu dinero.' },
-            ].map((s) => (
+            {([
+              { n: 1, t: 'how.step1.title', d: 'how.step1.text' },
+              { n: 2, t: 'how.step2.title', d: 'how.step2.text' },
+              { n: 3, t: 'how.step3.title', d: 'how.step3.text' },
+            ] as const).map((s) => (
               <div key={s.n} className="text-center">
                 <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary font-display text-xl font-bold text-primary-contrast">
                   {s.n}
                 </span>
-                <h3 className="mt-4 font-display text-lg font-semibold">{s.t}</h3>
-                <p className="mt-1.5 text-sm text-muted">{s.d}</p>
+                <h3 className="mt-4 font-display text-lg font-semibold">{t(s.t)}</h3>
+                <p className="mt-1.5 text-sm text-muted">{t(s.d)}</p>
               </div>
             ))}
           </div>
@@ -251,14 +232,10 @@ export function Landing() {
 
       {/* Final CTA */}
       <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6">
-        <h2 className="font-display text-3xl font-bold sm:text-4xl">
-          Empieza a construir tu libertad financiera hoy
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-muted">
-          Gratis, sin tarjeta y en tu idioma. Únete y toma el control de tu dinero.
-        </p>
+        <h2 className="font-display text-3xl font-bold sm:text-4xl">{t('cta.title')}</h2>
+        <p className="mx-auto mt-3 max-w-xl text-muted">{t('cta.subtitle')}</p>
         <Link to="/login?signup=1" className="btn-primary mt-8 px-8 py-3.5 text-base">
-          Crear mi cuenta gratis <ArrowRight size={18} />
+          {t('cta.button')} <ArrowRight size={18} />
         </Link>
       </section>
 
@@ -271,7 +248,7 @@ export function Landing() {
             </span>
             <span className="font-display font-bold">Finzo</span>
           </div>
-          <p className="text-xs text-subtle">© {new Date().getFullYear()} Finzo · Gestión financiera personal</p>
+          <p className="text-xs text-subtle">© {new Date().getFullYear()} Finzo · {t('footer.tagline')}</p>
         </div>
       </footer>
     </div>

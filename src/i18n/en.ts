@@ -935,4 +935,18 @@ export const EN: Record<string, string> = {
     'Log expenses to see the category ranking.',
   '+{n} categorías más': '+{n} more categories',
   'Sin gastos en el periodo': 'No expenses in the period',
+
+  // ---- Currency conversion ----
+  'Convertir moneda': 'Convert currency',
+  'Convertir de {a} a {b}': 'Convert from {a} to {b}',
+  'Tasa de cambio (1 USD = ? COP)': 'Exchange rate (1 USD = ? COP)',
+  'Obteniendo tasa actual…': 'Getting current rate…',
+  'No pude obtener la tasa automáticamente. Ingrésala manualmente.':
+    "Couldn't fetch the rate automatically. Enter it manually.",
+  'Ejemplo:': 'Example:',
+  'Se convertirán TODOS tus montos guardados (ingresos, gastos, deudas, presupuestos, ahorros y más) con esta tasa. Esta acción reescribe tus datos.':
+    'ALL your stored amounts (income, expenses, debts, budgets, savings and more) will be converted at this rate. This rewrites your data.',
+  'Convertir todo': 'Convert everything',
+  'Ingresa una tasa válida': 'Enter a valid rate',
+  'Moneda convertida a {c} ✓': 'Currency converted to {c} ✓',
 }

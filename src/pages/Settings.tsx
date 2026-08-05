@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   User,
   Coins,
@@ -16,16 +16,20 @@ import {
   PlayCircle,
   Languages,
 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { LangSwitch } from '@/components/LangSwitch'
 import { ActivitySettings } from '@/components/ActivitySettings'
 import { Card, CardHeader } from '@/components/ui/Card'
+import { Modal } from '@/components/ui/Modal'
 import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
 import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
+import { fetchUsdToCop, FALLBACK_USD_COP } from '@/lib/exchange'
+import { formatMoney } from '@/lib/utils'
 import type { Currency, ThemeMode } from '@/types'
 
 export function Settings() {
@@ -36,7 +40,6 @@ export function Settings() {
   const categories = useStore((s) => s.categories)
   const incomes = useStore((s) => s.incomes)
   const expenses = useStore((s) => s.expenses)
-  const setCurrency = useStore((s) => s.setCurrency)
   const setTheme = useStore((s) => s.setTheme)
   const saveProfile = useStore((s) => s.saveProfile)
   const signOut = useStore((s) => s.signOut)
@@ -49,6 +52,7 @@ export function Settings() {
   const [name, setName] = useState(profile?.display_name ?? '')
   const [opening, setOpening] = useState(profile?.opening_balance ?? 0)
   const [savingProfile, setSavingProfile] = useState(false)
+  const [pendingCurrency, setPendingCurrency] = useState<Currency | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function onSaveProfile() {
@@ -142,8 +146,7 @@ export function Settings() {
         <Segmented
           value={currency}
           onChange={(v: Currency) => {
-            setCurrency(v)
-            toast.success(`${t('Moneda')}: ${v}`)
+            if (v !== currency) setPendingCurrency(v)
           }}
           options={[
             { value: 'COP', label: t('Peso (COP) $') },
@@ -156,6 +159,21 @@ export function Settings() {
             : t('Formato con decimales: $1,250.00')}
         </p>
       </Card>
+
+      <Modal
+        open={pendingCurrency !== null}
+        onClose={() => setPendingCurrency(null)}
+        title={t('Convertir moneda')}
+        maxWidth="max-w-sm"
+      >
+        {pendingCurrency && (
+          <CurrencyConvertForm
+            from={currency}
+            to={pendingCurrency}
+            onDone={() => setPendingCurrency(null)}
+          />
+        )}
+      </Modal>
 
       {/* Theme */}
       <Card>
@@ -267,6 +285,118 @@ export function Settings() {
       <p className="pb-2 text-center text-xs text-subtle">
         {t('Finzo · Gestión financiera personal · v1.0')}
       </p>
+    </div>
+  )
+}
+
+const CURRENCY_NAMES: Record<Currency, string> = { COP: 'COP', USD: 'USD' }
+
+function CurrencyConvertForm({
+  from,
+  to,
+  onDone,
+}: {
+  from: Currency
+  to: Currency
+  onDone: () => void
+}) {
+  const { t } = useI18n()
+  const convertCurrency = useStore((s) => s.convertCurrency)
+  const [rate, setRate] = useState<number>(FALLBACK_USD_COP)
+  const [loading, setLoading] = useState(true)
+  const [fetchFailed, setFetchFailed] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    setLoading(true)
+    fetchUsdToCop().then((r) => {
+      if (!alive) return
+      if (r) setRate(Math.round(r * 100) / 100)
+      else setFetchFailed(true)
+      setLoading(false)
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  // Live example so the user can sanity-check the rate before converting.
+  const example =
+    to === 'USD'
+      ? `${formatMoney(100000, 'COP')} → ${formatMoney(100000 / (rate || 1), 'USD')}`
+      : `${formatMoney(25, 'USD')} → ${formatMoney(25 * (rate || 0), 'COP')}`
+
+  async function convert() {
+    if (!rate || rate <= 0) return toast.error(t('Ingresa una tasa válida'))
+    setBusy(true)
+    try {
+      await convertCurrency(to, rate)
+      toast.success(t('Moneda convertida a {c} ✓').replace('{c}', CURRENCY_NAMES[to]))
+      onDone()
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-content">
+        {t('Convertir de {a} a {b}')
+          .replace('{a}', CURRENCY_NAMES[from])
+          .replace('{b}', CURRENCY_NAMES[to])}
+      </p>
+
+      <div>
+        <label className="label">{t('Tasa de cambio (1 USD = ? COP)')}</label>
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm text-muted">
+            <Loader2 size={15} className="animate-spin" /> {t('Obteniendo tasa actual…')}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted">1 USD =</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={rate || ''}
+                onChange={(e) => setRate(Number(e.target.value))}
+                className="input flex-1"
+                step="0.01"
+                min={0}
+                autoFocus
+              />
+              <span className="text-sm text-muted">COP</span>
+            </div>
+            {fetchFailed && (
+              <p className="mt-1 text-xs text-warning">
+                {t('No pude obtener la tasa automáticamente. Ingrésala manualmente.')}
+              </p>
+            )}
+            <p className="mt-1.5 text-xs text-muted">
+              {t('Ejemplo:')} <span className="tnum text-content">{example}</span>
+            </p>
+          </>
+        )}
+      </div>
+
+      <p className="rounded-xl bg-warning/10 p-3 text-xs text-warning">
+        {t(
+          'Se convertirán TODOS tus montos guardados (ingresos, gastos, deudas, presupuestos, ahorros y más) con esta tasa. Esta acción reescribe tus datos.',
+        )}
+      </p>
+
+      <div className="flex gap-3">
+        <button onClick={onDone} disabled={busy} className="btn-ghost flex-1">
+          {t('Cancelar')}
+        </button>
+        <button onClick={convert} disabled={busy || loading} className="btn-primary flex-1">
+          {busy ? <Loader2 size={16} className="animate-spin" /> : t('Convertir todo')}
+        </button>
+      </div>
     </div>
   )
 }

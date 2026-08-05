@@ -1,5 +1,6 @@
 import type {
   Category,
+  Currency,
   Debt,
   DebtGoal,
   DebtPayment,
@@ -14,6 +15,7 @@ import type {
 } from '@/types'
 import { DEFAULT_CATEGORIES } from '@/lib/defaultCategories'
 import { activityPreset } from '@/config/activities'
+import { roundFor } from '@/lib/exchange'
 import { uid } from '@/lib/utils'
 import type {
   CategoryInput,
@@ -470,6 +472,44 @@ export class LocalDatabase implements Database {
     const s = read(this.key)
     s.savingsGoals = s.savingsGoals.filter((g) => g.id !== id)
     write(s, this.key)
+  }
+
+  async convertCurrency(factor: number, newCurrency: Currency): Promise<Snapshot> {
+    const s = read(this.key)
+    const c = (n: number) => roundFor(newCurrency, n * factor)
+    s.profile.currency = newCurrency
+    s.profile.opening_balance = c(s.profile.opening_balance)
+    s.profile.budgets = Object.fromEntries(
+      Object.entries(s.profile.budgets ?? {}).map(([k, v]) => [k, c(v)]),
+    )
+    s.incomes = s.incomes.map((i) => ({ ...i, amount: c(i.amount) }))
+    s.expenses = s.expenses.map((e) => ({ ...e, amount: c(e.amount) }))
+    s.debts = s.debts.map((d) => ({
+      ...d,
+      balance: c(d.balance),
+      initial_balance: c(d.initial_balance),
+      min_payment: c(d.min_payment),
+      target_payment: c(d.target_payment),
+      credit_limit: d.credit_limit != null ? c(d.credit_limit) : d.credit_limit,
+    }))
+    s.debtPayments = s.debtPayments.map((p) => ({ ...p, amount: c(p.amount) }))
+    s.reminders = s.reminders.map((r) => ({
+      ...r,
+      amount: r.amount != null ? c(r.amount) : r.amount,
+    }))
+    s.fixedExpenses = s.fixedExpenses.map((f) => ({ ...f, amount: c(f.amount) }))
+    s.savingsGoals = s.savingsGoals.map((g) => ({
+      ...g,
+      target_amount: c(g.target_amount),
+      saved_amount: c(g.saved_amount),
+    }))
+    s.workSessions = s.workSessions.map((w) => ({
+      ...w,
+      earnings: c(w.earnings),
+      fuel_cost: c(w.fuel_cost),
+    }))
+    write(s, this.key)
+    return structuredClone(s)
   }
 
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   Category,
+  Currency,
   Debt,
   DebtGoal,
   DebtPayment,
@@ -13,6 +14,7 @@ import type {
   WorkSession,
 } from '@/types'
 import { DEFAULT_CATEGORIES } from '@/lib/defaultCategories'
+import { roundFor } from '@/lib/exchange'
 import type {
   CategoryInput,
   Database,
@@ -431,6 +433,61 @@ export class SupabaseDatabase implements Database {
   }
   deleteSavingsGoal(id: string) {
     return this.remove('savings_goals', id)
+  }
+
+  async convertCurrency(factor: number, newCurrency: Currency): Promise<Snapshot> {
+    const snap = await this.bootstrap()
+    const c = (n: number) => roundFor(newCurrency, n * factor)
+
+    // Profile: currency, opening balance and per-category budgets.
+    const budgets = Object.fromEntries(
+      Object.entries(snap.profile.budgets ?? {}).map(([k, v]) => [k, c(v)]),
+    )
+    await this.updateProfile({
+      currency: newCurrency,
+      opening_balance: c(snap.profile.opening_balance),
+      budgets,
+    })
+
+    const bulk = async (table: string, rows: object[]) => {
+      if (rows.length === 0) return
+      const { error } = await this.sb.from(table).upsert(rows)
+      if (error) throw error
+    }
+
+    await bulk('incomes', snap.incomes.map((i) => ({ ...i, amount: c(i.amount) })))
+    await bulk('expenses', snap.expenses.map((e) => ({ ...e, amount: c(e.amount) })))
+    await bulk(
+      'debts',
+      snap.debts.map((d) => ({
+        ...d,
+        balance: c(d.balance),
+        initial_balance: c(d.initial_balance),
+        min_payment: c(d.min_payment),
+        target_payment: c(d.target_payment),
+        credit_limit: d.credit_limit != null ? c(d.credit_limit) : d.credit_limit,
+      })),
+    )
+    await bulk('debt_payments', snap.debtPayments.map((p) => ({ ...p, amount: c(p.amount) })))
+    await bulk(
+      'reminders',
+      snap.reminders.map((r) => ({ ...r, amount: r.amount != null ? c(r.amount) : r.amount })),
+    )
+    await bulk('fixed_expenses', snap.fixedExpenses.map((f) => ({ ...f, amount: c(f.amount) })))
+    await bulk(
+      'savings_goals',
+      snap.savingsGoals.map((g) => ({
+        ...g,
+        target_amount: c(g.target_amount),
+        saved_amount: c(g.saved_amount),
+      })),
+    )
+    await bulk(
+      'work_sessions',
+      snap.workSessions.map((w) => ({ ...w, earnings: c(w.earnings), fuel_cost: c(w.fuel_cost) })),
+    )
+
+    return this.bootstrap()
   }
 
   async importAll(data: Partial<Snapshot>): Promise<Snapshot> {

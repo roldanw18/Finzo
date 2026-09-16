@@ -1,5 +1,3 @@
-import type { Currency } from '@/types'
-
 /** Fallback COP per 1 USD, used only if the live rate can't be fetched. */
 export const FALLBACK_USD_COP = 4000
 
@@ -18,17 +16,4 @@ export async function fetchUsdToCop(): Promise<number | null> {
   } catch {
     return null
   }
-}
-
-/** Rounds a converted amount to the precision of the target currency. */
-export function roundFor(currency: Currency, value: number): number {
-  return currency === 'USD' ? Math.round(value * 100) / 100 : Math.round(value)
-}
-
-/**
- * Conversion factor to multiply amounts by, going to `to` currency.
- * `rate` is COP per 1 USD. Since only COP/USD exist, `to` implies the direction.
- */
-export function conversionFactor(to: Currency, rate: number): number {
-  return to === 'USD' ? 1 / rate : rate
 }

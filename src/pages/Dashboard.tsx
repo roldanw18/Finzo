@@ -50,7 +50,7 @@ function greeting(): string {
 export function Dashboard() {
   const { incomes, expenses, categories, debtPayments, debts, profile, kpis, movements } =
     useAnalytics()
-  const { money } = useMoney()
+  const { money, convert, view } = useMoney()
   const { t } = useI18n()
   const openExpense = useUI((s) => s.openExpense)
   const openIncome = useUI((s) => s.openIncome)
@@ -127,8 +127,8 @@ export function Dashboard() {
               <span className="text-sm">{t('Dinero disponible')}</span>
             </div>
             <AnimatedNumber
-              value={kpis.available}
-              currency={profile?.currency ?? 'COP'}
+              value={convert(kpis.available)}
+              currency={view}
               className="tnum mt-1 block font-display text-4xl font-bold tracking-tight sm:text-5xl"
             />
             {debts.length > 0 && (

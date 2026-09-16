@@ -1,6 +1,5 @@
 import type {
   Category,
-  Currency,
   Debt,
   DebtGoal,
   DebtPayment,
@@ -172,12 +171,6 @@ export interface Database {
   createSavingsGoal(input: SavingsGoalInput): Promise<SavingsGoal>
   updateSavingsGoal(id: string, patch: Partial<SavingsGoalInput>): Promise<SavingsGoal>
   deleteSavingsGoal(id: string): Promise<void>
-
-  /**
-   * Converts every stored monetary value by `factor` and sets the new currency.
-   * Non-money fields (rates, counts, days, cost factor) are left untouched.
-   */
-  convertCurrency(factor: number, newCurrency: Currency): Promise<Snapshot>
 
   /** Replace all data (used by import). */
   importAll(data: Partial<Snapshot>): Promise<Snapshot>

@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Lang } from '@/i18n/dict'
+import type { Currency } from '@/types'
+import { FALLBACK_USD_COP } from '@/lib/exchange'
 
 function detectLang(): Lang {
   if (typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('en')) {
@@ -17,6 +19,16 @@ interface Prefs {
   /** UI language. */
   lang: Lang
   setLang: (v: Lang) => void
+  /**
+   * Currency to DISPLAY amounts in. null = show them in the base currency
+   * (profile.currency) as stored. This is a view-only overlay: it never
+   * changes stored data, so switching back always shows the exact originals.
+   */
+  displayCurrency: Currency | null
+  setDisplayCurrency: (v: Currency | null) => void
+  /** Exchange rate used for the display overlay: COP per 1 USD. */
+  rate: number
+  setRate: (v: number) => void
 }
 
 export const usePrefs = create<Prefs>()(
@@ -26,6 +38,10 @@ export const usePrefs = create<Prefs>()(
       setUseAvailableInTarget: (v) => set({ useAvailableInTarget: v }),
       lang: detectLang(),
       setLang: (v) => set({ lang: v }),
+      displayCurrency: null,
+      setDisplayCurrency: (v) => set({ displayCurrency: v }),
+      rate: FALLBACK_USD_COP,
+      setRate: (v) => set({ rate: v }),
     }),
     { name: 'finzo:prefs' },
   ),

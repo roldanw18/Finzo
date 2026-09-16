@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   User,
   Coins,
@@ -21,15 +21,14 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { LangSwitch } from '@/components/LangSwitch'
 import { ActivitySettings } from '@/components/ActivitySettings'
 import { Card, CardHeader } from '@/components/ui/Card'
-import { Modal } from '@/components/ui/Modal'
 import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { useStore } from '@/store/useStore'
+import { usePrefs } from '@/store/prefs'
 import { useMoney } from '@/hooks/useMoney'
 import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
-import { fetchUsdToCop, FALLBACK_USD_COP } from '@/lib/exchange'
-import { formatMoney } from '@/lib/utils'
+import { fetchUsdToCop } from '@/lib/exchange'
 import type { Currency, ThemeMode } from '@/types'
 
 export function Settings() {
@@ -52,7 +51,6 @@ export function Settings() {
   const [name, setName] = useState(profile?.display_name ?? '')
   const [opening, setOpening] = useState(profile?.opening_balance ?? 0)
   const [savingProfile, setSavingProfile] = useState(false)
-  const [pendingCurrency, setPendingCurrency] = useState<Currency | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   async function onSaveProfile() {
@@ -137,43 +135,7 @@ export function Settings() {
       <ActivitySettings />
 
       {/* Currency */}
-      <Card>
-        <CardHeader
-          title={t('Moneda')}
-          subtitle={t('Cómo se muestran los montos')}
-          icon={<Coins size={18} className="text-primary" />}
-        />
-        <Segmented
-          value={currency}
-          onChange={(v: Currency) => {
-            if (v !== currency) setPendingCurrency(v)
-          }}
-          options={[
-            { value: 'COP', label: t('Peso (COP) $') },
-            { value: 'USD', label: t('Dólar (USD) $') },
-          ]}
-        />
-        <p className="mt-3 text-xs text-muted">
-          {currency === 'COP'
-            ? t('Formato sin decimales: $ 1.250.000')
-            : t('Formato con decimales: $1,250.00')}
-        </p>
-      </Card>
-
-      <Modal
-        open={pendingCurrency !== null}
-        onClose={() => setPendingCurrency(null)}
-        title={t('Convertir moneda')}
-        maxWidth="max-w-sm"
-      >
-        {pendingCurrency && (
-          <CurrencyConvertForm
-            from={currency}
-            to={pendingCurrency}
-            onDone={() => setPendingCurrency(null)}
-          />
-        )}
-      </Modal>
+      <CurrencyCard />
 
       {/* Theme */}
       <Card>
@@ -289,114 +251,98 @@ export function Settings() {
   )
 }
 
-const CURRENCY_NAMES: Record<Currency, string> = { COP: 'COP', USD: 'USD' }
-
-function CurrencyConvertForm({
-  from,
-  to,
-  onDone,
-}: {
-  from: Currency
-  to: Currency
-  onDone: () => void
-}) {
+/**
+ * Non-destructive currency control. The base currency (profile.currency) is
+ * where data is stored and never changes. The "view in" toggle only changes how
+ * amounts are displayed, using a rate — switching back shows the exact originals.
+ */
+function CurrencyCard() {
   const { t } = useI18n()
-  const convertCurrency = useStore((s) => s.convertCurrency)
-  const [rate, setRate] = useState<number>(FALLBACK_USD_COP)
-  const [loading, setLoading] = useState(true)
-  const [fetchFailed, setFetchFailed] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const base = useStore((s) => s.profile?.currency ?? 'COP') as Currency
+  const displayCurrency = usePrefs((s) => s.displayCurrency)
+  const rate = usePrefs((s) => s.rate)
+  const setDisplayCurrency = usePrefs((s) => s.setDisplayCurrency)
+  const setRate = usePrefs((s) => s.setRate)
+  const [fetching, setFetching] = useState(false)
 
-  useEffect(() => {
-    let alive = true
-    setLoading(true)
-    fetchUsdToCop().then((r) => {
-      if (!alive) return
-      if (r) setRate(Math.round(r * 100) / 100)
-      else setFetchFailed(true)
-      setLoading(false)
-    })
-    return () => {
-      alive = false
+  const view: Currency = displayCurrency ?? base
+
+  async function refreshRate() {
+    setFetching(true)
+    const r = await fetchUsdToCop()
+    setFetching(false)
+    if (r) {
+      setRate(Math.round(r * 100) / 100)
+      toast.success(t('Tasa actualizada ✓'))
+    } else {
+      toast.error(t('No pude obtener la tasa automáticamente. Ingrésala manualmente.'))
     }
-  }, [])
+  }
 
-  // Live example so the user can sanity-check the rate before converting.
-  const example =
-    to === 'USD'
-      ? `${formatMoney(100000, 'COP')} → ${formatMoney(100000 / (rate || 1), 'USD')}`
-      : `${formatMoney(25, 'USD')} → ${formatMoney(25 * (rate || 0), 'COP')}`
-
-  async function convert() {
-    if (!rate || rate <= 0) return toast.error(t('Ingresa una tasa válida'))
-    setBusy(true)
-    try {
-      await convertCurrency(to, rate)
-      toast.success(t('Moneda convertida a {c} ✓').replace('{c}', CURRENCY_NAMES[to]))
-      onDone()
-    } catch (e) {
-      toast.error((e as Error).message)
-    } finally {
-      setBusy(false)
+  function pick(v: Currency) {
+    if (v === base) {
+      setDisplayCurrency(null)
+    } else {
+      setDisplayCurrency(v)
+      void refreshRate()
     }
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-content">
-        {t('Convertir de {a} a {b}')
-          .replace('{a}', CURRENCY_NAMES[from])
-          .replace('{b}', CURRENCY_NAMES[to])}
+    <Card>
+      <CardHeader
+        title={t('Moneda')}
+        subtitle={t('Cómo se muestran los montos')}
+        icon={<Coins size={18} className="text-primary" />}
+      />
+      <p className="mb-3 text-xs text-muted">
+        {t('Moneda principal: {c}. Tus datos se guardan así y no cambian.').replace('{c}', base)}
       </p>
 
-      <div>
-        <label className="label">{t('Tasa de cambio (1 USD = ? COP)')}</label>
-        {loading ? (
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Loader2 size={15} className="animate-spin" /> {t('Obteniendo tasa actual…')}
+      <label className="label">{t('Ver montos en')}</label>
+      <Segmented
+        value={view}
+        onChange={pick}
+        options={[
+          { value: 'COP', label: t('Peso (COP) $') },
+          { value: 'USD', label: t('Dólar (USD) $') },
+        ]}
+      />
+
+      {view !== base && (
+        <div className="mt-3 space-y-2 rounded-xl border border-border bg-surface-2/50 p-3">
+          <label className="label mb-0">{t('Tasa de cambio (1 USD = ? COP)')}</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted">1 USD =</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={rate || ''}
+              onChange={(e) => setRate(Number(e.target.value))}
+              className="input flex-1"
+              step="0.01"
+              min={0}
+            />
+            <span className="text-sm text-muted">COP</span>
+            <button
+              type="button"
+              onClick={refreshRate}
+              disabled={fetching}
+              className="btn-ghost shrink-0"
+              title={t('Actualizar tasa')}
+            >
+              {fetching ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <RotateCcw size={15} />
+              )}
+            </button>
           </div>
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">1 USD =</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={rate || ''}
-                onChange={(e) => setRate(Number(e.target.value))}
-                className="input flex-1"
-                step="0.01"
-                min={0}
-                autoFocus
-              />
-              <span className="text-sm text-muted">COP</span>
-            </div>
-            {fetchFailed && (
-              <p className="mt-1 text-xs text-warning">
-                {t('No pude obtener la tasa automáticamente. Ingrésala manualmente.')}
-              </p>
-            )}
-            <p className="mt-1.5 text-xs text-muted">
-              {t('Ejemplo:')} <span className="tnum text-content">{example}</span>
-            </p>
-          </>
-        )}
-      </div>
-
-      <p className="rounded-xl bg-warning/10 p-3 text-xs text-warning">
-        {t(
-          'Se convertirán TODOS tus montos guardados (ingresos, gastos, deudas, presupuestos, ahorros y más) con esta tasa. Esta acción reescribe tus datos.',
-        )}
-      </p>
-
-      <div className="flex gap-3">
-        <button onClick={onDone} disabled={busy} className="btn-ghost flex-1">
-          {t('Cancelar')}
-        </button>
-        <button onClick={convert} disabled={busy || loading} className="btn-primary flex-1">
-          {busy ? <Loader2 size={16} className="animate-spin" /> : t('Convertir todo')}
-        </button>
-      </div>
-    </div>
+          <p className="text-xs text-muted">
+            {t('Solo cambia cómo se ven los montos. Tus datos siguen en {c}.').replace('{c}', base)}
+          </p>
+        </div>
+      )}
+    </Card>
   )
 }

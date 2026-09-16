@@ -949,4 +949,11 @@ export const EN: Record<string, string> = {
   'Convertir todo': 'Convert everything',
   'Ingresa una tasa válida': 'Enter a valid rate',
   'Moneda convertida a {c} ✓': 'Currency converted to {c} ✓',
+  'Moneda principal: {c}. Tus datos se guardan así y no cambian.':
+    'Main currency: {c}. Your data is stored this way and never changes.',
+  'Ver montos en': 'View amounts in',
+  'Solo cambia cómo se ven los montos. Tus datos siguen en {c}.':
+    'Only changes how amounts are shown. Your data stays in {c}.',
+  'Tasa actualizada ✓': 'Rate updated ✓',
+  'Actualizar tasa': 'Refresh rate',
 }

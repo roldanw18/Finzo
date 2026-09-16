@@ -38,7 +38,6 @@ import {
 } from '@/data/localDb'
 import { SupabaseDatabase } from '@/data/supabaseDb'
 import { hasSupabase, supabase } from '@/lib/supabase'
-import { conversionFactor } from '@/lib/exchange'
 
 type Status = 'idle' | 'loading' | 'ready' | 'auth' | 'error'
 export type Mode = 'local' | 'remote'
@@ -89,8 +88,6 @@ interface AppState {
   // Profile / settings
   setTheme: (theme: ThemeMode) => Promise<void>
   setCurrency: (currency: Currency) => Promise<void>
-  /** Switch currency AND convert every stored amount using `rate` (COP per 1 USD). */
-  convertCurrency: (newCurrency: Currency, rate: number) => Promise<void>
   saveProfile: (patch: Partial<Profile>) => Promise<void>
   setBudget: (categoryId: string, amount: number) => Promise<void>
 
@@ -357,13 +354,6 @@ export const useStore = create<AppState>((set, get) => {
     async setCurrency(currency) {
       const profile = await get().db!.updateProfile({ currency })
       set({ profile })
-    },
-    async convertCurrency(newCurrency, rate) {
-      const current = get().profile?.currency
-      if (!current || current === newCurrency) return
-      const factor = conversionFactor(newCurrency, rate)
-      const snap = await get().db!.convertCurrency(factor, newCurrency)
-      setSnapshot(snap)
     },
     async saveProfile(patch) {
       const profile = await get().db!.updateProfile(patch)

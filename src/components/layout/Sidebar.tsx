@@ -17,7 +17,7 @@ export function Sidebar() {
   const mode = useStore((s) => s.mode)
   const openIncome = useUI((s) => s.openIncome)
   const openExpense = useUI((s) => s.openExpense)
-  const { currency, money } = useMoney()
+  const { money, convert, view } = useMoney()
   const { kpis, debts, debtPayments } = useAnalytics()
   const { t } = useI18n()
 
@@ -41,8 +41,8 @@ export function Sidebar() {
       <div className="mt-5 rounded-2xl border border-border bg-surface p-4">
         <p className="text-xs text-muted">{t('Dinero disponible')}</p>
         <AnimatedNumber
-          value={kpis.available}
-          currency={currency}
+          value={convert(kpis.available)}
+          currency={view}
           className="tnum mt-1 block font-display text-2xl font-bold text-content"
         />
         {debts.length > 0 && (

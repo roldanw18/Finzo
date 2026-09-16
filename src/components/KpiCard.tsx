@@ -42,7 +42,7 @@ export function KpiCard({
   spark,
   delay = 0,
 }: Props) {
-  const { currency } = useMoney()
+  const { convert, view } = useMoney()
   const t = TONE[tone]
 
   const deltaGood =
@@ -65,8 +65,8 @@ export function KpiCard({
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted truncate">{label}</p>
           <AnimatedNumber
-            value={value}
-            currency={currency}
+            value={convert(value)}
+            currency={view}
             compact={compact}
             sign={sign}
             className={cn(

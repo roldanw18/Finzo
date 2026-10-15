@@ -33,6 +33,20 @@ export default defineConfig({
         ],
         shortcuts: [
           {
+            name: 'Agregar ingreso',
+            short_name: 'Ingreso',
+            description: 'Registrar un ingreso al instante',
+            url: '/ingreso',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Agregar gasto',
+            short_name: 'Gasto',
+            description: 'Registrar un gasto al instante',
+            url: '/gasto',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
             name: 'Agregar propina',
             short_name: 'Propina',
             description: 'Registrar una propina al instante',

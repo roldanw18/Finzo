@@ -20,8 +20,8 @@ const DebtPlan = lazy(() => import('@/pages/DebtPlan').then((m) => ({ default: m
 const MonthlyReport = lazy(() =>
   import('@/pages/MonthlyReport').then((m) => ({ default: m.MonthlyReport })),
 )
-const TipQuickPage = lazy(() =>
-  import('@/pages/TipQuickPage').then((m) => ({ default: m.TipQuickPage })),
+const QuickEntry = lazy(() =>
+  import('@/pages/QuickEntry').then((m) => ({ default: m.QuickEntry })),
 )
 
 function PageLoader() {
@@ -97,8 +97,10 @@ function AppContent({
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Full-screen quick tip entry (deep-link / iOS shortcut target) */}
-        <Route path="/propina" element={<TipQuickPage />} />
+        {/* Full-screen quick entry screens (deep-link / iOS home-screen shortcut targets) */}
+        <Route path="/propina" element={<QuickEntry kind="tip" />} />
+        <Route path="/ingreso" element={<QuickEntry kind="income" />} />
+        <Route path="/gasto" element={<QuickEntry kind="expense" />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/plan" element={<DebtPlan />} />

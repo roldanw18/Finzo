@@ -462,6 +462,8 @@ export const EN: Record<string, string> = {
   'Agrega el valor de tu propina': 'Enter your tip amount',
   'Volver al inicio': 'Back to home',
   'Propina rápida': 'Quick tip',
+  'Ingreso rápido': 'Quick income',
+  'Gasto rápido': 'Quick expense',
   'Registra y listo': 'Log it and go',
   'Ir al inicio →': 'Go home →',
   'Valor de la propina': 'Tip amount',

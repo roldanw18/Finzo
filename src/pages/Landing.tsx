@@ -50,9 +50,9 @@ export function Landing() {
               <Wallet size={20} strokeWidth={2.4} />
             </span>
             <span className="font-display text-xl font-bold">Finzo</span>
+            <LangSwitch className="ml-1" />
           </div>
           <div className="flex items-center gap-2">
-            <LangSwitch className="mr-1" />
             <button onClick={() => enterDemo()} className="btn-ghost hidden sm:inline-flex">
               <PlayCircle size={16} /> {t('nav.try')}
             </button>

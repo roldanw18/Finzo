@@ -150,6 +150,8 @@ export interface SavingsGoal {
   saved_amount: number
   /** Optional deadline (yyyy-MM-dd) to pace contributions. */
   target_date: string | null
+  /** Manual amount to set aside per day. null/0 = auto (remaining ÷ days left). */
+  daily_target: number | null
   color: string
   icon: string
   created_at: string

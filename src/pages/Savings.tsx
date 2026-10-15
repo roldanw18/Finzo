@@ -8,6 +8,7 @@ import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SavingsGoalForm } from '@/components/forms/SavingsGoalForm'
+import { SavingsReminderCard } from '@/components/SavingsReminderCard'
 import { getIcon } from '@/lib/icons'
 import { useStore } from '@/store/useStore'
 import { useMoney } from '@/hooks/useMoney'
@@ -15,6 +16,7 @@ import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { fmtShort } from '@/lib/dates'
 import { safeDiv } from '@/lib/utils'
+import { dailyTarget, totalDailySavings } from '@/lib/savings'
 import type { SavingsGoal } from '@/types'
 
 type Sheet =
@@ -40,7 +42,7 @@ export function Savings() {
     const saved = savingsGoals.reduce((a, g) => a + g.saved_amount, 0)
     const target = savingsGoals.reduce((a, g) => a + g.target_amount, 0)
     const done = savingsGoals.filter((g) => g.saved_amount >= g.target_amount && g.target_amount > 0).length
-    return { saved, target, done, pct: safeDiv(saved, target) * 100 }
+    return { saved, target, done, pct: safeDiv(saved, target) * 100, daily: totalDailySavings(savingsGoals) }
   }, [savingsGoals])
 
   return (
@@ -100,7 +102,17 @@ export function Savings() {
                 style={{ width: `${Math.min(100, totals.pct)}%` }}
               />
             </div>
+            {totals.daily > 0 && (
+              <p className="mt-3 text-sm text-content">
+                {t('Hoy aparta')}{' '}
+                <b className="tnum text-income">{money(totals.daily)}</b>{' '}
+                <span className="text-muted">{t('para avanzar tus metas')}</span>
+              </p>
+            )}
           </motion.div>
+
+          {/* Daily savings reminder */}
+          <SavingsReminderCard />
 
           {/* Goals grid */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,6 +121,7 @@ export function Savings() {
               const pct = safeDiv(g.saved_amount, g.target_amount) * 100
               const done = g.target_amount > 0 && g.saved_amount >= g.target_amount
               const remaining = Math.max(0, g.target_amount - g.saved_amount)
+              const dt = dailyTarget(g)
               const dl = g.target_date ? daysLeft(g.target_date) : null
               return (
                 <motion.div
@@ -170,6 +183,18 @@ export function Savings() {
                       {pct.toFixed(0)}%
                     </p>
                   </div>
+
+                  {dt !== null && (
+                    <div className="flex items-center justify-between rounded-xl bg-surface-2/60 px-3 py-2 text-xs">
+                      <span className="flex items-center gap-1.5 text-muted">
+                        <PiggyBank size={13} /> {t('Ahorra')}
+                      </span>
+                      <span className="tnum font-semibold" style={{ color: g.color }}>
+                        {money(dt, { compact: true })}
+                        <span className="font-normal text-muted">{t('/día')}</span>
+                      </span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => setSheet({ type: 'contribute', goal: g })}

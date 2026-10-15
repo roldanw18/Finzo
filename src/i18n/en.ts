@@ -197,6 +197,18 @@ export const EN: Record<string, string> = {
   'Meta de ahorro': 'Savings goal',
   'Nombre de la meta': 'Goal name',
   'Ej. Fondo de emergencia': 'e.g. Emergency fund',
+  'Meta diaria de ahorro (opcional)': 'Daily savings target (optional)',
+  'Sugerir según fecha': 'Suggest from date',
+  'Si lo dejas en 0, se calcula automáticamente según la fecha meta.':
+    'Leave it at 0 and it’s calculated automatically from the target date.',
+  Ahorra: 'Save',
+  'Ahorra cada día': 'Save every day',
+  'Hoy aparta': 'Set aside today',
+  'para avanzar tus metas': 'to move your goals forward',
+  'Recordatorio de ahorro de hoy': 'Today’s savings reminder',
+  Aparta: 'Set aside',
+  'para tus metas': 'for your goals',
+  'hoy para tus metas de ahorro': 'today for your savings goals',
 
   // ---- Settings ----
   'Personaliza tu experiencia': 'Customize your experience',

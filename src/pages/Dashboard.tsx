@@ -26,6 +26,7 @@ import { FlowChart } from '@/components/charts/FlowChart'
 import { CategoryRanking } from '@/components/charts/CategoryRanking'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { DueSoonCard } from '@/components/DueSoonCard'
+import { SavingsReminderCard } from '@/components/SavingsReminderCard'
 import { NetWorthCard } from '@/components/NetWorthCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
@@ -281,6 +282,9 @@ export function Dashboard() {
 
       {/* Upcoming due dates + browser reminders */}
       <DueSoonCard />
+
+      {/* Daily savings reminder */}
+      <SavingsReminderCard />
 
       {/* Charts row 1 */}
       <div className="grid gap-4 lg:grid-cols-3">

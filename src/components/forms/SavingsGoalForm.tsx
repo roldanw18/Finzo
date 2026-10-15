@@ -7,6 +7,7 @@ import { useMoney } from '@/hooks/useMoney'
 import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
 import { cn } from '@/lib/utils'
+import { daysUntil } from '@/lib/savings'
 import type { SavingsGoal } from '@/types'
 
 const GOAL_ICONS = [
@@ -40,9 +41,18 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
   const [target, setTarget] = useState(editing?.target_amount ?? 0)
   const [saved, setSaved] = useState(editing?.saved_amount ?? 0)
   const [targetDate, setTargetDate] = useState(editing?.target_date ?? '')
+  const [daily, setDaily] = useState(editing?.daily_target ?? 0)
   const [color, setColor] = useState(editing?.color ?? CATEGORY_COLORS[2])
   const [icon, setIcon] = useState(editing?.icon ?? 'PiggyBank')
   const [saving, setSaving] = useState(false)
+
+  // Suggest a daily amount from the target date: remaining ÷ days left.
+  function suggestDaily() {
+    const remaining = Math.max(0, target - saved)
+    const left = targetDate ? daysUntil(targetDate) : -1
+    if (remaining <= 0 || left < 0) return
+    setDaily(Math.ceil(remaining / Math.max(1, left)))
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,6 +65,7 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
         target_amount: target,
         saved_amount: saved,
         target_date: targetDate || null,
+        daily_target: daily > 0 ? daily : null,
         color,
         icon,
       }
@@ -120,6 +131,25 @@ export function SavingsGoalForm({ editing, onDone }: Props) {
           onChange={(e) => setTargetDate(e.target.value)}
           className="input"
         />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between">
+          <label className="label">{t('Meta diaria de ahorro (opcional)')}</label>
+          {target > 0 && targetDate && (
+            <button
+              type="button"
+              onClick={suggestDaily}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {t('Sugerir según fecha')}
+            </button>
+          )}
+        </div>
+        <AmountInput value={daily} onChange={setDaily} currency={currency} size="md" />
+        <p className="mt-1.5 text-xs text-muted">
+          {t('Si lo dejas en 0, se calcula automáticamente según la fecha meta.')}
+        </p>
       </div>
 
       <div>

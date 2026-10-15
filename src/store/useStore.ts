@@ -204,12 +204,16 @@ export const useStore = create<AppState>((set, get) => {
 
         // Remote mode
         const { data } = await supabase.auth.getSession()
-        supabase.auth.onAuthStateChange((_evt, session) => {
+        supabase.auth.onAuthStateChange((evt, session) => {
           const s = get()
-          if (session?.user && s.status === 'auth') {
+          // Session (re)gained — finished Google redirect or token refreshed.
+          if ((evt === 'SIGNED_IN' || evt === 'TOKEN_REFRESHED') && session?.user && s.status === 'auth') {
             void s.init()
           }
-          if (!session && s.status === 'ready' && s.mode === 'remote') {
+          // Only return to the login screen on a real sign-out / invalid refresh token.
+          // A transient null (e.g. a refresh that failed while offline) must NOT force a
+          // re-login; the stored refresh token is recovered on the next launch or focus.
+          if (evt === 'SIGNED_OUT' && s.mode === 'remote') {
             set({ status: 'auth', user: null, db: null })
           }
         })

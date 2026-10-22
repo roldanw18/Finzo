@@ -181,6 +181,31 @@ export function computeKpis(
   }
 }
 
+/* ------------------------------------------------- Income by service */
+
+export interface ServiceSlice {
+  name: string
+  total: number
+  count: number
+}
+
+/**
+ * Breakdown of income by the services that composed it (from `income.items`),
+ * most revenue first. Only incomes logged through the quick-service menu appear.
+ */
+export function incomeByService(incomes: Income[]): ServiceSlice[] {
+  const map = new Map<string, ServiceSlice>()
+  for (const inc of incomes) {
+    for (const it of inc.items ?? []) {
+      const cur = map.get(it.name) ?? { name: it.name, total: 0, count: 0 }
+      cur.total += it.price
+      cur.count += 1
+      map.set(it.name, cur)
+    }
+  }
+  return [...map.values()].sort((a, b) => b.total - a.total)
+}
+
 /* ------------------------------------------------- Category breakdown */
 
 export interface CategorySlice {

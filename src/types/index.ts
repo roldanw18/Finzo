@@ -26,6 +26,19 @@ export interface Category {
   created_at: string
 }
 
+/** A configurable service/product in the user's quick menu (e.g. Corte $20.000). */
+export interface Service {
+  id: string
+  name: string
+  price: number
+}
+
+/** A line of an income ticket — a snapshot of a service at sale time. */
+export interface IncomeItem {
+  name: string
+  price: number
+}
+
 export interface Income {
   id: string
   user_id: string
@@ -34,6 +47,8 @@ export interface Income {
   note: string | null
   /** Defaults to 'main' for legacy rows without the column. */
   source?: IncomeSource
+  /** Services/products that made up this income, for per-service analytics. */
+  items?: IncomeItem[] | null
   created_at: string
 }
 
@@ -62,6 +77,8 @@ export interface Profile {
   opening_balance: number
   /** Per-category monthly budgets, keyed by category id. */
   budgets: Record<string, number>
+  /** Quick service/product menu for fast income entry (e.g. Corte, Cejas, Snack). */
+  services?: Service[]
   /** What the user does for a living — drives wording, categories and costs. */
   activity_type?: string | null
   /** How income is named, e.g. "Viaje", "Servicio", "Venta". */

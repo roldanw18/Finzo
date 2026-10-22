@@ -38,6 +38,18 @@ export const EN: Record<string, string> = {
   'Sin conexión — tus cambios podrían no guardarse': 'Offline — your changes may not be saved',
   'En metas': 'In goals',
   'Días para completar': 'Days to complete',
+  // ---- Quick services (barber/shop/etc.) ----
+  Servicios: 'Services',
+  'Servicios rápidos': 'Quick services',
+  'Tu menú para registrar ingresos de un toque': 'Your one-tap menu for logging income',
+  'Agrega tus servicios o productos con su precio (p. ej. Corte, Cejas, Snack).':
+    'Add your services or products with their price (e.g. Cut, Eyebrows, Snack).',
+  'Agregar servicio': 'Add service',
+  'Servicios guardados': 'Services saved',
+  Quitar: 'Remove',
+  'Ingresos por servicio': 'Income by service',
+  'Por servicio': 'By service',
+  'Cuánto ha generado cada servicio': 'How much each service has earned',
 
   // ---- Common ----
   Guardar: 'Save',

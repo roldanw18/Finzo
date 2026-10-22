@@ -32,6 +32,7 @@ import {
   annualSeries,
   dailySeries,
   expensesByCategory,
+  incomeByService,
   type DateRange,
 } from '@/lib/analytics'
 import {
@@ -108,6 +109,7 @@ export function Analytics() {
     () => generateRecommendations(incomes, expenses, categories, opening),
     [incomes, expenses, categories, opening],
   )
+  const byService = useMemo(() => incomeByService(incomes), [incomes])
 
   const totalRange = byCat.reduce((a, s) => a + s.value, 0)
 
@@ -239,6 +241,44 @@ export function Analytics() {
           </div>
         )}
       </section>
+
+      {/* Income by service */}
+      {byService.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="font-display text-lg font-semibold">{t('Ingresos por servicio')}</h2>
+          <Card>
+            <CardHeader
+              title={t('Por servicio')}
+              subtitle={t('Cuánto ha generado cada servicio')}
+            />
+            <div className="space-y-2.5">
+              {byService.map((s) => {
+                const max = byService[0].total || 1
+                const pct = (s.total / max) * 100
+                return (
+                  <div key={s.name}>
+                    <div className="mb-1 flex items-center justify-between text-sm">
+                      <span className="font-medium text-content">
+                        {s.name}{' '}
+                        <span className="text-xs text-muted">· {s.count}×</span>
+                      </span>
+                      <span className="tnum font-semibold text-income">
+                        {money(s.total, { compact: true })}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+                      <div
+                        className="h-full rounded-full bg-income transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        </section>
+      )}
 
       {/* Distribution + ranking */}
       <section className="space-y-4">

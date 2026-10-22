@@ -19,6 +19,12 @@ export interface CategorySeed {
   icon: string
 }
 
+/** A default quick-service seed (name + starting price). The user edits later. */
+export interface ServiceSeed {
+  name: string
+  price: number
+}
+
 export interface ActivityPreset {
   value: ActivityType
   /** Shown in the onboarding picker. */
@@ -41,6 +47,8 @@ export interface ActivityPreset {
   /** Whether vehicle-related reminders make sense (SOAT, oil change…). */
   vehicle: boolean
   categories: CategorySeed[]
+  /** Starting quick-service menu for fast income entry (optional). */
+  services?: ServiceSeed[]
 }
 
 /** Categories everyone gets, regardless of occupation. */
@@ -98,6 +106,14 @@ export const ACTIVITY_PRESETS: ActivityPreset[] = [
       { name: 'Alquiler del puesto', color: '#fb923c', icon: 'Home' },
       { name: 'Publicidad', color: '#ec4899', icon: 'Sparkles' },
       ...COMMON,
+    ],
+    services: [
+      { name: 'Corte', price: 20000 },
+      { name: 'Barba', price: 12000 },
+      { name: 'Cejas', price: 5000 },
+      { name: 'Corte + Barba', price: 30000 },
+      { name: 'Mascarilla', price: 8000 },
+      { name: 'Snack', price: 3000 },
     ],
   },
   {

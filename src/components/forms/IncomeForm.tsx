@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Loader2, Trash2, Target } from 'lucide-react'
+import { Loader2, Trash2, Target, X } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
 import { AmountPresets } from '@/components/ui/AmountPresets'
 import { getIcon } from '@/lib/icons'
@@ -11,7 +11,7 @@ import { toast } from '@/store/toast'
 import { friendlyError } from '@/lib/errors'
 import { todayISO } from '@/lib/dates'
 import { nextRecommendedDebt } from '@/lib/debt'
-import type { Income } from '@/types'
+import type { Income, IncomeItem, Service } from '@/types'
 
 interface Props {
   editing?: Income
@@ -28,13 +28,27 @@ export function IncomeForm({ editing, onDone }: Props) {
   const removeIncome = useStore((s) => s.removeIncome)
   const addPayment = useStore((s) => s.addPayment)
   const debts = useStore((s) => s.debts)
+  const services = useStore((s) => s.profile?.services ?? [])
 
   const activeDebts = useMemo(() => debts.filter((d) => d.status === 'active'), [debts])
   const recommended = useMemo(() => nextRecommendedDebt(debts).debt, [debts])
 
   const [amount, setAmount] = useState(editing?.amount ?? 0)
+  const [items, setItems] = useState<IncomeItem[]>(editing?.items ?? [])
   const [date, setDate] = useState(editing?.date ?? todayISO())
   const [note, setNote] = useState(editing?.note ?? '')
+
+  function addService(s: Service) {
+    setItems((prev) => [...prev, { name: s.name, price: s.price }])
+    setAmount((a) => a + s.price)
+  }
+  function removeItem(idx: number) {
+    setItems((prev) => {
+      const removed = prev[idx]
+      if (removed) setAmount((a) => Math.max(0, a - removed.price))
+      return prev.filter((_, i) => i !== idx)
+    })
+  }
   const [allocate, setAllocate] = useState(false)
   const [allocAmount, setAllocAmount] = useState(0)
   const [allocDebtId, setAllocDebtId] = useState(recommended?.id ?? activeDebts[0]?.id ?? '')
@@ -49,12 +63,14 @@ export function IncomeForm({ editing, onDone }: Props) {
       return
     }
     setSaving(true)
+    const composedNote = note.trim() || (items.length ? items.map((i) => i.name).join(' + ') : '')
+    const itemsPayload = items.length ? items : null
     try {
       if (editing) {
-        await editIncome(editing.id, { amount, date, note })
+        await editIncome(editing.id, { amount, date, note: composedNote, items: itemsPayload })
         toast.success(t('Ingreso actualizado'))
       } else {
-        await addIncome({ amount, date, note })
+        await addIncome({ amount, date, note: composedNote, items: itemsPayload })
         if (allocate && allocAmount > 0 && allocDebtId) {
           await addPayment({ debt_id: allocDebtId, amount: allocAmount, date, note: t('Abono desde ingreso') })
           toast.success(t('Ingreso + abono de {m} ✓').replace('{m}', money(allocAmount)))
@@ -102,6 +118,45 @@ export function IncomeForm({ editing, onDone }: Props) {
         <AmountInput value={amount} onChange={setAmount} currency={currency} autoFocus />
         <AmountPresets currency={currency} onAdd={(d) => setAmount(amount + d)} />
       </div>
+
+      {services.length > 0 && (
+        <div>
+          <label className="label">{t('Servicios')}</label>
+          <div className="flex flex-wrap gap-2">
+            {services.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => addService(s)}
+                className="chip border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-content transition hover:bg-surface-3 active:scale-95"
+              >
+                {s.name}
+                <span className="ml-1 text-muted">{money(s.price, { compact: true })}</span>
+              </button>
+            ))}
+          </div>
+          {items.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {items.map((it, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
+                >
+                  {it.name}
+                  <button
+                    type="button"
+                    onClick={() => removeItem(i)}
+                    aria-label={t('Quitar')}
+                    className="transition hover:text-expense"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>

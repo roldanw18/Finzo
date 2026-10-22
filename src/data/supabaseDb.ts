@@ -220,6 +220,7 @@ export class SupabaseDatabase implements Database {
         date: input.date,
         note: input.note ?? null,
         source: input.source ?? 'main',
+        items: input.items ?? null,
       })
       .select()
       .single()

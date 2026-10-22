@@ -31,6 +31,7 @@ export interface IncomeInput {
   date: string
   note?: string | null
   source?: IncomeSource
+  items?: import('@/types').IncomeItem[] | null
 }
 
 export interface ExpenseInput {

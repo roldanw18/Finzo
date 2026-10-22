@@ -41,6 +41,7 @@ export function Onboarding() {
         income_label: activity.incomeLabel,
         cost_label: activity.costLabel,
         cost_factor: costFactor,
+        services: (activity.services ?? []).map((s) => ({ id: crypto.randomUUID(), ...s })),
         onboarded: true,
       })
       // Add the occupation's categories that don't exist yet (never removes).

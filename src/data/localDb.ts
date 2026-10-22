@@ -56,6 +56,7 @@ function defaultProfile(): Profile {
     theme: 'dark',
     opening_balance: 0,
     budgets: {},
+    services: [],
     activity_type: null,
     work_days_per_week: 7,
     income_label: 'Ingreso',
@@ -187,6 +188,7 @@ export class LocalDatabase implements Database {
       date: input.date,
       note: input.note ?? null,
       source: input.source ?? 'main',
+      items: input.items ?? null,
       created_at: new Date().toISOString(),
     }
     s.incomes.push(inc)

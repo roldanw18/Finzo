@@ -788,6 +788,12 @@ export function buildDemoStore(theme: ThemeMode = 'dark'): Store {
     opening_balance: 500000, budgets: {}, activity_type: 'driver',
     work_days_per_week: 6, income_label: 'Viaje', cost_label: 'Gasolina',
     cost_factor: 1.3, onboarded: true, created_at: now,
+    services: [
+      { id: 'svc-corte', name: 'Corte', price: 20000 },
+      { id: 'svc-barba', name: 'Barba', price: 12000 },
+      { id: 'svc-cejas', name: 'Cejas', price: 5000 },
+      { id: 'svc-snack', name: 'Snack', price: 3000 },
+    ],
   }
 
   return { profile, categories, incomes, expenses, debts, debtPayments, goals, workSessions, reminders, fixedExpenses, savingsGoals }

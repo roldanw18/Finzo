@@ -8,8 +8,9 @@ import { useI18n } from '@/i18n'
 
 /**
  * Patrimonio neto = (disponible + ahorros) − deudas.
- * Savings goals are tracked as a separate bucket (contributions don't touch
- * cash), so they add to assets alongside available cash.
+ * A contribution already leaves "disponible" (useAnalytics subtracts cash
+ * reserved in goals), so adding savings back here moves the money between
+ * buckets without double-counting it.
  */
 export function NetWorthCard() {
   const { kpis, debts } = useAnalytics()

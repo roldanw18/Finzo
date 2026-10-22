@@ -423,6 +423,7 @@ export class SupabaseDatabase implements Database {
       saved_amount: input.saved_amount ?? 0,
       target_date: input.target_date ?? null,
       daily_target: input.daily_target ?? null,
+      reserved_from_cash: input.reserved_from_cash ?? 0,
       color: input.color ?? '#0ecb81',
       icon: input.icon ?? 'PiggyBank',
     })

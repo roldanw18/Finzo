@@ -9,13 +9,21 @@ export function useAnalytics() {
   const categories = useStore((s) => s.categories)
   const debtPayments = useStore((s) => s.debtPayments)
   const debts = useStore((s) => s.debts)
+  const savingsGoals = useStore((s) => s.savingsGoals)
   const profile = useStore((s) => s.profile)
   const opening = profile?.opening_balance ?? 0
 
-  const kpis = useMemo(
-    () => computeKpis(incomes, expenses, opening, new Date(), debtPayments),
-    [incomes, expenses, opening, debtPayments],
+  // Cash the user has moved into savings goals via contributions — it leaves
+  // "disponible" (but not "ahorro acumulado", which is a separate cash-flow metric).
+  const reservedInSavings = useMemo(
+    () => savingsGoals.reduce((a, g) => a + (g.reserved_from_cash ?? 0), 0),
+    [savingsGoals],
   )
+
+  const kpis = useMemo(() => {
+    const k = computeKpis(incomes, expenses, opening, new Date(), debtPayments)
+    return { ...k, available: k.available - reservedInSavings }
+  }, [incomes, expenses, opening, debtPayments, reservedInSavings])
 
   const incomeLabel = profile?.income_label
   const movements = useMemo(

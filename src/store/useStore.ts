@@ -491,7 +491,11 @@ export const useStore = create<AppState>((set, get) => {
       const current = get().savingsGoals.find((g) => g.id === id)
       if (!current) return
       const saved_amount = Math.max(0, current.saved_amount + delta)
-      const goal = await get().db!.updateSavingsGoal(id, { saved_amount })
+      // Track cash moved from "disponible": a contribution reserves cash, a
+      // withdrawal releases it back (floored at 0). The initial "ya ahorrado"
+      // was never cash out, so it stays out of this figure.
+      const reserved_from_cash = Math.max(0, (current.reserved_from_cash ?? 0) + delta)
+      const goal = await get().db!.updateSavingsGoal(id, { saved_amount, reserved_from_cash })
       set((s) => ({ savingsGoals: s.savingsGoals.map((g) => (g.id === id ? goal : g)) }))
     },
 

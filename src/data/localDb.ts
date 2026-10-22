@@ -449,6 +449,7 @@ export class LocalDatabase implements Database {
       saved_amount: input.saved_amount ?? 0,
       target_date: input.target_date ?? null,
       daily_target: input.daily_target ?? null,
+      reserved_from_cash: input.reserved_from_cash ?? 0,
       color: input.color ?? '#0ecb81',
       icon: input.icon ?? 'PiggyBank',
       created_at: new Date().toISOString(),
@@ -775,9 +776,9 @@ export function buildDemoStore(theme: ThemeMode = 'dark'): Store {
   ]
 
   const savingsGoals: SavingsGoal[] = [
-    { id: uid(), user_id: LOCAL_USER, name: 'Fondo de emergencia', target_amount: 3000000, saved_amount: 1150000, target_date: null, daily_target: 20000, color: '#0ecb81', icon: 'ShieldCheck', created_at: now },
-    { id: uid(), user_id: LOCAL_USER, name: 'Vacaciones', target_amount: 2000000, saved_amount: 600000, target_date: new Date(today.getFullYear(), today.getMonth() + 5, 1).toISOString().slice(0, 10), daily_target: null, color: '#50a0ff', icon: 'Plane', created_at: now },
-    { id: uid(), user_id: LOCAL_USER, name: 'Cambio de celular', target_amount: 1800000, saved_amount: 1800000, target_date: null, daily_target: null, color: '#a855f7', icon: 'Smartphone', created_at: now },
+    { id: uid(), user_id: LOCAL_USER, name: 'Fondo de emergencia', target_amount: 3000000, saved_amount: 1150000, target_date: null, daily_target: 20000, reserved_from_cash: 0, color: '#0ecb81', icon: 'ShieldCheck', created_at: now },
+    { id: uid(), user_id: LOCAL_USER, name: 'Vacaciones', target_amount: 2000000, saved_amount: 600000, target_date: new Date(today.getFullYear(), today.getMonth() + 5, 1).toISOString().slice(0, 10), daily_target: null, reserved_from_cash: 0, color: '#50a0ff', icon: 'Plane', created_at: now },
+    { id: uid(), user_id: LOCAL_USER, name: 'Cambio de celular', target_amount: 1800000, saved_amount: 1800000, target_date: null, daily_target: null, reserved_from_cash: 0, color: '#a855f7', icon: 'Smartphone', created_at: now },
   ]
 
   const profile: Profile = {

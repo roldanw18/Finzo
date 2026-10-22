@@ -108,6 +108,7 @@ export interface SavingsGoalInput {
   saved_amount?: number
   target_date?: string | null
   daily_target?: number | null
+  reserved_from_cash?: number
   color?: string
   icon?: string
 }

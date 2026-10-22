@@ -152,6 +152,9 @@ export interface SavingsGoal {
   target_date: string | null
   /** Manual amount to set aside per day. null/0 = auto (remaining ÷ days left). */
   daily_target: number | null
+  /** Cash moved from "disponible" into this goal via contributions. Only this
+   *  (not the initial "ya ahorrado") reduces available money. */
+  reserved_from_cash: number
   color: string
   icon: string
   created_at: string

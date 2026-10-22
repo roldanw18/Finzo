@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Minus, PiggyBank, Pencil, Loader2, CheckCircle2 } from 'lucide-react'
+import { Plus, Minus, PiggyBank, Pencil, Loader2, CheckCircle2, CalendarClock } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
@@ -122,6 +122,7 @@ export function Savings() {
               const done = g.target_amount > 0 && g.saved_amount >= g.target_amount
               const remaining = Math.max(0, g.target_amount - g.saved_amount)
               const dt = dailyTarget(g)
+              const daysToComplete = dt && dt > 0 ? Math.ceil(remaining / dt) : null
               const dl = g.target_date ? daysLeft(g.target_date) : null
               return (
                 <motion.div
@@ -185,14 +186,26 @@ export function Savings() {
                   </div>
 
                   {dt !== null && (
-                    <div className="flex items-center justify-between rounded-xl bg-surface-2/60 px-3 py-2 text-xs">
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <PiggyBank size={13} /> {t('Ahorra')}
-                      </span>
-                      <span className="tnum font-semibold" style={{ color: g.color }}>
-                        {money(dt, { compact: true })}
-                        <span className="font-normal text-muted">{t('/día')}</span>
-                      </span>
+                    <div className="space-y-1.5 rounded-xl bg-surface-2/60 px-3 py-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-muted">
+                          <PiggyBank size={13} /> {t('Ahorra')}
+                        </span>
+                        <span className="tnum font-semibold" style={{ color: g.color }}>
+                          {money(dt, { compact: true })}
+                          <span className="font-normal text-muted">{t('/día')}</span>
+                        </span>
+                      </div>
+                      {daysToComplete !== null && (
+                        <div className="flex items-center justify-between border-t border-border/60 pt-1.5">
+                          <span className="flex items-center gap-1.5 text-muted">
+                            <CalendarClock size={13} /> {t('Días para completar')}
+                          </span>
+                          <span className="tnum font-semibold text-content">
+                            {daysToComplete} {daysToComplete === 1 ? t('día') : t('días')}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
 

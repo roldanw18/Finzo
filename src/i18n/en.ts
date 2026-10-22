@@ -37,6 +37,7 @@ export const EN: Record<string, string> = {
   Recargar: 'Reload',
   'Sin conexión — tus cambios podrían no guardarse': 'Offline — your changes may not be saved',
   'En metas': 'In goals',
+  'Días para completar': 'Days to complete',
 
   // ---- Common ----
   Guardar: 'Save',

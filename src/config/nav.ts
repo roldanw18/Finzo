@@ -6,6 +6,7 @@ import {
   Settings,
   Target,
   PiggyBank,
+  FileText,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -24,7 +25,12 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/historial', label: 'Historial', icon: History, primary: true },
   { to: '/ahorro', label: 'Ahorro', icon: PiggyBank },
   { to: '/categorias', label: 'Categorías', icon: Tags },
+  { to: '/reporte', label: 'Reporte', icon: FileText },
   { to: '/ajustes', label: 'Ajustes', icon: Settings, primary: true },
 ]
 
+/** Shown directly in the mobile bottom bar. */
 export const BOTTOM_NAV_ITEMS = NAV_ITEMS.filter((n) => n.primary)
+
+/** Reachable on mobile through the "Más" sheet (not in the bottom bar). */
+export const SECONDARY_NAV_ITEMS = NAV_ITEMS.filter((n) => !n.primary)

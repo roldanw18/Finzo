@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
-import { useStore } from '@/store/useStore'
 import { DebtModalContext, type DebtModal } from '@/components/debt/modalContext'
 import { DebtForm } from '@/components/debt/DebtForm'
 import { PaymentForm } from '@/components/debt/PaymentForm'
@@ -45,7 +44,6 @@ const MODAL_TITLES: Record<Exclude<DebtModal['type'], 'none'>, string> = {
 }
 
 export function DebtPlan() {
-  const mode = useStore((s) => s.mode)
   const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('plan')
   const [modal, setModal] = useState<DebtModal>({ type: 'none' })
@@ -87,13 +85,6 @@ export function DebtPlan() {
           ))}
         </div>
       </div>
-
-      {mode === 'remote' && (
-        <p className="mb-4 rounded-xl border border-info/25 bg-info/10 px-3.5 py-2 text-xs text-info">
-          {t('Si es tu primera vez aquí y algo no guarda, ejecuta la migración')}{' '}
-          <code>0003_debt_plan.sql</code> {t('en Supabase (SQL Editor).')}
-        </p>
-      )}
 
       <motion.div
         key={tab}

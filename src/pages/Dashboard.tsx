@@ -27,6 +27,7 @@ import { CategoryRanking } from '@/components/charts/CategoryRanking'
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber'
 import { DueSoonCard } from '@/components/DueSoonCard'
 import { SavingsReminderCard } from '@/components/SavingsReminderCard'
+import { FirstStepsCard } from '@/components/FirstStepsCard'
 import { NetWorthCard } from '@/components/NetWorthCard'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { useMoney } from '@/hooks/useMoney'
@@ -109,6 +110,9 @@ export function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Getting-started checklist (new users only) */}
+      <FirstStepsCard />
 
       {/* Hero balance card */}
       <motion.div

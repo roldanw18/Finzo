@@ -17,6 +17,13 @@ export const EN: Record<string, string> = {
   Propina: 'Tip',
   'Registrar movimiento': 'Add movement',
   'Cerrar sesión': 'Log out',
+  Más: 'More',
+  'Primeros pasos': 'First steps',
+  'Haz esto para empezar con buen pie': 'Do this to get off to a good start',
+  'Registra tu primer ingreso': 'Add your first income',
+  'Registra tu primer gasto': 'Add your first expense',
+  'Crea una meta de ahorro': 'Create a savings goal',
+  Ocultar: 'Hide',
 
   // ---- Common ----
   Guardar: 'Save',

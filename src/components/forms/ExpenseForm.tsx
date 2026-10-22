@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Loader2, Trash2, Plus, Check, CreditCard } from 'lucide-react'
 import { AmountInput } from '@/components/ui/AmountInput'
+import { AmountPresets } from '@/components/ui/AmountPresets'
 import { CategoryIcon } from '@/components/ui/CategoryIcon'
 import { useStore } from '@/store/useStore'
 import { useUI } from '@/store/ui'
 import { useMoney } from '@/hooks/useMoney'
 import { useI18n } from '@/i18n'
 import { toast } from '@/store/toast'
+import { friendlyError } from '@/lib/errors'
 import { todayISO } from '@/lib/dates'
 import { cn } from '@/lib/utils'
 import { PAYMENT_METHODS, type Expense, type PaymentMethod } from '@/types'
@@ -71,7 +73,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
       }
       onDone()
     } catch (err) {
-      toast.error((err as Error).message)
+      toast.error(friendlyError(err))
     } finally {
       setSaving(false)
     }
@@ -79,13 +81,14 @@ export function ExpenseForm({ editing, onDone }: Props) {
 
   async function onDelete() {
     if (!editing) return
+    if (!confirm(t('¿Eliminar este gasto?'))) return
     setSaving(true)
     try {
       await removeExpense(editing.id)
       toast.success(t('Gasto eliminado'))
       onDone()
     } catch (err) {
-      toast.error((err as Error).message)
+      toast.error(friendlyError(err))
     } finally {
       setSaving(false)
     }
@@ -96,6 +99,7 @@ export function ExpenseForm({ editing, onDone }: Props) {
       <div>
         <label className="label">{t('Monto')}</label>
         <AmountInput value={amount} onChange={setAmount} currency={currency} autoFocus />
+        <AmountPresets currency={currency} onAdd={(d) => setAmount(amount + d)} />
       </div>
 
       <div>
@@ -236,7 +240,13 @@ export function ExpenseForm({ editing, onDone }: Props) {
 
       <div className="flex gap-3 pt-1">
         {editing && (
-          <button type="button" onClick={onDelete} className="btn-danger" disabled={saving}>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="btn-danger"
+            disabled={saving}
+            aria-label={t('Eliminar gasto')}
+          >
             <Trash2 size={16} />
           </button>
         )}

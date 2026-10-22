@@ -8,6 +8,7 @@ import { Fab } from './Fab'
 import { QuickAddModals } from '@/components/QuickAddModals'
 import { DemoBanner } from './DemoBanner'
 import { DemoModeBanner } from './DemoModeBanner'
+import { OfflineBanner } from './OfflineBanner'
 import { usePrefs } from '@/store/prefs'
 
 export function AppLayout() {
@@ -23,6 +24,7 @@ export function AppLayout() {
 
       <main className="lg:pl-64">
         <div className="mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
+          <OfflineBanner />
           <DemoBanner />
           <motion.div
             key={location.pathname}

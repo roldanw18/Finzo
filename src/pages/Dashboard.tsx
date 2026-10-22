@@ -176,7 +176,7 @@ export function Dashboard() {
                 {t('Balance mes')}: {money(kpis.monthBalance, { sign: true, compact: true })}
               </span>
               <span className="chip bg-surface-2 text-xs text-muted">
-                <PiggyBank size={13} /> {t('Ahorro')}: {money(kpis.totalSavings, { compact: true })}
+                <PiggyBank size={13} /> {t('Ahorro acumulado')}: {money(kpis.totalSavings, { compact: true })}
               </span>
               <button
                 onClick={() => openTip()}

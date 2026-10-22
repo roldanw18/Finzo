@@ -24,6 +24,19 @@ export const EN: Record<string, string> = {
   'Registra tu primer gasto': 'Add your first expense',
   'Crea una meta de ahorro': 'Create a savings goal',
   Ocultar: 'Hide',
+  // ---- Errors / connectivity / confirmations ----
+  '¿Eliminar este ingreso?': 'Delete this income?',
+  '¿Eliminar este gasto?': 'Delete this expense?',
+  'Eliminar ingreso': 'Delete income',
+  'Eliminar gasto': 'Delete expense',
+  'Sin conexión. Revisa tu internet e intenta de nuevo.':
+    'No connection. Check your internet and try again.',
+  'No se pudo completar. Intenta de nuevo.': 'Could not complete. Please try again.',
+  'La aplicación tuvo un problema. Recarga para continuar.':
+    'The app ran into a problem. Reload to continue.',
+  Recargar: 'Reload',
+  'Sin conexión — tus cambios podrían no guardarse': 'Offline — your changes may not be saved',
+  'En metas': 'In goals',
 
   // ---- Common ----
   Guardar: 'Save',

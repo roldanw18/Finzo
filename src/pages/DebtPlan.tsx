@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Modal } from '@/components/ui/Modal'
+import { useStore } from '@/store/useStore'
 import { DebtModalContext, type DebtModal } from '@/components/debt/modalContext'
 import { DebtForm } from '@/components/debt/DebtForm'
 import { PaymentForm } from '@/components/debt/PaymentForm'
@@ -43,11 +44,21 @@ const MODAL_TITLES: Record<Exclude<DebtModal['type'], 'none'>, string> = {
   fixed: 'Gasto fijo',
 }
 
+// Debt-dependent tabs — hidden until the user adds a debt, so the page isn't
+// overwhelming on first visit.
+const ADVANCED_TABS: Tab[] = ['pagos', 'simulador', 'trabajo', 'metas']
+
 export function DebtPlan() {
   const { t } = useI18n()
+  const debts = useStore((s) => s.debts)
+  const hasDebts = debts.length > 0
   const [tab, setTab] = useState<Tab>('plan')
   const [modal, setModal] = useState<DebtModal>({ type: 'none' })
   const close = () => setModal({ type: 'none' })
+
+  const visibleTabs = hasDebts ? TABS : TABS.filter((tb) => !ADVANCED_TABS.includes(tb.id))
+  // If the current tab got hidden (e.g. last debt deleted), fall back to Plan.
+  const activeTab: Tab = visibleTabs.some((tb) => tb.id === tab) ? tab : 'plan'
 
   return (
     <DebtModalContext.Provider value={setModal}>
@@ -64,16 +75,16 @@ export function DebtPlan() {
       {/* Tabs */}
       <div className="sticky top-14 z-10 -mx-4 mb-5 overflow-x-auto border-b border-border bg-bg/80 px-4 backdrop-blur lg:top-0 lg:mx-0 lg:rounded-xl lg:border lg:bg-surface lg:px-2">
         <div className="flex min-w-max gap-1 py-1.5">
-          {TABS.map((tab_) => (
+          {visibleTabs.map((tab_) => (
             <button
               key={tab_.id}
               onClick={() => setTab(tab_.id)}
               className={cn(
                 'relative rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
-                tab === tab_.id ? 'text-primary-contrast' : 'text-muted hover:text-content',
+                activeTab === tab_.id ? 'text-primary-contrast' : 'text-muted hover:text-content',
               )}
             >
-              {tab === tab_.id && (
+              {activeTab === tab_.id && (
                 <motion.span
                   layoutId="debt-tab"
                   className="absolute inset-0 rounded-lg bg-primary"
@@ -87,19 +98,19 @@ export function DebtPlan() {
       </div>
 
       <motion.div
-        key={tab}
+        key={activeTab}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        {tab === 'plan' && <PlanOverview />}
-        {tab === 'deudas' && <DebtsTab />}
-        {tab === 'pagos' && <PaymentsTab />}
-        {tab === 'fijos' && <FixedTab />}
-        {tab === 'simulador' && <SimulatorTab />}
-        {tab === 'trabajo' && <WorkTab />}
-        {tab === 'metas' && <GoalsTab />}
-        {tab === 'calendario' && <CalendarTab />}
+        {activeTab === 'plan' && <PlanOverview />}
+        {activeTab === 'deudas' && <DebtsTab />}
+        {activeTab === 'pagos' && <PaymentsTab />}
+        {activeTab === 'fijos' && <FixedTab />}
+        {activeTab === 'simulador' && <SimulatorTab />}
+        {activeTab === 'trabajo' && <WorkTab />}
+        {activeTab === 'metas' && <GoalsTab />}
+        {activeTab === 'calendario' && <CalendarTab />}
       </motion.div>
 
       <Modal

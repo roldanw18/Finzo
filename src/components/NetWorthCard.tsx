@@ -100,7 +100,7 @@ export function NetWorthCard() {
         </div>
         <div className="rounded-xl bg-surface-2 p-2.5">
           <p className="flex items-center gap-1 text-[11px] text-muted">
-            <PiggyBank size={12} /> {t('Ahorros')}
+            <PiggyBank size={12} /> {t('En metas')}
           </p>
           <p className="tnum mt-0.5 text-sm font-bold text-content">
             {money(savings, { compact: true })}

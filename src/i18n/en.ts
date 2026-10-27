@@ -50,6 +50,9 @@ export const EN: Record<string, string> = {
   'Ingresos por servicio': 'Income by service',
   'Por servicio': 'By service',
   'Cuánto ha generado cada servicio': 'How much each service has earned',
+  'Tu menú de servicios (opcional)': 'Your service menu (optional)',
+  'Para cobrar rápido lo que vendes (p. ej. Corte, Cejas, Snack). Aparecen al registrar un ingreso. Déjalo vacío si no aplica.':
+    "To quickly charge what you sell (e.g. Cut, Eyebrows, Snack). They appear when logging income. Leave it empty if it doesn't apply.",
 
   // ---- Common ----
   Guardar: 'Save',

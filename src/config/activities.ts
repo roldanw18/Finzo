@@ -88,6 +88,11 @@ export const ACTIVITY_PRESETS: ActivityPreset[] = [
     costFactor: 1.3,
     vehicle: true,
     categories: [...VEHICLE, ...COMMON],
+    services: [
+      { name: 'Viaje corto', price: 7000 },
+      { name: 'Viaje largo', price: 18000 },
+      { name: 'Domicilio', price: 5000 },
+    ],
   },
   {
     value: 'barber',
@@ -128,6 +133,10 @@ export const ACTIVITY_PRESETS: ActivityPreset[] = [
     costFactor: 1.25,
     vehicle: true,
     categories: [...VEHICLE, ...COMMON],
+    services: [
+      { name: 'Pedido', price: 6000 },
+      { name: 'Domicilio express', price: 9000 },
+    ],
   },
   {
     value: 'shop',

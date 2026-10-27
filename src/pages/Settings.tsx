@@ -20,7 +20,6 @@ import { Loader2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { LangSwitch } from '@/components/LangSwitch'
 import { ActivitySettings } from '@/components/ActivitySettings'
-import { ServicesSettings } from '@/components/ServicesSettings'
 import { Card, CardHeader } from '@/components/ui/Card'
 import { Segmented } from '@/components/ui/Segmented'
 import { AmountInput } from '@/components/ui/AmountInput'
@@ -132,11 +131,8 @@ export function Settings() {
         </div>
       </Card>
 
-      {/* Activity / occupation */}
+      {/* Activity / occupation (includes the quick-services menu) */}
       <ActivitySettings />
-
-      {/* Quick services menu */}
-      <ServicesSettings />
 
       {/* Currency */}
       <CurrencyCard />

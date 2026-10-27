@@ -29,17 +29,29 @@ export function ActivitySettings() {
   const [services, setServices] = useState<Service[]>(profile?.services ?? [])
   const [saving, setSaving] = useState(false)
 
-  function pick(t: ActivityType) {
-    const p = activityPreset(t)
-    setType(t)
+  function seedsOf(a: ActivityType) {
+    return (activityPreset(a).services ?? []).map((s) => ({ name: s.name, price: s.price }))
+  }
+  function matchesSeeds(svcs: Service[], seeds: { name: string; price: number }[]) {
+    return (
+      svcs.length === seeds.length &&
+      svcs.every((s, i) => s.name === seeds[i].name && s.price === seeds[i].price)
+    )
+  }
+
+  function pick(next: ActivityType) {
+    const p = activityPreset(next)
+    // Swap the suggested services only when the menu is untouched: empty, or
+    // still equal to the PREVIOUS occupation's suggestions. A customized menu
+    // is kept so the user never loses their own services on an activity switch.
+    const pristine = services.length === 0 || matchesSeeds(services, seedsOf(type))
+    setType(next)
     setIncome(p.incomeLabel)
     setCost(p.costLabel)
     setFactor(p.costFactor)
-    // Prefill this occupation's suggested services, but only if the menu is
-    // empty — never clobber services the user already set up.
-    setServices((prev) =>
-      prev.length > 0 ? prev : (p.services ?? []).map((s) => ({ id: crypto.randomUUID(), ...s })),
-    )
+    if (pristine) {
+      setServices((p.services ?? []).map((s) => ({ id: crypto.randomUUID(), ...s })))
+    }
   }
 
   function updateSvc(id: string, patch: Partial<Service>) {

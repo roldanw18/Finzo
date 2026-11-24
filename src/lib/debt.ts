@@ -393,7 +393,19 @@ export function pendingDebtThisMonth(
   }
   return debts
     .filter((d) => d.status === 'active')
-    .reduce((a, d) => a + Math.max(0, d.min_payment - (paid.get(d.id) ?? 0)), 0)
+    .reduce((a, d) => a + Math.max(0, monthlyDueOf(d) - (paid.get(d.id) ?? 0)), 0)
+}
+
+/**
+ * The monthly payment that drives the daily goal and "pending this month":
+ * the minimum, falling back to the target payment when no minimum was set.
+ *
+ * Without this fallback a debt configured only with a target payment counted as
+ * ZERO silently — and toggling its "count in the daily goal" switch appeared to
+ * do nothing, because 0 in and 0 out.
+ */
+export function monthlyDueOf(d: Debt): number {
+  return d.min_payment || d.target_payment || 0
 }
 
 /* --------------------------------------------- Daily income target */
@@ -490,12 +502,12 @@ export function dailyEarningTargets(
   const remainingSum = (list: Debt[], pick: (d: Debt) => number) =>
     list.reduce((a, d) => a + remainingOf(d, pick), 0)
   const nearestDue = (list: Debt[]) => {
-    const pending = list.filter((d) => remainingOf(d, (x) => x.min_payment) > 0)
+    const pending = list.filter((d) => remainingOf(d, monthlyDueOf) > 0)
     return pending.length ? Math.min(...pending.map(daysToDue)) : daysLeftInMonth
   }
 
-  const cardNetPerDay = netPerDayFor(cards, (d) => d.min_payment)
-  const allNetPerDay = netPerDayFor(counted, (d) => d.min_payment)
+  const cardNetPerDay = netPerDayFor(cards, monthlyDueOf)
+  const allNetPerDay = netPerDayFor(counted, monthlyDueOf)
   const targetNetPerDay = netPerDayFor(counted, (d) => d.target_payment || d.min_payment)
 
   // Fixed expenses spread over their own due dates (working days)
@@ -508,12 +520,12 @@ export function dailyEarningTargets(
   const totalNetPerDay = allNetPerDay + fixedNetPerDay
   // Same figure ignoring payments already made (what a full cycle demands).
   const totalNetPerDayFull =
-    counted.reduce((a, d) => a + d.min_payment / workDaysToDue(d), 0) + fixedNetPerDay
+    counted.reduce((a, d) => a + monthlyDueOf(d) / workDaysToDue(d), 0) + fixedNetPerDay
 
   // Nearest obligation WITH a real due date, so we can name it.
   const dueItems: { days: number; name: string }[] = [
     ...counted
-      .filter((d) => d.due_day && remainingOf(d, (x) => x.min_payment) > 0)
+      .filter((d) => d.due_day && remainingOf(d, monthlyDueOf) > 0)
       .map((d) => ({ days: daysToDue(d), name: d.name })),
     ...activeFixed
       .filter((f) => f.due_day)
@@ -526,11 +538,11 @@ export function dailyEarningTargets(
     costFactor,
     hasCards: cards.length > 0,
     hasDebts: counted.length > 0,
-    cardRemaining: remainingSum(cards, (d) => d.min_payment),
-    allRemaining: remainingSum(counted, (d) => d.min_payment),
+    cardRemaining: remainingSum(cards, monthlyDueOf),
+    allRemaining: remainingSum(counted, monthlyDueOf),
     targetRemaining: remainingSum(counted, (d) => d.target_payment || d.min_payment),
-    cardMinimums: cards.reduce((a, d) => a + d.min_payment, 0),
-    allMinimums: counted.reduce((a, d) => a + d.min_payment, 0),
+    cardMinimums: cards.reduce((a, d) => a + monthlyDueOf(d), 0),
+    allMinimums: counted.reduce((a, d) => a + monthlyDueOf(d), 0),
     cardPerDay: cardNetPerDay * costFactor,
     allPerDay: allNetPerDay * costFactor,
     targetPerDay: targetNetPerDay * costFactor,
@@ -667,7 +679,7 @@ export function buildCalendar(
         daysUntil: days,
         title: `${T('Pago')} ${d.name}`,
         subtitle: T(debtTypeMeta(d.type).label),
-        amount: d.min_payment || null,
+        amount: monthlyDueOf(d) || null,
         category: 'pago',
         urgency: urgencyFor(days),
       })

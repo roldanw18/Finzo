@@ -1,4 +1,4 @@
-import { CreditCard, Repeat, Info, Gauge, Wallet, CheckCircle2 } from 'lucide-react'
+import { CreditCard, Repeat, Info, Gauge, Wallet, CheckCircle2, Fuel } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { useStore } from '@/store/useStore'
 import { usePrefs } from '@/store/prefs'
@@ -31,6 +31,10 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
   // Optional: apply your available cash to the obligations first (persisted).
   const useAvailable = usePrefs((s) => s.useAvailableInTarget)
   const setUseAvailable = usePrefs((s) => s.setUseAvailableInTarget)
+  // Optional: include the variable cost (fuel / supplies) in the goal.
+  const includeCost = usePrefs((s) => s.includeCostInTarget)
+  const setIncludeCost = usePrefs((s) => s.setIncludeCostInTarget)
+  const rawCostFactor = useStore((s) => s.profile?.cost_factor ?? 1.2)
   const available = Math.max(0, kpis.available)
   const applied = applyAvailableToTarget(dt, available, useAvailable)
   const remainingObligation = applied.remaining
@@ -98,12 +102,39 @@ export function DailyTargetConfig({ open, onClose }: { open: boolean; onClose: (
           />
         </label>
 
+        {/* Toggle: include the variable cost (fuel / supplies) */}
+        <label className="flex cursor-pointer items-start justify-between gap-3 rounded-xl border border-border bg-surface-2/50 p-3.5">
+          <span className="flex items-start gap-2.5">
+            <Fuel size={18} className="mt-0.5 shrink-0 text-warning" />
+            <span>
+              <span className="block text-sm font-medium text-content">
+                {t('Incluir {c} en la meta').replace('{c}', costLabel.toLowerCase())}
+              </span>
+              <span className="mt-0.5 block text-xs text-muted">
+                {t('Multiplica la meta ×{f} para que, después de pagar tu {c}, te quede libre justo lo de tus obligaciones.')
+                  .replace('{f}', String(rawCostFactor))
+                  .replace('{c}', costLabel.toLowerCase())}
+              </span>
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={includeCost}
+            onChange={(e) => setIncludeCost(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-income"
+          />
+        </label>
+
         {/* How it's calculated */}
         <div className="flex items-start gap-2.5 rounded-xl bg-surface-2/60 p-3.5">
           <Info size={16} className="mt-0.5 shrink-0 text-info" />
           <p className="text-xs leading-relaxed text-muted">
             <b className="text-content">{t('Cómo se calcula:')}</b>{' '}
-            {t('de cada obligación tomo lo que falta pagar, lo reparto entre los {days} hasta su fecha de pago, sumo todo y lo multiplico por tu factor de {c} (×{f}). Así, tras cubrir tus costos, te queda libre justo lo de tus obligaciones.')
+            {t(
+              includeCost
+                ? 'de cada obligación tomo lo que falta pagar, lo reparto entre los {days} hasta su fecha de pago, sumo todo y lo multiplico por tu factor de {c} (×{f}). Así, tras cubrir tus costos, te queda libre justo lo de tus obligaciones.'
+                : 'de cada obligación tomo lo que falta pagar, lo reparto entre los {days} hasta su fecha de pago y sumo todo. No incluyo tu {c}: la meta es el neto para tus obligaciones.',
+            )
               .split('{days}')
               .map((seg, i) =>
                 i === 0 ? seg : <span key={i}><b className="text-content">{t('días que trabajas')}</b>{seg.replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}</span>,

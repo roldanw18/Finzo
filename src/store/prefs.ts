@@ -16,6 +16,13 @@ interface Prefs {
   /** Subtract available cash from obligations in the daily income goal. */
   useAvailableInTarget: boolean
   setUseAvailableInTarget: (v: boolean) => void
+  /**
+   * Include the variable cost factor (fuel / supplies) in the daily income goal.
+   * On: the goal is multiplied by profile.cost_factor, so the money is free
+   * AFTER covering that cost. Off: the goal is the net amount for obligations.
+   */
+  includeCostInTarget: boolean
+  setIncludeCostInTarget: (v: boolean) => void
   /** UI language. */
   lang: Lang
   setLang: (v: Lang) => void
@@ -36,6 +43,8 @@ export const usePrefs = create<Prefs>()(
     (set) => ({
       useAvailableInTarget: false,
       setUseAvailableInTarget: (v) => set({ useAvailableInTarget: v }),
+      includeCostInTarget: true,
+      setIncludeCostInTarget: (v) => set({ includeCostInTarget: v }),
       lang: detectLang(),
       setLang: (v) => set({ lang: v }),
       displayCurrency: null,

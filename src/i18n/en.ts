@@ -773,6 +773,13 @@ export const EN: Record<string, string> = {
     "You've already covered this cycle's obligations! 🎉",
   'Para el próximo ciclo, produce cada día': 'For the next cycle, earn each day',
   '/día': '/day',
+  'Incluir {c} en la meta': 'Include {c} in the goal',
+  'Multiplica la meta ×{f} para que, después de pagar tu {c}, te quede libre justo lo de tus obligaciones.':
+    'Multiplies the goal by {f} so that, after paying your {c}, exactly your obligations are left free.',
+  'de cada obligación tomo lo que falta pagar, lo reparto entre los {days} hasta su fecha de pago y sumo todo. No incluyo tu {c}: la meta es el neto para tus obligaciones.':
+    'from each obligation I take what is left to pay, spread it across the {days} until its due date and add it all up. Your {c} is not included: the goal is the net amount for your obligations.',
+  'Para cubrir solo tus gastos fijos necesitas producir {m}/día.':
+    'To cover just your fixed expenses you need to make {m}/day.',
   'incluye {c} (×{f})': 'includes {c} (×{f})',
   'Para cubrir {label}, produce cada día': 'To cover {label}, earn each day',
   'Para cubrir {label}, produce cada día que trabajas':

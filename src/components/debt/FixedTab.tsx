@@ -67,7 +67,11 @@ export function FixedTab() {
         <div className="flex items-start gap-2.5 rounded-2xl border border-income/25 bg-income/[0.07] p-4">
           <Repeat size={18} className="mt-0.5 shrink-0 text-income" />
           <p className="text-sm text-content">
-            {t('Para cubrir solo tus gastos fijos necesitas producir {m}/día (incluye {c} ×{f}).')
+            {t(
+              dailyTargets.costFactor > 1
+                ? 'Para cubrir solo tus gastos fijos necesitas producir {m}/día (incluye {c} ×{f}).'
+                : 'Para cubrir solo tus gastos fijos necesitas producir {m}/día.',
+            )
               .split('{m}')
               .map((seg, i) =>
                 i === 0 ? (

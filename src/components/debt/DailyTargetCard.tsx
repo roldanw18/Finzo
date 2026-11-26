@@ -44,6 +44,8 @@ export function DailyTargetCard() {
   const label = dt.hasFixed ? t('tus gastos fijos + los mínimos de deudas') : t('tus pagos mínimos')
   const covered = perDay <= 0.5
   const coveredByAvailable = useAvailable && applied.fullyCovered
+  // costFactor is 1 when the user turned "include fuel/supplies" off.
+  const showCost = dt.costFactor > 1
 
   return (
     <motion.div
@@ -79,9 +81,11 @@ export function DailyTargetCard() {
             {money(dt.totalPerDayFull)}
             <span className="ml-1 text-base font-medium text-muted">{t('/día')}</span>
           </p>
-          <span className="chip mt-2 bg-warning/12 text-xs font-medium text-warning">
-            <Fuel size={12} /> {t('incluye {c} (×{f})').replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}
-          </span>
+          {showCost && (
+            <span className="chip mt-2 bg-warning/12 text-xs font-medium text-warning">
+              <Fuel size={12} /> {t('incluye {c} (×{f})').replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}
+            </span>
+          )}
         </div>
       ) : (
         <div>
@@ -112,9 +116,11 @@ export function DailyTargetCard() {
           )}
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="chip bg-warning/12 text-xs font-medium text-warning">
-              <Fuel size={12} /> {t('incluye {c} (×{f})').replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}
-            </span>
+            {showCost && (
+              <span className="chip bg-warning/12 text-xs font-medium text-warning">
+                <Fuel size={12} /> {t('incluye {c} (×{f})').replace('{c}', costLabel.toLowerCase()).replace('{f}', String(dt.costFactor))}
+              </span>
+            )}
             {dt.workDaysPerWeek < 7 && (
               <span className="chip bg-surface-2 text-xs font-medium text-muted">
                 <CalendarClock size={12} /> {dt.workDaysPerWeek} {t('días/sem')}
@@ -161,19 +167,21 @@ export function DailyTargetCard() {
             </div>
           )}
 
-          <p className="mt-3 text-xs text-muted">
-            {t('De eso, {g} es {c} y te queda libre {n}/día para tus obligaciones.')
-              .split(/(\{g\}|\{n\})/)
-              .map((seg, i) =>
-                seg === '{g}' ? (
-                  <b key={i} className="text-content">{money(gas, { compact: true })}</b>
-                ) : seg === '{n}' ? (
-                  <b key={i} className="text-content">{money(netPerDay, { compact: true })}{t('/día')}</b>
-                ) : (
-                  <span key={i}>{seg.replace('{c}', costLabel.toLowerCase())}</span>
-                ),
-              )}
-          </p>
+          {showCost && (
+            <p className="mt-3 text-xs text-muted">
+              {t('De eso, {g} es {c} y te queda libre {n}/día para tus obligaciones.')
+                .split(/(\{g\}|\{n\})/)
+                .map((seg, i) =>
+                  seg === '{g}' ? (
+                    <b key={i} className="text-content">{money(gas, { compact: true })}</b>
+                  ) : seg === '{n}' ? (
+                    <b key={i} className="text-content">{money(netPerDay, { compact: true })}{t('/día')}</b>
+                  ) : (
+                    <span key={i}>{seg.replace('{c}', costLabel.toLowerCase())}</span>
+                  ),
+                )}
+            </p>
+          )}
         </div>
       )}
 

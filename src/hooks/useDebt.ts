@@ -15,11 +15,16 @@ import {
   projectDebts,
 } from '@/lib/debt'
 import { pctChange } from '@/lib/utils'
+import { usePrefs } from '@/store/prefs'
 
 /** Shared, memoized debt-plan computations from the store. */
 export function useDebt() {
   const debts = useStore((s) => s.debts)
-  const costFactor = useStore((s) => s.profile?.cost_factor ?? DEFAULT_COST_FACTOR)
+  const profileCostFactor = useStore((s) => s.profile?.cost_factor ?? DEFAULT_COST_FACTOR)
+  // Optional (per device): leave the variable cost out of the daily goal, so it
+  // shows the net money needed for obligations instead of the grossed-up figure.
+  const includeCost = usePrefs((s) => s.includeCostInTarget)
+  const costFactor = includeCost ? profileCostFactor : 1
   const workDaysPerWeek = useStore((s) => s.profile?.work_days_per_week ?? 7)
   const payments = useStore((s) => s.debtPayments)
   const goals = useStore((s) => s.goals)

@@ -385,15 +385,46 @@ export function pendingDebtThisMonth(
   debtPayments: DebtPayment[],
   ref = new Date(),
 ): number {
-  const monthKey = format(ref, 'yyyy-MM')
+  const active = debts.filter((d) => d.status === 'active')
+  const paid = paidInCurrentCycle(active, debtPayments, ref)
+  return active.reduce((a, d) => a + Math.max(0, monthlyDueOf(d) - (paid.get(d.id) ?? 0)), 0)
+}
+
+/** Most recent occurrence of a day-of-month at or before ref. */
+export function prevMonthlyDate(day: number, ref: Date): Date {
+  const d = new Date(ref.getFullYear(), ref.getMonth(), day)
+  const today = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate())
+  return d > today ? new Date(ref.getFullYear(), ref.getMonth() - 1, day) : d
+}
+
+/**
+ * How much has already been paid toward each debt's CURRENT billing cycle.
+ *
+ * The cycle starts at the debt's last cut day (or last due day, or the 1st of
+ * the month when neither is set). Measuring by CALENDAR MONTH instead let a
+ * payment for the PREVIOUS statement cancel the next one: paying a card on
+ * Nov 10 for its Nov 10 due date wrongly marked the Dec 10 statement - a brand
+ * new obligation - as already covered, so the debt vanished from the daily goal.
+ */
+export function paidInCurrentCycle(
+  debts: Debt[],
+  debtPayments: DebtPayment[],
+  ref = new Date(),
+): Map<string, number> {
   const paid = new Map<string, number>()
-  for (const p of debtPayments) {
-    if (p.date.slice(0, 7) !== monthKey) continue
-    paid.set(p.debt_id, (paid.get(p.debt_id) ?? 0) + p.amount)
+  for (const d of debts) {
+    const anchor = d.cut_day ?? d.due_day
+    const start = anchor
+      ? prevMonthlyDate(anchor, ref)
+      : new Date(ref.getFullYear(), ref.getMonth(), 1)
+    const startStr = format(start, 'yyyy-MM-dd')
+    let sum = 0
+    for (const p of debtPayments) {
+      if (p.debt_id === d.id && p.date > startStr) sum += p.amount
+    }
+    if (sum > 0) paid.set(d.id, sum)
   }
-  return debts
-    .filter((d) => d.status === 'active')
-    .reduce((a, d) => a + Math.max(0, monthlyDueOf(d) - (paid.get(d.id) ?? 0)), 0)
+  return paid
 }
 
 /**
@@ -475,14 +506,11 @@ export function dailyEarningTargets(
   )
   // Spread obligations only over the days you actually work.
   const workFactor = Math.min(1, Math.max(1, workDaysPerWeek) / 7)
-  const monthKey = format(ref, 'yyyy-MM')
   const daysLeftInMonth = Math.max(1, endOfMonth(ref).getDate() - ref.getDate() + 1)
 
-  const paidThisMonth = new Map<string, number>()
-  for (const p of debtPayments) {
-    if (p.date.slice(0, 7) !== monthKey) continue
-    paidThisMonth.set(p.debt_id, (paidThisMonth.get(p.debt_id) ?? 0) + p.amount)
-  }
+  // Payments already made toward each debt's CURRENT billing cycle - NOT the
+  // calendar month. See paidInCurrentCycle for why that distinction matters.
+  const paidThisMonth = paidInCurrentCycle(active, debtPayments, ref)
 
   // Days until a due day's next occurrence (fallback: end of month).
   const daysToDueDay = (dueDay: number | null) =>
